@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type {
   AccommodationItem,
   AccommodationSearchResponse,
@@ -8,8 +8,10 @@ import type {
   TransportItinerary,
 } from '../types/trip'
 import { formatCatalogPerPersonCost, roundMoney } from '../utils/cost'
-import { GrowConnector } from './tree/GrowConnector'
+import { FlowNodeSlot } from './tree/FlowNodeSlot'
 import { StepCard } from './tree/StepCard'
+import { TreeConnectorLines, type TreeEdge } from './tree/TreeConnectorLines'
+import { canvasMinWidth, computeFlowLayout } from './tree/tripFlowLayout'
 import {
   FlightExplorerPanel,
   type FlightSearchFilters,
@@ -36,6 +38,12 @@ export type TripFlowTreeProps = {
   selectedRoomId: string
   selectedTransportId: string
   selectedTransportExtraIds: Record<string, string>
+  isFavorite: (itemType: 'city' | 'hotel', itemKey: string) => boolean
+  onToggleFavorite: (
+    itemType: 'city' | 'hotel',
+    itemKey: string,
+    meta: { title: string; subtitle?: string; country?: string }
+  ) => void
   onSearchHotels: (filters: HotelSearchFilters) => Promise<AccommodationSearchResponse>
   onPickHotel: (hotelId: string) => Promise<void>
   onSearchRooms: (sortBy: string) => Promise<RoomItem[]>
@@ -58,6 +66,8 @@ export function TripFlowTree({
   selectedRoomId,
   selectedTransportId,
   selectedTransportExtraIds,
+  isFavorite,
+  onToggleFavorite,
   onSearchHotels,
   onPickHotel,
   onSearchRooms,
@@ -68,6 +78,7 @@ export function TripFlowTree({
   onShowFlightDetails,
 }: TripFlowTreeProps) {
   const [panel, setPanel] = useState<Panel>(null)
+  const flowRef = useRef<HTMLDivElement>(null)
 
   const selectedHotel = accommodations.find((h) => h.id === selectedHotelId)
   const selectedRoom = rooms.find((r) => r.room_id === selectedRoomId)
@@ -87,6 +98,21 @@ export function TripFlowTree({
   const showBranches = hasDestination
   const showRoomsBranch = Boolean(selectedHotelId)
   const showFlightExtras = Boolean(selectedTransportId && transportExtras)
+
+  const layout = useMemo(
+    () =>
+      computeFlowLayout({
+        showBranches,
+        showRooms: showRoomsBranch,
+        showFlightExtras,
+      }),
+    [showBranches, showRoomsBranch, showFlightExtras]
+  )
+
+  const minWidth = canvasMinWidth({
+    showRooms: showRoomsBranch,
+    showFlightExtras,
+  })
 
   const hotelsSubtitle = selectedHotel
     ? `${selectedHotel.title} · $${selectedHotel.price}`
@@ -114,6 +140,35 @@ export function TripFlowTree({
     [baggageCategory, refundCategory]
   )
 
+  const edges = useMemo<TreeEdge[]>(() => {
+    const list: TreeEdge[] = []
+    if (showBranches) {
+      list.push(
+        { from: { nodeId: 'dest', side: 'bottom' }, to: { nodeId: 'hotels', side: 'top' } },
+        { from: { nodeId: 'dest', side: 'bottom' }, to: { nodeId: 'flights', side: 'top' } }
+      )
+    }
+    if (showRoomsBranch && layout.rooms) {
+      list.push({
+        from: { nodeId: 'hotels', side: 'right' },
+        to: { nodeId: 'rooms', side: 'left' },
+      })
+    }
+    if (showFlightExtras && layout.baggage) {
+      list.push({
+        from: { nodeId: 'flights', side: 'right' },
+        to: { nodeId: 'baggage', side: 'left' },
+      })
+      if (layout.refund) {
+        list.push({
+          from: { nodeId: 'baggage', side: 'right' },
+          to: { nodeId: 'refund', side: 'left' },
+        })
+      }
+    }
+    return list
+  }, [showBranches, showRoomsBranch, showFlightExtras, layout.rooms, layout.baggage, layout.refund])
+
   async function handlePickHotel(id: string) {
     await onPickHotel(id)
     setPanel(null)
@@ -131,89 +186,124 @@ export function TripFlowTree({
 
   return (
     <div className="tripFlow">
-      <div className="tripFlow__column">
-        <StepCard
-          title={destination.title}
-          subtitle={destination.country}
-          visible={hasDestination}
-          selected
-          disabled
-        />
+      <div
+        ref={flowRef}
+        className="tripFlow__canvas"
+        style={{ minWidth: `${minWidth}px`, minHeight: showBranches ? 300 : 200 }}
+      >
+        <TreeConnectorLines containerRef={flowRef} edges={edges} />
 
-        <GrowConnector visible={showBranches} variant="down" delayMs={120} />
+        {layout.dest ? (
+          <FlowNodeSlot position={layout.dest}>
+            <StepCard
+              nodeId="dest"
+              variant="flow"
+              title={destination.title}
+              subtitle="Выбрано направление"
+              visible={hasDestination}
+              selected
+              disabled
+              favoriteActive={isFavorite('city', destination.id)}
+              onFavoriteToggle={() =>
+                onToggleFavorite('city', destination.id, {
+                  title: destination.title,
+                  country: destination.country,
+                })
+              }
+            />
+          </FlowNodeSlot>
+        ) : null}
 
-        {showBranches ? (
-          <div className="tripFlow__split">
-            <GrowConnector visible={showBranches} variant="branchLeft" delayMs={200} />
-            <GrowConnector visible={showBranches} variant="branchRight" delayMs={200} />
+        {layout.hotels ? (
+          <FlowNodeSlot position={layout.hotels}>
+            <StepCard
+              nodeId="hotels"
+              variant="flow"
+              title={selectedHotel ? selectedHotel.title : 'Отели'}
+              subtitle={hotelsSubtitle}
+              visible={showBranches}
+              delayMs={120}
+              selected={Boolean(selectedHotelId)}
+              onClick={() => setPanel('hotels')}
+              disabled={loading}
+              imageUrl={selectedHotel?.image_url}
+              favoriteActive={selectedHotel ? isFavorite('hotel', selectedHotel.id) : false}
+              onFavoriteToggle={
+                selectedHotel
+                  ? () =>
+                      onToggleFavorite('hotel', selectedHotel.id, {
+                        title: selectedHotel.title,
+                        subtitle: `${selectedHotel.stars}★ · $${selectedHotel.price}`,
+                        country: destination.country,
+                      })
+                  : undefined
+              }
+            />
+          </FlowNodeSlot>
+        ) : null}
 
-            <div className="tripFlow__branches">
-              <div className="tripFlow__branch">
-                <StepCard
-                  title={selectedHotel ? 'Отель' : 'Отели'}
-                  subtitle={hotelsSubtitle}
-                  visible={showBranches}
-                  delayMs={280}
-                  selected={Boolean(selectedHotelId)}
-                  onClick={() => setPanel('hotels')}
-                  disabled={loading}
-                  imageUrl={selectedHotel?.image_url}
-                />
+        {layout.rooms && showRoomsBranch ? (
+          <FlowNodeSlot position={layout.rooms}>
+            <StepCard
+              nodeId="rooms"
+              variant="flow"
+              title="Номера"
+              subtitle={roomsSubtitle}
+              visible={showRoomsBranch}
+              delayMs={200}
+              selected={Boolean(selectedRoomId)}
+              onClick={() => selectedHotelId && setPanel('rooms')}
+              disabled={loading || !selectedHotelId}
+            />
+          </FlowNodeSlot>
+        ) : null}
 
-                <GrowConnector visible={showRoomsBranch} variant="down" delayMs={400} />
+        {layout.flights ? (
+          <FlowNodeSlot position={layout.flights}>
+            <StepCard
+              nodeId="flights"
+              variant="flow"
+              title={selectedFlight ? 'Рейс' : 'Рейсы'}
+              subtitle={flightsSubtitle}
+              visible={showBranches}
+              delayMs={160}
+              selected={Boolean(selectedTransportId)}
+              onClick={() => setPanel('flights')}
+              disabled={loading}
+            />
+          </FlowNodeSlot>
+        ) : null}
 
-                {showRoomsBranch ? (
-                  <StepCard
-                    title="Номера"
-                    subtitle={roomsSubtitle}
-                    visible={showRoomsBranch}
-                    delayMs={480}
-                    selected={Boolean(selectedRoomId)}
-                    onClick={() => selectedHotelId && setPanel('rooms')}
-                    disabled={loading || !selectedHotelId}
-                  />
-                ) : null}
-              </div>
+        {layout.baggage && showFlightExtras ? (
+          <FlowNodeSlot position={layout.baggage}>
+            <StepCard
+              nodeId="baggage"
+              variant="flow"
+              title="Багаж"
+              subtitle={baggageSubtitle}
+              visible={showFlightExtras}
+              delayMs={280}
+              selected={Boolean(selectedTransportExtraIds.baggage)}
+              onClick={() => setPanel('baggage')}
+              disabled={loading}
+            />
+          </FlowNodeSlot>
+        ) : null}
 
-              <div className="tripFlow__branch">
-                <StepCard
-                  title={selectedFlight ? 'Рейс' : 'Рейсы'}
-                  subtitle={flightsSubtitle}
-                  visible={showBranches}
-                  delayMs={320}
-                  selected={Boolean(selectedTransportId)}
-                  onClick={() => setPanel('flights')}
-                  disabled={loading}
-                />
-
-                <GrowConnector visible={showFlightExtras} variant="down" delayMs={520} />
-
-                {showFlightExtras ? (
-                  <>
-                    <StepCard
-                      title="Багаж"
-                      subtitle={baggageSubtitle}
-                      visible={showFlightExtras}
-                      delayMs={600}
-                      selected={Boolean(selectedTransportExtraIds.baggage)}
-                      onClick={() => setPanel('baggage')}
-                      disabled={loading}
-                    />
-                    <GrowConnector visible={showFlightExtras} variant="down" delayMs={680} />
-                    <StepCard
-                      title="Условия возврата"
-                      subtitle={refundSubtitle}
-                      visible={showFlightExtras}
-                      delayMs={760}
-                      selected={Boolean(selectedTransportExtraIds.refund_policy)}
-                      onClick={() => setPanel('refund')}
-                      disabled={loading}
-                    />
-                  </>
-                ) : null}
-              </div>
-            </div>
-          </div>
+        {layout.refund && showFlightExtras ? (
+          <FlowNodeSlot position={layout.refund}>
+            <StepCard
+              nodeId="refund"
+              variant="flow"
+              title="Условия возврата"
+              subtitle={refundSubtitle}
+              visible={showFlightExtras}
+              delayMs={360}
+              selected={Boolean(selectedTransportExtraIds.refund_policy)}
+              onClick={() => setPanel('refund')}
+              disabled={loading}
+            />
+          </FlowNodeSlot>
         ) : null}
       </div>
 
@@ -223,6 +313,14 @@ export function TripFlowTree({
         onSearch={onSearchHotels}
         onSelect={(id) => void handlePickHotel(id)}
         loading={loading}
+        isFavorite={(id) => isFavorite('hotel', id)}
+        onToggleFavorite={(hotel) =>
+          onToggleFavorite('hotel', hotel.id, {
+            title: hotel.title,
+            subtitle: `${hotel.stars}★ · $${hotel.price}`,
+            country: destination.country,
+          })
+        }
       />
 
       <RoomPickerPanel

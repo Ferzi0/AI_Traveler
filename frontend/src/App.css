@@ -2,7 +2,6 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-bottom: 100px;
 }
 
 .topBar {
@@ -40,10 +39,16 @@
 
 .main {
   flex: 1;
-  max-width: 960px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 1.25rem;
   width: 100%;
+}
+
+.main:has(.tripFlow) {
+  max-width: none;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
 }
 
 .paramsBar {
@@ -617,13 +622,40 @@
   padding: 2rem 1rem;
 }
 
-.summaryDock {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+.appSummaryBar {
+  flex-shrink: 0;
   z-index: 40;
-  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  padding: 0.75rem 1rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(180deg, transparent, var(--bg) 24%);
+}
+
+.saveTripMessage {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2d6a3e;
+  text-align: center;
+}
+
+.saveTripBtn {
+  width: 100%;
+  max-width: 960px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+}
+
+.saveTripBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.summaryDock {
+  width: 100%;
+  max-width: 960px;
   display: flex;
   justify-content: center;
   pointer-events: none;
@@ -989,24 +1021,75 @@
 }
 
 .historyCard {
-  display: block;
   width: 100%;
-  border: none;
   border-radius: 14px;
   background: linear-gradient(to right, #d4846a, #6b2a1a);
-  padding: 0;
-  cursor: pointer;
-  text-align: left;
-  transition: transform 0.15s, box-shadow 0.15s;
   overflow: hidden;
+  transition: box-shadow 0.25s ease;
 }
 
-.historyCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(107, 42, 26, 0.25);
+.historyCard--expanded {
+  box-shadow: 0 12px 32px rgba(107, 42, 26, 0.28);
+}
+
+.historyCard__head {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  color: inherit;
+}
+
+.historyCard__head:hover {
+  filter: brightness(1.05);
+}
+
+.historyCard__chevron {
+  padding: 0 1.25rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+}
+
+.historyCard__body {
+  background: #fff;
+  color: var(--text);
+  padding: 1rem 1.25rem 1.25rem;
+  animation: cardExpand 0.35s ease;
+}
+
+.historyDetailList {
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.historyDetailList > div {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+}
+
+.historyDetailList dt {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.historyDetailList dd {
+  margin: 0;
+}
+
+.historyDetailList__breakdown ul {
+  margin: 0;
+  padding-left: 1.1rem;
 }
 
 .historyCardContent {
+  flex: 1;
   padding: 28px 24px 20px;
   display: flex;
   flex-direction: column;
@@ -1038,21 +1121,90 @@
   }
 }
 
+@keyframes cardExpand {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .favoriteCard {
   position: relative;
   border-radius: 14px;
   background: linear-gradient(135deg, #d4846a 0%, #6b2a1a 100%);
-  aspect-ratio: 1;
   overflow: hidden;
+  grid-column: span 1;
+  transition: grid-column 0.35s ease, box-shadow 0.25s ease;
+}
+
+.favoriteCard--expanded {
+  grid-column: 1 / -1;
+  box-shadow: 0 12px 36px rgba(107, 42, 26, 0.22);
+}
+
+.favoriteCard__head {
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  min-height: 140px;
+}
+
+.favoriteCard__thumb {
+  width: 100px;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.15);
+  background-size: cover;
+  background-position: center;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.favoriteCard__chevron {
+  align-self: center;
+  padding: 0 0.75rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.favoriteCard__body {
+  background: #fff;
+  color: var(--text);
+  padding: 0 0 1rem;
+  animation: cardExpand 0.35s ease;
+}
+
+.favoriteCard__description {
+  margin: 0;
+  padding: 0 1rem 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.favoriteCard__meta {
+  margin: 0;
+  padding: 0 1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 .favoriteCardContent {
+  flex: 1;
   padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  justify-content: flex-end;
 }
 
 .favoriteCardTitle {
@@ -1087,6 +1239,78 @@
 
 .favoriteRemoveBtn:hover {
   background: rgba(0, 0, 0, 0.55);
+}
+
+.photoSlider {
+  position: relative;
+  margin-bottom: 0.75rem;
+}
+
+.photoSlider__viewport {
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.photoSlider__track {
+  display: flex;
+  transition: transform 0.65s ease-in-out;
+}
+
+.photoSlider__slide {
+  min-width: 100%;
+  height: 220px;
+  background: linear-gradient(135deg, #eee6df, #e0d0c4);
+  background-size: cover;
+  background-position: center;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.photoSlider__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+  z-index: 2;
+}
+
+.photoSlider__arrow--prev {
+  left: 0.5rem;
+}
+
+.photoSlider__arrow--next {
+  right: 0.5rem;
+}
+
+.photoSlider__dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem;
+}
+
+.photoSlider__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: none;
+  background: var(--border);
+  cursor: pointer;
+  padding: 0;
+}
+
+.photoSlider__dot--active {
+  background: var(--accent);
 }
 
 /* ─── ПРОФИЛЬ ──────────────────────────────────────────── */
@@ -1300,37 +1524,39 @@
 /* ——— Дерево поездки (Layla-style) ——— */
 
 .tripFlow {
-  position: relative;
-  min-height: 420px;
+  width: 100%;
+  overflow-x: auto;
   padding: 0.5rem 0 2rem;
+  -webkit-overflow-scrolling: touch;
 }
 
-.tripFlow__column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-}
-
-.tripFlow__split {
+.tripFlow__canvas {
   position: relative;
-  width: 100%;
-  max-width: 720px;
+  margin: 0 auto;
+  isolation: isolate;
 }
 
-.tripFlow__branches {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
-  width: 100%;
-  margin-top: 1.5rem;
+.flowNodeSlot {
+  position: absolute;
+  transform: translate(-50%, 0);
+  z-index: 2;
 }
 
-.tripFlow__branch {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
+.treeConnectorLines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+
+.treeConnectorLines__path {
+  fill: none;
+  stroke: #1a1a1a;
+  stroke-width: 2px;
+  stroke-linejoin: round;
+  stroke-linecap: square;
+  transition: d 0.3s ease;
 }
 
 .growConnector {
@@ -1352,46 +1578,19 @@
   display: none;
 }
 
-.tripFlow__split::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 2px;
-  height: 0;
-  background: var(--accent);
-  transform: translateX(-50%);
-  transition: height 0.5s ease 0.15s;
-}
-
-.tripFlow__split:has(.growConnector--visible)::before {
-  height: 28px;
-}
-
-.tripFlow__split::after {
-  content: '';
-  position: absolute;
-  top: 28px;
-  left: 25%;
-  right: 25%;
-  height: 2px;
-  background: var(--accent);
-  opacity: 0;
-  transition: opacity 0.4s ease 0.35s;
-}
-
-.tripFlow__split:has(.stepCardWrap--visible)::after {
-  opacity: 1;
-}
-
 .stepCardWrap {
+  position: relative;
   opacity: 0;
-  transform: translateY(12px) scale(0.96);
+  transform: translateY(10px) scale(0.97);
   transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .stepCardWrap--visible {
   opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.stepCardWrap--flow.stepCardWrap--visible {
   transform: translateY(0) scale(1);
 }
 
@@ -1425,6 +1624,71 @@
   outline-offset: 2px;
 }
 
+.stepCard--flow {
+  width: min(220px, 28vw);
+  min-width: 168px;
+  background: linear-gradient(90deg, var(--node-from) 0%, var(--node-leaf-from) 42%, var(--node-to) 100%);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  position: relative;
+}
+
+.stepCard--flow .stepCard__body {
+  padding: 1rem 1.1rem 1.05rem;
+}
+
+.stepCard--flow .stepCard__title {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.stepCard--flow .stepCard__subtitle {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.78rem;
+}
+
+.stepCard--flow .favoriteBtn {
+  top: 0.35rem;
+  right: 0.35rem;
+}
+
+.stepCard--flow.stepCard--selected {
+  outline-color: #fff;
+  outline-offset: 3px;
+}
+
+.stepCard__anchor {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.stepCard__anchor[data-tree-anchor='top'] {
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.stepCard__anchor[data-tree-anchor='bottom'] {
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 50%);
+}
+
+.stepCard__anchor[data-tree-anchor='left'] {
+  left: 0;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.stepCard__anchor[data-tree-anchor='right'] {
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+}
+
 .stepCard__media {
   height: 100px;
   background: linear-gradient(135deg, #f0e6dc, #e8d4c8);
@@ -1432,6 +1696,38 @@
   background-position: center;
   display: grid;
   place-items: center;
+  position: relative;
+}
+
+.favoriteBtn {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  color: #c0603a;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  z-index: 2;
+}
+
+.favoriteBtn--sm {
+  width: 28px;
+  height: 28px;
+  font-size: 0.9rem;
+}
+
+.favoriteBtn--active {
+  color: #e03030;
+}
+
+.favoriteBtn:hover:not(:disabled) {
+  transform: scale(1.06);
 }
 
 .stepCard__mediaPlaceholder {
@@ -1641,6 +1937,7 @@
   color: var(--text-muted);
   font-size: 0.8rem;
   flex-shrink: 0;
+  position: relative;
 }
 
 .catalogCard__media--small {
@@ -1687,11 +1984,6 @@
 }
 
 @media (max-width: 768px) {
-  .tripFlow__branches {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
   .hotelExplorer {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 240px;

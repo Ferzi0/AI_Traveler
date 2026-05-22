@@ -1,27 +1,18 @@
+import { useState } from 'react'
 import { AppFooter } from './AppFooter'
-
-type FavoriteItem = {
-  id: number
-  title: string
-  savedAt: string
-}
-
-// Заглушка — потом заменишь на реальный запрос GET /favorites
-const MOCK_FAVORITES: FavoriteItem[] = [
-  { id: 1, title: 'Laguna Phuket', savedAt: 'Сохранено в избранном' },
-  { id: 2, title: 'Andaman Grill', savedAt: 'Сохранено в избранном' },
-  { id: 3, title: 'Big Buddha', savedAt: 'Сохранено в избранном' },
-  { id: 4, title: 'Bosphorus Cruise', savedAt: 'Сохранено в избранном' },
-  { id: 5, title: 'Tower of London', savedAt: 'Сохранено в избранном' },
-  { id: 6, title: 'West End Show', savedAt: 'Сохранено в избранном' },
-]
+import { PhotoSlider } from './PhotoSlider'
+import type { FavoriteItem } from '../types/favorites'
 
 type Props = {
+  items: FavoriteItem[]
+  loading: boolean
   onClose: () => void
   onRemove: (id: number) => void
 }
 
-export function FavoritesPage({ onClose, onRemove }: Props) {
+export function FavoritesPage({ items, loading, onClose, onRemove }: Props) {
+  const [expandedId, setExpandedId] = useState<number | null>(null)
+
   return (
     <div className="pagePanelOverlay">
       <div className="pagePanel">
@@ -37,16 +28,47 @@ export function FavoritesPage({ onClose, onRemove }: Props) {
         <div className="pagePanelBody">
           <h1 className="pageTitle">Избранное</h1>
 
-          {MOCK_FAVORITES.length === 0 ? (
+          {loading ? <p className="emptyTree">Загрузка…</p> : null}
+
+          {!loading && items.length === 0 ? (
             <p className="emptyTree">Нет сохранённых мест</p>
-          ) : (
-            <div className="favoritesGrid">
-              {MOCK_FAVORITES.map((item) => (
-                <div key={item.id} className="favoriteCard">
-                  <div className="favoriteCardContent">
-                    <span className="favoriteCardTitle">{item.title}</span>
-                    <span className="favoriteCardSub">{item.savedAt}</span>
-                  </div>
+          ) : null}
+
+          <div className="favoritesGrid">
+            {items.map((item) => {
+              const expanded = expandedId === item.id
+              return (
+                <article
+                  key={item.id}
+                  className={`favoriteCard${expanded ? ' favoriteCard--expanded' : ''}`}
+                >
+                  <button
+                    type="button"
+                    className="favoriteCard__head"
+                    onClick={() => setExpandedId(expanded ? null : item.id)}
+                  >
+                    <div
+                      className="favoriteCard__thumb"
+                      style={
+                        item.image_urls[0]
+                          ? { backgroundImage: `url(${item.image_urls[0]})` }
+                          : undefined
+                      }
+                    >
+                      {!item.image_urls[0] ? <span>Фото</span> : null}
+                    </div>
+                    <div className="favoriteCardContent">
+                      <span className="favoriteCardTitle">{item.title}</span>
+                      <span className="favoriteCardSub">
+                        {item.item_type === 'city' ? 'Город' : 'Отель'}
+                        {item.country ? ` · ${item.country}` : ''}
+                      </span>
+                    </div>
+                    <span className="favoriteCard__chevron" aria-hidden>
+                      {expanded ? '▲' : '▼'}
+                    </span>
+                  </button>
+
                   <button
                     type="button"
                     className="favoriteRemoveBtn"
@@ -55,10 +77,20 @@ export function FavoritesPage({ onClose, onRemove }: Props) {
                   >
                     ✕
                   </button>
-                </div>
-              ))}
-            </div>
-          )}
+
+                  {expanded ? (
+                    <div className="favoriteCard__body">
+                      <PhotoSlider images={item.image_urls} />
+                      <p className="favoriteCard__description">{item.description}</p>
+                      {item.subtitle ? (
+                        <p className="favoriteCard__meta">{item.subtitle}</p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </article>
+              )
+            })}
+          </div>
         </div>
 
         <AppFooter />

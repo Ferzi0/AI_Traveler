@@ -26,6 +26,8 @@ import { DestinationSearch } from './components/DestinationSearch'
 import type { TouristDestination } from './data/touristDestinations'
 import { RUSSIAN_CITIES } from './data/russianCities'
 import type { UserProfile } from './types/user'
+import type { FavoriteCreatePayload, FavoriteItem } from './types/favorites'
+import { favoriteKey } from './types/favorites'
 import './App.css'
 
 function App() {
@@ -61,8 +63,21 @@ function App() {
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [saveMessage, setSaveMessage] = useState('')
+
+  const [favorites, setFavorites] = useState<FavoriteItem[]>([])
+  const [favoriteKeys, setFavoriteKeys] = useState<Set<string>>(new Set())
 
   const total = useMemo(() => summary?.total_estimated_cost ?? 0, [summary])
+
+  const canSaveTrip = Boolean(
+    selectedDestination &&
+      selectedHotelId &&
+      selectedRoomId &&
+      selectedTransportId &&
+      selectedTransportExtraIds.baggage &&
+      selectedTransportExtraIds.refund_policy
+  )
 
   useEffect(() => {
     if (!token) {
@@ -80,6 +95,99 @@ function App() {
       setOrigin(currentUser.default_origin)
     }
   }, [currentUser?.default_origin])
+
+  useEffect(() => {
+    if (!token) {
+      setFavorites([])
+      setFavoriteKeys(new Set())
+      return
+    }
+    void loadFavorites()
+  }, [token])
+
+  async function loadFavorites() {
+    try {
+      const res = await api<{ items: FavoriteItem[] }>('/favorites')
+      setFavorites(res.items)
+      setFavoriteKeys(new Set(res.items.map((f) => favoriteKey(f.item_type, f.item_key))))
+    } catch {
+      setFavorites([])
+      setFavoriteKeys(new Set())
+    }
+  }
+
+  function isFavorite(itemType: 'city' | 'hotel', itemKey: string) {
+    return favoriteKeys.has(favoriteKey(itemType, itemKey))
+  }
+
+  async function toggleFavorite(
+    itemType: 'city' | 'hotel',
+    itemKey: string,
+    meta: { title: string; subtitle?: string; country?: string }
+  ) {
+    const key = favoriteKey(itemType, itemKey)
+    const existing = favorites.find((f) => favoriteKey(f.item_type, f.item_key) === key)
+    setError('')
+    try {
+      if (existing) {
+        await api(`/favorites/${existing.id}`, 'DELETE')
+        setFavorites((prev) => prev.filter((f) => f.id !== existing.id))
+        setFavoriteKeys((prev) => {
+          const next = new Set(prev)
+          next.delete(key)
+          return next
+        })
+      } else {
+        const payload: FavoriteCreatePayload = {
+          item_type: itemType,
+          item_key: itemKey,
+          title: meta.title,
+          subtitle: meta.subtitle ?? null,
+          country: meta.country ?? null,
+        }
+        const created = await api<FavoriteItem>('/favorites', 'POST', payload)
+        setFavorites((prev) => [created, ...prev])
+        setFavoriteKeys((prev) => new Set(prev).add(key))
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка избранного')
+    }
+  }
+
+  async function removeFavorite(id: number) {
+    setError('')
+    try {
+      await api(`/favorites/${id}`, 'DELETE')
+      setFavorites((prev) => {
+        const removed = prev.find((f) => f.id === id)
+        if (removed) {
+          setFavoriteKeys((keys) => {
+            const next = new Set(keys)
+            next.delete(favoriteKey(removed.item_type, removed.item_key))
+            return next
+          })
+        }
+        return prev.filter((f) => f.id !== id)
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось удалить')
+    }
+  }
+
+  async function saveTrip() {
+    if (!tripId || !canSaveTrip) return
+    setLoading(true)
+    setSaveMessage('')
+    setError('')
+    try {
+      await api('/history', 'POST', { trip_id: tripId })
+      setSaveMessage('Поездка сохранена в истории')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось сохранить поездку')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!tripId || !selectedDestination) return
@@ -340,11 +448,14 @@ function App() {
   }
   return (
     <>
-      {activePage === 'history' && (
-        <HistoryPage onClose={() => setActivePage(null)} onOpen={(id) => console.log(id)} />
-      )}
+      {activePage === 'history' && <HistoryPage onClose={() => setActivePage(null)} />}
       {activePage === 'favorites' && (
-        <FavoritesPage onClose={() => setActivePage(null)} onRemove={(id) => console.log(id)} />
+        <FavoritesPage
+          items={favorites}
+          loading={false}
+          onClose={() => setActivePage(null)}
+          onRemove={(id) => void removeFavorite(id)}
+        />
       )}
       {activePage === 'profile' && (
         <ProfilePage
@@ -462,42 +573,55 @@ function App() {
               onPickRoom={pickRoom}
               onSearchFlights={searchFlights}
               onPickFlight={pickTransport}
+              isFavorite={isFavorite}
+              onToggleFavorite={toggleFavorite}
               onPickTransportExtra={pickTransportExtra}
               onShowFlightDetails={setDetailsItinerary}
             />
           ) : null}
         </main>
 
-        <AppFooter />
-
         {selectedDestination ? (
-          <div className="summaryDock">
-            <div className="summaryInner">
-              <button type="button" className="summaryPill" onClick={() => setShowBreakdown((v) => !v)}>
-                <span>
-                  Приблизительная сумма: ${total}
-                  {passengers > 1 ? ` · ${passengers} пасс.` : ''}
-                </span>
-                <span aria-hidden>{showBreakdown ? '▲' : '▼'}</span>
-              </button>
-              {showBreakdown && summary ? (
-                <div className="breakdown">
-                  {summary.calculation.items.length === 0 ? (
-                    <p className="breakdownItem">Выберите номер и рейс в дереве</p>
-                  ) : (
-                    summary.calculation.items.map((item) => (
-                      <div key={`${item.node_type}-${item.title}`} className="breakdownItem">
-                        <strong>{item.title}</strong>
-                        <span className="meta">{formatCalculationMeta(item)}</span>
-                        <span className="price">${item.result}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              ) : null}
+          <div className="appSummaryBar">
+            {saveMessage ? <p className="saveTripMessage">{saveMessage}</p> : null}
+            <div className="summaryDock">
+              <div className="summaryInner">
+                <button type="button" className="summaryPill" onClick={() => setShowBreakdown((v) => !v)}>
+                  <span>
+                    Приблизительная сумма: ${total}
+                    {passengers > 1 ? ` · ${passengers} пасс.` : ''}
+                  </span>
+                  <span aria-hidden>{showBreakdown ? '▲' : '▼'}</span>
+                </button>
+                {showBreakdown && summary ? (
+                  <div className="breakdown">
+                    {summary.calculation.items.length === 0 ? (
+                      <p className="breakdownItem">Выберите номер и рейс в дереве</p>
+                    ) : (
+                      summary.calculation.items.map((item) => (
+                        <div key={`${item.node_type}-${item.title}`} className="breakdownItem">
+                          <strong>{item.title}</strong>
+                          <span className="meta">{formatCalculationMeta(item)}</span>
+                          <span className="price">${item.result}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                ) : null}
+              </div>
             </div>
+            <button
+              type="button"
+              className="btn saveTripBtn"
+              disabled={loading || !canSaveTrip}
+              onClick={() => void saveTrip()}
+            >
+              Сохранить поездку
+            </button>
           </div>
         ) : null}
+
+        <AppFooter />
 
         {detailsItinerary ? (
           <TransportDetailsPanel

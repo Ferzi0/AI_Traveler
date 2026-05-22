@@ -21,10 +21,13 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - ../backend/app:/app/app
+      - ../backend/alembic:/app/alembic
 
   db:
     image: postgres:16
@@ -37,6 +40,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ai_traveler"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7

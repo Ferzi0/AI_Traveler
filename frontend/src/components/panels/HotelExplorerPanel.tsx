@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { FavoriteButton } from '../FavoriteButton'
 import type { AccommodationItem, AccommodationSearchResponse } from '../../types/trip'
 import { FilterToolbar } from './FilterToolbar'
 import { FullscreenPanel } from './FullscreenPanel'
@@ -26,9 +27,19 @@ type Props = {
   onSearch: (filters: HotelSearchFilters) => Promise<AccommodationSearchResponse>
   onSelect: (hotelId: string) => void
   loading?: boolean
+  isFavorite: (hotelId: string) => boolean
+  onToggleFavorite: (hotel: AccommodationItem) => void
 }
 
-export function HotelExplorerPanel({ open, onClose, onSearch, onSelect, loading }: Props) {
+export function HotelExplorerPanel({
+  open,
+  onClose,
+  onSearch,
+  onSelect,
+  loading,
+  isFavorite,
+  onToggleFavorite,
+}: Props) {
   const [filters, setFilters] = useState<HotelSearchFilters>(DEFAULT_FILTERS)
   const [items, setItems] = useState<AccommodationItem[]>([])
   const [mapCenter, setMapCenter] = useState({ latitude: 0, longitude: 0 })
@@ -133,6 +144,11 @@ export function HotelExplorerPanel({ open, onClose, onSearch, onSelect, loading 
                 style={hotel.image_url ? { backgroundImage: `url(${hotel.image_url})` } : undefined}
               >
                 {!hotel.image_url ? <span>Фото</span> : null}
+                <FavoriteButton
+                  active={isFavorite(hotel.id)}
+                  onClick={() => onToggleFavorite(hotel)}
+                  size="sm"
+                />
               </div>
               <div className="catalogCard__body">
                 <strong>{hotel.title}</strong>
