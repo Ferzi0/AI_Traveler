@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { formatPhone } from '../utils/phone'
+import { AppFooter } from './AppFooter'
 import '../App.css'
 
 type Props = {
@@ -7,18 +9,6 @@ type Props = {
 }
 
 const API_BASE = 'http://localhost:8000/api/v1'
-
-function formatPhone(raw: string): string {
-  const digits = raw.replace(/\D/g, '').slice(0, 11)
-  if (digits.length === 0) return ''
-  let result = '+7'
-  if (digits.length > 1) result += `(${digits.slice(1, 4)}`
-  if (digits.length >= 4) result += `)`
-  if (digits.length > 4) result += digits.slice(4, 7)
-  if (digits.length > 7) result += `-${digits.slice(7, 9)}`
-  if (digits.length > 9) result += `-${digits.slice(9, 11)}`
-  return result
-}
 
 export function RegisterPage({ onSuccess, onGoLogin }: Props) {
   const [form, setForm] = useState({
@@ -147,10 +137,7 @@ export function RegisterPage({ onSuccess, onGoLogin }: Props) {
         </div>
       </div>
 
-      <footer className="footer">
-        <span>AI TRAVELER</span>
-        <span>Users 4.2k &nbsp; Trips 730 &nbsp; Avg $1280</span>
-      </footer>
+      <AppFooter />
     </div>
   )
 }

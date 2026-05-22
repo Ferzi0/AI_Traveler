@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AppFooter } from './AppFooter'
 import '../App.css'
 
 type Props = {
@@ -104,10 +105,7 @@ export function LoginPage({ onSuccess, onGoRegister }: Props) {
         </div>
       </div>
 
-      <footer className="footer">
-        <span>AI TRAVELER</span>
-        <span>Users 4.2k &nbsp; Trips 730 &nbsp; Avg $1280</span>
-      </footer>
+      <AppFooter />
     </div>
   )
 }

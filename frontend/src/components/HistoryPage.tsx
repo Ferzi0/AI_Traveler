@@ -1,3 +1,5 @@
+import { AppFooter } from './AppFooter'
+
 type TripCard = {
   id: number
   destination: string
@@ -53,10 +55,7 @@ export function HistoryPage({ onClose, onOpen }: Props) {
           </div>
         </div>
 
-        <footer className="footer">
-          <span>AI TRAVELER</span>
-          <span>Users 4.2k &nbsp; Trips 730 &nbsp; Avg $1280</span>
-        </footer>
+        <AppFooter />
       </div>
     </div>
   )

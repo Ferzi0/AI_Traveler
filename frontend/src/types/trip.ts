@@ -136,7 +136,13 @@ export type TripSummary = {
       formula: string
       values: Record<string, number>
       result: number
+      is_per_person?: boolean
+      per_person?: number | null
+      passengers?: number | null
     }>
     total_formula: string
+  }
+  params?: {
+    passengers: number
   }
 }

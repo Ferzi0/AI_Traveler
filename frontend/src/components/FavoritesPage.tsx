@@ -1,3 +1,5 @@
+import { AppFooter } from './AppFooter'
+
 type FavoriteItem = {
   id: number
   title: string
@@ -59,10 +61,7 @@ export function FavoritesPage({ onClose, onRemove }: Props) {
           )}
         </div>
 
-        <footer className="footer">
-          <span>AI TRAVELER</span>
-          <span>Users 4.2k &nbsp; Trips 730 &nbsp; Avg $1280</span>
-        </footer>
+        <AppFooter />
       </div>
     </div>
   )

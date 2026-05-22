@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { TransportDetailsPanel } from './components/TransportDetailsPanel'
 import { TreeBranch, TreeConnector, TreeLevel, TreeNode, TripTree } from './components/TripTree'
+import { AppFooter } from './components/AppFooter'
 import { SideMenu } from './components/SideMenu'
 import { HistoryPage } from './components/HistoryPage'
 import { FavoritesPage } from './components/FavoritesPage'
@@ -19,34 +19,24 @@ import type {
   TransportItinerary,
   TripSummary,
 } from './types/trip'
+import { api } from './api'
+import {
+  appendCostToSubtitle,
+  formatCalculationMeta,
+  formatCatalogPerPersonCost,
+  roundMoney,
+} from './utils/cost'
+import { CityCombobox } from './components/CityCombobox'
+import { DestinationSearch } from './components/DestinationSearch'
+import type { TouristDestination } from './data/touristDestinations'
+import { RUSSIAN_CITIES } from './data/russianCities'
+import type { UserProfile } from './types/user'
 import './App.css'
-
-const API_BASE = 'http://localhost:8000/api/v1'
 
 type AccPhase = 'idle' | 'hotels' | 'rooms' | 'extras'
 type TransportPhase = 'idle' | 'flights' | 'extras'
 type CityTransportPhase = 'idle' | 'options'
 type DayPlanPhase = 'idle' | 'days' | 'slots'
-
-async function api<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
-  let response: Response
-  try {
-    response = await fetch(`${API_BASE}${path}`, {
-      method,
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
-    })
-  } catch {
-    throw new Error(
-      'Нет связи с API (http://localhost:8000). Запустите Docker: docker compose up -d'
-    )
-  }
-  if (!response.ok) {
-    const details = await response.text()
-    throw new Error(`${response.status}: ${details}`)
-  }
-  return response.json() as Promise<T>
-}
 
 function formatDuration(minutes: number): string {
   const h = Math.floor(minutes / 60)
@@ -57,7 +47,8 @@ function formatDuration(minutes: number): string {
 }
 
 function App() {
-  const [userId, setUserId] = useState(1)
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+  const [origin, setOrigin] = useState('Москва')
   const [tripId, setTripId] = useState<number | null>(null)
   const [startDate, setStartDate] = useState('2026-06-10')
   const [endDate, setEndDate] = useState('2026-06-17')
@@ -107,6 +98,41 @@ function App() {
 
   const total = useMemo(() => summary?.total_estimated_cost ?? 0, [summary])
 
+  useEffect(() => {
+    if (!token) {
+      setCurrentUser(null)
+      return
+    }
+    void api<UserProfile>('/auth/me')
+      .then(setCurrentUser)
+      .catch(() => setCurrentUser(null))
+  }, [token])
+
+  useEffect(() => {
+    if (!currentUser?.default_origin) return
+    if (RUSSIAN_CITIES.includes(currentUser.default_origin)) {
+      setOrigin(currentUser.default_origin)
+    }
+  }, [currentUser?.default_origin])
+
+  useEffect(() => {
+    if (!tripId || !selectedDestination) return
+    void (async () => {
+      try {
+        await api(`/trips/${tripId}/params`, 'PATCH', {
+          origin,
+          start_date: startDate,
+          end_date: endDate,
+          passengers,
+          round_trip: true,
+        })
+        await refreshSummary()
+      } catch {
+        /* summary обновится при следующем выборе в дереве */
+      }
+    })()
+  }, [passengers])
+
   const selectedHotel = accommodations.find((h) => h.id === selectedHotelId)
   const selectedTransport = transport.find((t) => t.itinerary_id === selectedTransportId)
 
@@ -121,24 +147,31 @@ function App() {
     setActivePage(null)
   }
 
-  async function ensureTrip(event?: FormEvent) {
-    event?.preventDefault()
-    if (tripId) return tripId
+  async function ensureTrip() {
+    const params = {
+      origin,
+      start_date: startDate,
+      end_date: endDate,
+      passengers,
+      round_trip: true,
+    }
+    if (tripId) {
+      try {
+        await api(`/trips/${tripId}/params`, 'PATCH', params)
+        return tripId
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Ошибка обновления параметров')
+        return null
+      }
+    }
     setLoading(true)
     setError('')
     try {
       const created = await api<{ id: number }>('/trips', 'POST', {
-        user_id: userId,
         title: 'Новая поездка',
         destination: '',
       })
-      await api(`/trips/${created.id}/params`, 'PATCH', {
-        origin: 'Москва',
-        start_date: startDate,
-        end_date: endDate,
-        passengers,
-        round_trip: true,
-      })
+      await api(`/trips/${created.id}/params`, 'PATCH', params)
       setTripId(created.id)
       return created.id
     } catch (err) {
@@ -149,20 +182,37 @@ function App() {
     }
   }
 
-  async function searchDestinations() {
+  async function searchDestinations(query = destinationQuery) {
     const id = tripId ?? (await ensureTrip())
     if (!id) return
     setLoading(true)
     setError('')
     try {
       const found = await api<{ items: DestinationItem[] }>(
-        `/trips/destination/search?query=${encodeURIComponent(destinationQuery)}`
+        `/trips/destination/search?query=${encodeURIComponent(query)}`
       )
       setDestinations(found.items)
+      return found.items
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка поиска')
+      return []
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleDestinationSuggest(dest: TouristDestination) {
+    setDestinationQuery(dest.title)
+    if (!dest.inCatalog) {
+      setDestinations([])
+      setError('Маршрут для этого города скоро появится. Сейчас доступны: Пхукет, Лондон, Стамбул.')
+      return
+    }
+    setError('')
+    const items = await searchDestinations(dest.title)
+    const match = items?.find((item) => item.title === dest.title)
+    if (match) {
+      await pickDestination(match)
     }
   }
 
@@ -455,7 +505,10 @@ function App() {
       : 'Рейсы'
 
   const transportNodeSubtitle = selectedTransport
-    ? `${formatDuration(selectedTransport.total_duration_min)} · $${selectedTransport.total_price}`
+    ? `${formatCatalogPerPersonCost(
+        roundMoney(selectedTransport.total_price / Math.max(1, passengers)),
+        passengers
+      )} · ${formatDuration(selectedTransport.total_duration_min)}`
     : transportPhase === 'flights'
       ? 'Авиабилеты'
       : 'Авиабилеты'
@@ -488,7 +541,11 @@ function App() {
         <FavoritesPage onClose={() => setActivePage(null)} onRemove={(id) => console.log(id)} />
       )}
       {activePage === 'profile' && (
-        <ProfilePage userId={userId} onClose={() => setActivePage(null)} onLogout={handleLogout} />
+        <ProfilePage
+          onClose={() => setActivePage(null)}
+          onLogout={handleLogout}
+          onUpdated={setCurrentUser}
+        />
       )}
 
       <div className="app">
@@ -508,7 +565,11 @@ function App() {
         <main className="main">
           {error ? <div className="errorBanner">{error}</div> : null}
 
-          <form className="paramsBar" onSubmit={ensureTrip}>
+          <div className="paramsBar">
+            <div className="paramsCell paramsCell--origin">
+              <label htmlFor="origin">Откуда</label>
+              <CityCombobox id="origin" value={origin} onChange={setOrigin} />
+            </div>
             <div className="paramsCell">
               <label htmlFor="start">Когда</label>
               <input
@@ -533,33 +594,23 @@ function App() {
                 onChange={(e) => setPassengers(Number(e.target.value))}
               />
             </div>
-          </form>
-
-          <div className="paramsActions">
-            <span className="devHint">
-              user_id
-              <input
-                type="number"
-                min={1}
-                value={userId}
-                onChange={(e) => setUserId(Number(e.target.value))}
-              />
-            </span>
-            <button type="button" className="btn btnAccent" disabled={loading} onClick={() => void ensureTrip()}>
-              {tripId ? `Поездка #${tripId}` : 'Создать поездку'}
-            </button>
           </div>
 
           {!selectedDestination ? (
             <>
               <div className="searchRow">
-                <input
-                  type="text"
-                  placeholder="Куда летим? Пхукет, Лондон…"
+                <DestinationSearch
                   value={destinationQuery}
-                  onChange={(e) => setDestinationQuery(e.target.value)}
+                  onChange={setDestinationQuery}
+                  onSelect={(dest) => void handleDestinationSuggest(dest)}
+                  disabled={loading}
                 />
-                <button type="button" className="btn btnGhost" disabled={loading} onClick={() => void searchDestinations()}>
+                <button
+                  type="button"
+                  className="btn btnGhost"
+                  disabled={loading}
+                  onClick={() => void searchDestinations()}
+                >
                   Найти
                 </button>
               </div>
@@ -674,7 +725,11 @@ function App() {
                                 key={item.id}
                                 variant="leaf"
                                 title={item.title}
-                                subtitle={`${item.description} · $${item.estimated_cost}`}
+                                subtitle={appendCostToSubtitle(
+                                  item.description,
+                                  item.estimated_cost,
+                                  passengers
+                                )}
                                 selected={selectedExtraIds[activeExtraCategory] === item.id}
                                 onClick={() => void pickHotelExtra(activeExtraCategory, item.id)}
                                 disabled={loading}
@@ -732,7 +787,11 @@ function App() {
                                 key={item.id}
                                 variant="leaf"
                                 title={item.title}
-                                subtitle={`${item.description} · $${item.estimated_cost}`}
+                                subtitle={appendCostToSubtitle(
+                                  item.description,
+                                  item.estimated_cost,
+                                  passengers
+                                )}
                                 selected={selectedCityTransportIds[activeCityTransportCategory] === item.id}
                                 onClick={() =>
                                   void pickCityTransport(activeCityTransportCategory, item.id)
@@ -814,7 +873,11 @@ function App() {
                                 key={item.id}
                                 variant="leaf"
                                 title={item.title}
-                                subtitle={`${item.description} · $${item.estimated_cost}`}
+                                subtitle={appendCostToSubtitle(
+                                  item.description,
+                                  item.estimated_cost,
+                                  passengers
+                                )}
                                 selected={
                                   selectedDayPlanIds[`${activeDay.day_key}:${activeDaySlot}`] === item.id
                                 }
@@ -851,7 +914,10 @@ function App() {
                             key={item.itinerary_id}
                             variant="leaf"
                             title={item.outbound.title.replace('Авиаперелет ', '')}
-                            subtitle={`$${item.total_price} · ${formatDuration(item.total_duration_min)}`}
+                            subtitle={`${formatCatalogPerPersonCost(
+                              roundMoney(item.total_price / Math.max(1, passengers)),
+                              passengers
+                            )} · ${formatDuration(item.total_duration_min)}`}
                             selected={selectedTransportId === item.itinerary_id}
                             onClick={() => void pickTransport(item.itinerary_id)}
                             onDetailsClick={
@@ -896,7 +962,11 @@ function App() {
                                 key={item.id}
                                 variant="leaf"
                                 title={item.title}
-                                subtitle={`${item.description} · $${item.estimated_cost}`}
+                                subtitle={appendCostToSubtitle(
+                                  item.description,
+                                  item.estimated_cost,
+                                  passengers
+                                )}
                                 selected={
                                   selectedTransportExtraIds[activeTransportExtraCategory] === item.id
                                 }
@@ -917,16 +987,16 @@ function App() {
           )}
         </main>
 
-        <footer className="footer">
-          <span>AI TRAVELER</span>
-          <span>Конструктор поездки</span>
-        </footer>
+        <AppFooter />
 
         {selectedDestination ? (
           <div className="summaryDock">
             <div className="summaryInner">
               <button type="button" className="summaryPill" onClick={() => setShowBreakdown((v) => !v)}>
-                Приблизительная сумма: ${total}
+                <span>
+                  Приблизительная сумма: ${total}
+                  {passengers > 1 ? ` · ${passengers} пасс.` : ''}
+                </span>
                 <span aria-hidden>{showBreakdown ? '▲' : '▼'}</span>
               </button>
               {showBreakdown && summary ? (
@@ -937,7 +1007,7 @@ function App() {
                     summary.calculation.items.map((item) => (
                       <div key={`${item.node_type}-${item.title}`} className="breakdownItem">
                         <strong>{item.title}</strong>
-                        <span className="meta">{item.formula}</span>
+                        <span className="meta">{formatCalculationMeta(item)}</span>
                         <span className="price">${item.result}</span>
                       </div>
                     ))

@@ -2,13 +2,11 @@ import re
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
+from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.core.security import (
     create_access_token,
@@ -19,7 +17,6 @@ from app.core.security import (
 from app.models.user import User
 
 router = APIRouter()
-bearer_scheme = HTTPBearer()
 
 PHONE_RE = re.compile(r"^\+7\(\d{3}\)\d{3}-\d{2}-\d{2}$")
 
@@ -49,6 +46,36 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class UpdateProfileRequest(BaseModel):
+    email: EmailStr | None = None
+    phone: str | None = Field(default=None, min_length=16, max_length=16)
+    last_name: str | None = Field(default=None, min_length=1, max_length=100)
+    first_name: str | None = Field(default=None, min_length=1, max_length=100)
+    middle_name: str | None = Field(default=None, min_length=1, max_length=100)
+    default_origin: str | None = Field(default=None, min_length=1, max_length=255)
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, value: str | None) -> str | None:
+        if value is not None and not PHONE_RE.match(value):
+            raise ValueError("Phone must be in format +7(999)999-99-99")
+        return value
+
+
+def _serialize_user(user: User) -> dict:
+    return {
+        "id": user.id,
+        "email": user.email,
+        "phone": user.phone,
+        "last_name": user.last_name,
+        "first_name": user.first_name,
+        "middle_name": user.middle_name,
+        "login": user.login,
+        "full_name": user.full_name,
+        "default_origin": user.default_origin,
+    }
 
 
 def _unauthorized(message: str) -> HTTPException:
@@ -111,33 +138,43 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
 
 
 @router.get("/me")
-def me(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
+def me(user: Annotated[User, Depends(get_current_user)]) -> dict:
+    return _serialize_user(user)
+
+
+@router.patch("/me")
+def update_me(
+    payload: UpdateProfileRequest,
+    user: Annotated[User, Depends(get_current_user)],
     db: Session = Depends(get_db),
 ) -> dict:
-    try:
-        payload = jwt.decode(
-            credentials.credentials,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM],
-        )
-        user_id = payload.get("sub")
-        if not user_id:
-            raise _unauthorized("Invalid token payload")
-    except JWTError as exc:
-        raise _unauthorized("Invalid or expired token") from exc
+    updates = payload.model_dump(exclude_unset=True)
 
-    user = db.get(User, int(user_id))
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if "email" in updates:
+        normalized_email = updates["email"].lower()
+        conflict = db.execute(
+            select(User).where(User.email == normalized_email, User.id != user.id)
+        ).scalar_one_or_none()
+        if conflict:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Пользователь с таким email уже существует",
+            )
+        updates["email"] = normalized_email
 
-    return {
-        "id": user.id,
-        "email": user.email,
-        "phone": user.phone,
-        "last_name": user.last_name,
-        "first_name": user.first_name,
-        "middle_name": user.middle_name,
-        "login": user.login,
-        "full_name": user.full_name,
-    }
+    if "phone" in updates:
+        conflict = db.execute(
+            select(User).where(User.phone == updates["phone"], User.id != user.id)
+        ).scalar_one_or_none()
+        if conflict:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Пользователь с таким телефоном уже существует",
+            )
+
+    for field, value in updates.items():
+        setattr(user, field, value)
+
+    db.commit()
+    db.refresh(user)
+    return _serialize_user(user)

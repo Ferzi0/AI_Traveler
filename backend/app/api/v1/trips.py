@@ -1,11 +1,13 @@
 from datetime import date
 import json
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models.constructor_catalog import (
     ConstructorAccommodation,
@@ -21,7 +23,6 @@ router = APIRouter()
 
 
 class CreateTripRequest(BaseModel):
-    user_id: int
     title: str = Field(min_length=1, max_length=255)
     destination: str = ""
 
@@ -758,6 +759,23 @@ def _reset_day_plan_slot(db: Session, trip_id: int, day_key: str, slot: str) -> 
     _reset_choice_branch(db, trip_id, node_type)
 
 
+def _is_per_person_node_type(node_type: str) -> bool:
+    return node_type.startswith(
+        ("hotel_extra:", "transport_extra:", "city_transport:", "day_plan:")
+    )
+
+
+def _billing_for_node(
+    node: TripNode, passengers: int
+) -> tuple[float, float, bool]:
+    """unit_cost, line_total, is_per_person (catalog stores per-person for the last flag)."""
+    raw = round(node.estimated_cost or 0.0, 2)
+    if _is_per_person_node_type(node.node_type):
+        unit = raw
+        return unit, round(unit * passengers, 2), True
+    return raw, raw, False
+
+
 def _destination_by_title(db: Session, title: str) -> ConstructorDestination | None:
     normalized = title.strip()
     if not normalized:
@@ -962,13 +980,13 @@ def list_trips(db: Session = Depends(get_db)) -> dict[str, list[dict]]:
 
 
 @router.post("")
-def create_trip(payload: CreateTripRequest, db: Session = Depends(get_db)) -> dict[str, int]:
-    user = db.get(User, payload.user_id)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
+def create_trip(
+    payload: CreateTripRequest,
+    user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> dict[str, int]:
     trip = Trip(
-        user_id=payload.user_id,
+        user_id=user.id,
         title=payload.title,
         destination=payload.destination,
     )
@@ -1581,92 +1599,74 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)) -> dict:
         )
     ).scalars()
     items = list(selected_nodes)
-    total = round(sum(node.estimated_cost or 0.0 for node in items), 2)
     nights = _get_nights(trip)
     passengers = max(1, trip.passengers)
 
-    breakdown = [
-        {
-            "node_type": node.node_type,
-            "title": node.title,
-            "description": node.description,
-            "cost": node.estimated_cost or 0.0,
-        }
-        for node in items
-    ]
+    breakdown = []
+    line_totals: list[float] = []
+    for node in items:
+        unit_cost, line_total, is_per_person = _billing_for_node(node, passengers)
+        line_totals.append(line_total)
+        breakdown.append(
+            {
+                "node_type": node.node_type,
+                "title": node.title,
+                "description": node.description,
+                "cost": line_total,
+                "per_person": unit_cost if is_per_person else None,
+                "is_per_person": is_per_person,
+            }
+        )
+    total = round(sum(line_totals), 2)
 
     calculations: list[dict] = []
     for node in items:
-        cost = round(node.estimated_cost or 0.0, 2)
+        unit_cost, line_total, is_per_person = _billing_for_node(node, passengers)
+        base = {
+            "node_type": node.node_type,
+            "title": node.title,
+            "result": line_total,
+            "is_per_person": is_per_person,
+            "passengers": passengers if is_per_person else None,
+            "per_person": unit_cost if is_per_person else None,
+        }
         if node.node_type == "accommodation":
-            nightly_price = round(cost / nights, 2)
+            nightly_price = round(line_total / nights, 2)
             calculations.append(
                 {
-                    "node_type": "accommodation",
-                    "title": node.title,
+                    **base,
                     "formula": "price_per_night * nights",
                     "values": {
                         "price_per_night": nightly_price,
                         "nights": nights,
                     },
-                    "result": cost,
                 }
             )
         elif node.node_type == "transport":
             legs = 2 if trip.round_trip else 1
-            price_per_person_total = round(cost / passengers, 2)
+            price_per_person_total = round(line_total / passengers, 2)
             price_per_leg_per_person = round(price_per_person_total / legs, 2)
             calculations.append(
                 {
-                    "node_type": "transport",
-                    "title": node.title,
+                    **base,
                     "formula": "price_per_leg_per_person * legs * passengers",
                     "values": {
                         "price_per_leg_per_person": price_per_leg_per_person,
                         "legs": legs,
                         "passengers": passengers,
                     },
-                    "result": cost,
+                    "per_person": price_per_person_total,
                 }
             )
-        elif node.node_type.startswith("hotel_extra:"):
+        elif is_per_person:
             calculations.append(
                 {
-                    "node_type": node.node_type,
-                    "title": node.title,
-                    "formula": "fixed_cost",
-                    "values": {"fixed_cost": cost},
-                    "result": cost,
-                }
-            )
-        elif node.node_type.startswith("transport_extra:"):
-            calculations.append(
-                {
-                    "node_type": node.node_type,
-                    "title": node.title,
-                    "formula": "fixed_cost",
-                    "values": {"fixed_cost": cost},
-                    "result": cost,
-                }
-            )
-        elif node.node_type.startswith("city_transport:"):
-            calculations.append(
-                {
-                    "node_type": node.node_type,
-                    "title": node.title,
-                    "formula": "fixed_cost",
-                    "values": {"fixed_cost": cost},
-                    "result": cost,
-                }
-            )
-        elif node.node_type.startswith("day_plan:"):
-            calculations.append(
-                {
-                    "node_type": node.node_type,
-                    "title": node.title,
-                    "formula": "fixed_cost",
-                    "values": {"fixed_cost": cost},
-                    "result": cost,
+                    **base,
+                    "formula": "per_person * passengers",
+                    "values": {
+                        "per_person": unit_cost,
+                        "passengers": passengers,
+                    },
                 }
             )
 

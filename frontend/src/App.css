@@ -48,14 +48,16 @@
 
 .paramsBar {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0;
-  background: #8CB345;
+  background: #fff;
   border: 2px solid var(--accent);
   border-radius: var(--radius-md);
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 1.5rem;
   box-shadow: 0 0 0 3px var(--accent-ring);
+  position: relative;
+  z-index: 10;
 }
 
 .paramsCell {
@@ -91,28 +93,139 @@
   outline: none;
 }
 
-.paramsActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  align-items: center;
+.paramsCell--origin {
+  overflow: visible;
 }
 
-.devHint {
-  font-size: 0.75rem;
+.cityCombobox {
+  position: relative;
+  width: 100%;
+}
+
+.cityCombobox__input {
+  border: none;
+  background: transparent;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0 1.35rem 0 0;
+  width: 100%;
+  color: inherit;
+}
+
+.cityCombobox__input::placeholder {
+  color: #aaa;
+  font-weight: 500;
+}
+
+.cityCombobox__input:focus {
+  outline: none;
+}
+
+.cityCombobox__chevron {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.3rem;
+  line-height: 1;
   color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+  pointer-events: none;
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
-.devHint input {
-  width: 3rem;
-  padding: 0.25rem 0.35rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 0.8rem;
+.cityCombobox--open .cityCombobox__chevron {
+  transform: translateY(-50%) rotate(180deg);
+  color: var(--accent);
+}
+
+.cityCombobox__dropdown {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  left: -0.85rem;
+  right: -0.85rem;
+  z-index: 100;
+  background: #fff;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 0 0 3px var(--accent-ring);
+  overflow: hidden;
+  animation: cityDropdownIn 0.16s ease;
+}
+
+@keyframes cityDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cityCombobox__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem 0;
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.cityCombobox__list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cityCombobox__list::-webkit-scrollbar-thumb {
+  background: rgba(232, 93, 42, 0.35);
+  border-radius: 999px;
+}
+
+.cityCombobox__option {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.cityCombobox__option:hover,
+.cityCombobox__option--active {
+  background: rgba(232, 93, 42, 0.1);
+  color: var(--accent);
+}
+
+.cityCombobox__mark {
+  background: rgba(232, 93, 42, 0.2);
+  color: inherit;
+  font-weight: 700;
+  padding: 0 1px;
+  border-radius: 2px;
+}
+
+.cityCombobox__empty,
+.cityCombobox__hint {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.cityCombobox__hint {
+  border-top: 1px solid var(--border);
+  background: #faf9f7;
+}
+
+@media (max-width: 720px) {
+  .paramsBar {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .btn {
@@ -149,6 +262,8 @@
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 15;
 }
 
 .searchRow input {
@@ -162,6 +277,69 @@
 .searchRow input:focus {
   outline: 2px solid var(--accent-ring);
   border-color: var(--accent);
+}
+
+.destinationSearch {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.destinationSearch__input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.85rem;
+  background: var(--surface);
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.destinationSearch__input:focus {
+  outline: 2px solid var(--accent-ring);
+  border-color: var(--accent);
+}
+
+.destinationSearch__input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.destinationSearch__dropdown {
+  left: 0;
+  right: 0;
+}
+
+.destinationSearch__option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+
+.destinationSearch__country {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.destinationSearch__badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: rgba(232, 93, 42, 0.12);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.destinationSearch--open .destinationSearch__input {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
 }
 
 .destPicker {
@@ -455,11 +633,15 @@
 }
 
 .footer {
+  width: 100%;
   max-width: 960px;
   margin: 0 auto;
   padding: 1rem 1.25rem 2rem;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
   font-size: 0.75rem;
   color: var(--text-muted);
 }
@@ -909,6 +1091,12 @@
 
 .profileField input:focus {
   border-color: #d4846a;
+}
+
+.profileField input:read-only {
+  background: #f5f5f5;
+  color: #666;
+  cursor: default;
 }
 
 .profileActions {

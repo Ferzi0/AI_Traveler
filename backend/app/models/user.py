@@ -26,6 +26,9 @@ class User(Base):
     login: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255))
 
+    # Настройки поездок
+    default_origin: Mapped[str] = mapped_column(String(255), default="Москва")
+
     @validates("phone")
     def validate_phone(self, key: str, value: str) -> str:
         if not PHONE_RE.match(value):
