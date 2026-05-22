@@ -66,14 +66,25 @@ export function RegisterPage({ onSuccess, onGoLogin }: Props) {
           password,
         }),
       })
-      const data = await res.json()
+      const text = await res.text()
+      let data: { detail?: string | { msg: string }[] } = {}
+      if (text) {
+        try {
+          data = JSON.parse(text) as typeof data
+        } catch {
+          setError(res.ok ? 'Неверный ответ сервера' : `Ошибка сервера (${res.status})`)
+          return
+        }
+      }
       if (!res.ok) {
         setError(
           typeof data.detail === 'string'
             ? data.detail
             : Array.isArray(data.detail)
               ? data.detail.map((e: { msg: string }) => e.msg).join(', ')
-              : 'Ошибка регистрации'
+              : res.status >= 500
+                ? 'Ошибка сервера, попробуйте позже'
+                : 'Ошибка регистрации'
         )
         return
       }

@@ -24,14 +24,25 @@ export function LoginPage({ onSuccess, onGoRegister }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ login, password }),
       })
-      const data = await res.json()
+      const text = await res.text()
+      let data: { detail?: string | { msg: string }[] } = {}
+      if (text) {
+        try {
+          data = JSON.parse(text) as typeof data
+        } catch {
+          setError(res.ok ? 'Неверный ответ сервера' : `Ошибка сервера (${res.status})`)
+          return
+        }
+      }
       if (!res.ok) {
         setError(
           typeof data.detail === 'string'
             ? data.detail
             : Array.isArray(data.detail)
               ? data.detail.map((e: { msg: string }) => e.msg).join(', ')
-              : 'Неверный логин или пароль'
+              : res.status >= 500
+                ? 'Ошибка сервера, попробуйте позже'
+                : 'Неверный логин или пароль'
         )
         return
       }
