@@ -1,3 +1,0 @@
-Set-Location "d:\et45s\Дипломная работа\1 тест диплом ферзь\infra"
-docker compose up -d db
-docker compose run --rm api alembic upgrade head

@@ -258,6 +258,78 @@
   color: var(--text);
 }
 
+.destinationHero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: min(56vh, 520px);
+  padding: 2rem 0.5rem 3rem;
+  text-align: center;
+}
+
+.destinationHero__title {
+  margin: 0 0 1.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 6vw, 3rem);
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 50, 'WONK' 0;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.destinationHero__card {
+  width: 100%;
+  max-width: 540px;
+  padding: 0.65rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shadow),
+    0 16px 48px rgba(26, 26, 26, 0.07);
+}
+
+.destinationHero__search {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+  position: relative;
+  z-index: 15;
+}
+
+.destinationHero__search .destinationSearch {
+  flex: 1;
+}
+
+.destinationHero__search .destinationSearch__input {
+  padding: 0.85rem 1rem;
+  font-size: 1.05rem;
+  border-radius: var(--radius-md);
+  border-color: transparent;
+  background: #f8f6f3;
+}
+
+.destinationHero__search .destinationSearch__input:focus {
+  background: var(--surface);
+}
+
+.destinationHero__btn {
+  flex-shrink: 0;
+  align-self: stretch;
+  padding-left: 1.35rem;
+  padding-right: 1.35rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+}
+
+.destinationHero__results {
+  margin-top: 1.25rem;
+  justify-content: center;
+  max-width: 540px;
+}
+
 .searchRow {
   display: flex;
   gap: 0.5rem;
@@ -1223,4 +1295,411 @@
   padding: 10px 14px;
   font-size: 13px;
   text-align: center;
+}
+
+/* ——— Дерево поездки (Layla-style) ——— */
+
+.tripFlow {
+  position: relative;
+  min-height: 420px;
+  padding: 0.5rem 0 2rem;
+}
+
+.tripFlow__column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.tripFlow__split {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+}
+
+.tripFlow__branches {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.tripFlow__branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.growConnector {
+  width: 2px;
+  height: 0;
+  background: linear-gradient(180deg, var(--accent), #e8c4b8);
+  opacity: 0;
+  transition: height 0.45s ease, opacity 0.35s ease;
+  flex-shrink: 0;
+}
+
+.growConnector--visible.growConnector--down {
+  height: 36px;
+  opacity: 1;
+}
+
+.growConnector--visible.growConnector--branchLeft,
+.growConnector--visible.growConnector--branchRight {
+  display: none;
+}
+
+.tripFlow__split::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 0;
+  background: var(--accent);
+  transform: translateX(-50%);
+  transition: height 0.5s ease 0.15s;
+}
+
+.tripFlow__split:has(.growConnector--visible)::before {
+  height: 28px;
+}
+
+.tripFlow__split::after {
+  content: '';
+  position: absolute;
+  top: 28px;
+  left: 25%;
+  right: 25%;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.4s ease 0.35s;
+}
+
+.tripFlow__split:has(.stepCardWrap--visible)::after {
+  opacity: 1;
+}
+
+.stepCardWrap {
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+  transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.stepCardWrap--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.stepCard {
+  display: flex;
+  flex-direction: column;
+  width: 168px;
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stepCard:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+}
+
+.stepCard:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.stepCard--selected {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.stepCard__media {
+  height: 100px;
+  background: linear-gradient(135deg, #f0e6dc, #e8d4c8);
+  background-size: cover;
+  background-position: center;
+  display: grid;
+  place-items: center;
+}
+
+.stepCard__mediaPlaceholder {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.stepCard__body {
+  padding: 0.65rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.stepCard__title {
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.stepCard__subtitle {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.fullscreenPanel {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #faf8f6;
+  display: flex;
+  flex-direction: column;
+  animation: panelIn 0.35s ease;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fullscreenPanel__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+}
+
+.fullscreenPanel__back {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.fullscreenPanel__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.fullscreenPanel__body {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.filterToolbar {
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+}
+
+.filterToolbar__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.filterToolbar__label select {
+  margin-left: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.filterToolbar__reset {
+  margin-left: auto;
+}
+
+.filterToolbar__extra {
+  margin-top: 0.65rem;
+}
+
+.filterToolbar__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.filterToolbar__filters--inline label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+  gap: 0.2rem;
+}
+
+.filterRange {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  min-width: 200px;
+}
+
+.filterCheck {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.hotelExplorer {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) 1fr;
+  min-height: 0;
+}
+
+.hotelExplorer__list {
+  overflow-y: auto;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  border-right: 1px solid var(--border);
+  background: #fff;
+}
+
+.hotelExplorer__map {
+  min-height: 320px;
+  position: relative;
+}
+
+.hotelMap {
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+}
+
+.catalogList {
+  padding: 0.75rem 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.catalogCard {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.catalogCard--row {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.catalogCard--flight {
+  align-items: center;
+}
+
+.catalogCard:hover,
+.catalogCard--active {
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(192, 96, 58, 0.12);
+}
+
+.catalogCard__media {
+  height: 120px;
+  background: linear-gradient(135deg, #eee6df, #e0d0c4);
+  background-size: cover;
+  background-position: center;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.catalogCard__media--small {
+  width: 88px;
+  height: auto;
+  min-height: 88px;
+}
+
+.catalogCard__body {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.catalogCard__meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.catalogCard__tags {
+  font-size: 0.75rem;
+  color: #5a8a5a;
+}
+
+.catalogCard__price {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.catalogCard__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  justify-content: center;
+}
+
+.panelHint {
+  padding: 1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .tripFlow__branches {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .hotelExplorer {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 240px;
+  }
+
+  .hotelExplorer__list {
+    max-height: 45vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
 }

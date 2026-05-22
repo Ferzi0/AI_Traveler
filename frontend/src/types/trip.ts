@@ -40,6 +40,21 @@ export type AccommodationItem = {
   kind: string
   rating: number
   price: number
+  distance_km?: number
+  stars: number
+  breakfast_included: boolean
+  has_pool: boolean
+  latitude: number
+  longitude: number
+  image_url: string | null
+  destination?: string
+}
+
+export type AccommodationSearchResponse = {
+  items: AccommodationItem[]
+  nights: number
+  passengers: number
+  map_center: { latitude: number; longitude: number }
 }
 
 export type RoomItem = {

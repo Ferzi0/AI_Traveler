@@ -1,5 +1,7 @@
 from datetime import date
+import hashlib
 import json
+import math
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -58,6 +60,10 @@ class AccommodationSearchRequest(BaseModel):
     price_to: float | None = None
     kinds: list[str] = Field(default_factory=list)
     sort_by: str = "rating"
+    stars_min: int | None = Field(default=None, ge=1, le=5)
+    stars_max: int | None = Field(default=None, ge=1, le=5)
+    breakfast_included: bool | None = None
+    has_pool: bool | None = None
 
 
 class TransportSearchRequest(BaseModel):
@@ -492,9 +498,39 @@ def _serialize_destination(row: ConstructorDestination) -> dict[str, str]:
     return {"id": row.slug, "title": row.title, "country": row.country}
 
 
+DESTINATION_COORDS: dict[str, tuple[float, float]] = {
+    "Пхукет": (7.8804, 98.3923),
+    "Лондон": (51.5074, -0.1278),
+    "Стамбул": (41.0082, 28.9784),
+}
+
+
+def _accommodation_meta(acc: ConstructorAccommodation) -> dict[str, float | int | bool]:
+    digest = int(hashlib.md5(acc.public_id.encode(), usedforsecurity=False).hexdigest()[:8], 16)
+    stars = min(5, max(1, round(acc.rating / 2)))
+    return {
+        "stars": stars,
+        "breakfast_included": digest % 3 != 0,
+        "has_pool": acc.kind == "hotel" and digest % 5 != 0,
+    }
+
+
+def _accommodation_coords(acc: ConstructorAccommodation, destination_title: str) -> tuple[float, float]:
+    base_lat, base_lng = DESTINATION_COORDS.get(destination_title, (0.0, 0.0))
+    digest = int(hashlib.md5(acc.public_id.encode(), usedforsecurity=False).hexdigest()[:8], 16)
+    angle = (digest % 360) * (math.pi / 180)
+    offset = acc.distance_km * 0.008
+    return (
+        round(base_lat + offset * math.cos(angle), 5),
+        round(base_lng + offset * math.sin(angle), 5),
+    )
+
+
 def _serialize_accommodation(
     acc: ConstructorAccommodation, destination_title: str
 ) -> dict:
+    meta = _accommodation_meta(acc)
+    lat, lng = _accommodation_coords(acc, destination_title)
     return {
         "id": acc.public_id,
         "destination": destination_title,
@@ -503,6 +539,12 @@ def _serialize_accommodation(
         "rating": acc.rating,
         "price": acc.base_price_per_night,
         "distance_km": acc.distance_km,
+        "stars": meta["stars"],
+        "breakfast_included": meta["breakfast_included"],
+        "has_pool": meta["has_pool"],
+        "latitude": lat,
+        "longitude": lng,
+        "image_url": None,
     }
 
 
@@ -1166,12 +1208,31 @@ def search_accommodations(
         allowed = {kind.lower() for kind in payload.kinds}
         items = [item for item in items if item["kind"].lower() in allowed]
 
-    if payload.sort_by == "price":
+    if payload.stars_min is not None:
+        items = [item for item in items if item["stars"] >= payload.stars_min]
+    if payload.stars_max is not None:
+        items = [item for item in items if item["stars"] <= payload.stars_max]
+    if payload.breakfast_included is True:
+        items = [item for item in items if item["breakfast_included"]]
+    if payload.has_pool is True:
+        items = [item for item in items if item["has_pool"]]
+
+    if payload.sort_by in ("-price", "price_desc"):
+        items.sort(key=lambda item: item["price"], reverse=True)
+    elif payload.sort_by == "price":
         items.sort(key=lambda item: item["price"])
     else:
         items.sort(key=lambda item: item["rating"], reverse=True)
 
-    return {"items": items, "nights": _get_nights(trip), "passengers": trip.passengers}
+    return {
+        "items": items,
+        "nights": _get_nights(trip),
+        "passengers": trip.passengers,
+        "map_center": {
+            "latitude": DESTINATION_COORDS.get(trip.destination, (0.0, 0.0))[0],
+            "longitude": DESTINATION_COORDS.get(trip.destination, (0.0, 0.0))[1],
+        },
+    }
 
 
 @router.post("/{trip_id}/accommodations/rooms")
@@ -1191,12 +1252,12 @@ def get_accommodation_rooms(
     if payload.room_price_to is not None:
         rooms = [room for room in rooms if room["price_total"] <= payload.room_price_to]
 
-    if payload.sort_by == "-price":
+    if payload.sort_by in ("-price", "price_desc"):
         rooms.sort(key=lambda room: room["price_total"], reverse=True)
     else:
         rooms.sort(key=lambda room: room["price_total"])
 
-    return {"items": rooms}
+    return {"items": rooms, "nights": _get_nights(trip), "passengers": trip.passengers}
 
 
 @router.post("/{trip_id}/accommodations/select")
@@ -1368,10 +1429,12 @@ def search_transport(
         items.sort(key=lambda item: item["total_duration_min"])
     elif payload.sort_by == "-duration":
         items.sort(key=lambda item: item["total_duration_min"], reverse=True)
+    elif payload.sort_by in ("-price", "price_desc"):
+        items.sort(key=lambda item: item["total_price"], reverse=True)
     else:
         items.sort(key=lambda item: item["total_price"])
 
-    return {"items": items}
+    return {"items": items, "passengers": trip.passengers, "round_trip": trip.round_trip}
 
 
 @router.get("/{trip_id}/transport/itineraries/{itinerary_id}")
