@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AppFooter } from './AppFooter'
+import { BrandLogo } from './BrandLogo'
 import { PhotoSlider } from './PhotoSlider'
 import type { FavoriteItem } from '../types/favorites'
 
@@ -18,7 +19,9 @@ export function FavoritesPage({ items, loading, onClose, onRemove }: Props) {
       <div className="pagePanel">
         <header className="topBar">
           <div className="topBarInner">
-            <span className="logo">AI TRAVELER</span>
+            <button type="button" className="logo logoBtn" aria-label="На главную" onClick={onClose}>
+              <BrandLogo />
+            </button>
             <button type="button" className="menuBtn" aria-label="Закрыть" onClick={onClose}>
               ✕
             </button>

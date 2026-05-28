@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { AppFooter } from './AppFooter'
+import { BrandLogo } from './BrandLogo'
 import type { HistoryDetail, HistoryListItem } from '../types/history'
 
 type Props = {
@@ -57,7 +58,9 @@ export function HistoryPage({ onClose }: Props) {
       <div className="pagePanel">
         <header className="topBar">
           <div className="topBarInner">
-            <span className="logo">AI TRAVELER</span>
+            <button type="button" className="logo logoBtn" aria-label="На главную" onClick={onClose}>
+              <BrandLogo />
+            </button>
             <button type="button" className="menuBtn" aria-label="Закрыть" onClick={onClose}>
               ✕
             </button>

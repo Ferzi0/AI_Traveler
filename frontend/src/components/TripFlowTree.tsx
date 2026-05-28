@@ -203,13 +203,6 @@ export function TripFlowTree({
               visible={hasDestination}
               selected
               disabled
-              favoriteActive={isFavorite('city', destination.id)}
-              onFavoriteToggle={() =>
-                onToggleFavorite('city', destination.id, {
-                  title: destination.title,
-                  country: destination.country,
-                })
-              }
             />
           </FlowNodeSlot>
         ) : null}

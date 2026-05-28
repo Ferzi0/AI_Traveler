@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AppFooter } from './AppFooter'
+import { BrandLogo } from './BrandLogo'
 import '../App.css'
 
 type Props = {
@@ -60,7 +61,9 @@ export function LoginPage({ onSuccess, onGoRegister }: Props) {
     <div className="authPage">
       <header className="topBar">
         <div className="topBarInner">
-          <span className="logo">AI TRAVELER</span>
+          <span className="logo">
+            <BrandLogo />
+          </span>
         </div>
       </header>
 

@@ -10,6 +10,7 @@ import { FavoritesPage } from './components/FavoritesPage'
 import { ProfilePage } from './components/ProfilePage'
 import { LoginPage } from './components/LoginPage'
 import { RegisterPage } from './components/RegisterPage'
+import { BrandLogo } from './components/BrandLogo'
 import type {
   AccommodationItem,
   AccommodationSearchResponse,
@@ -468,14 +469,26 @@ function App() {
       <div className="app">
         <header className="topBar">
           <div className="topBarInner">
-            <span className="logo">AI TRAVELER</span>
-            <button type="button" className="menuBtn" onClick={() => setMenuOpen(v => !v)}>☰</button>
-            <SideMenu
-              open={menuOpen}
-              onNavigate={setActivePage}
-              onClose={() => setMenuOpen(false)}
-              onLogout={handleLogout}
-            />
+            <button
+              type="button"
+              className="logo logoBtn"
+              onClick={() => {
+                setActivePage(null)
+                setMenuOpen(false)
+              }}
+              aria-label="На главную"
+            >
+              <BrandLogo />
+            </button>
+            <div className="menuWrap">
+              <button type="button" className="menuBtn" onClick={() => setMenuOpen(v => !v)}>☰</button>
+              <SideMenu
+                open={menuOpen}
+                onNavigate={setActivePage}
+                onClose={() => setMenuOpen(false)}
+                onLogout={handleLogout}
+              />
+            </div>
           </div>
         </header>
 

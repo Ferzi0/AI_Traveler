@@ -8,12 +8,14 @@ type Props = {
 }
 
 export function SideMenu({ open, onNavigate, onClose, onLogout }: Props) {
-  if (!open) return null
-
   return (
     <>
-      <div className="menuOverlay" onClick={onClose} />
-      <nav className="sideMenu">
+      <div
+        className={`menuOverlay${open ? ' menuOverlay--open' : ''}`}
+        onClick={onClose}
+        aria-hidden={!open}
+      />
+      <nav className={`sideMenu${open ? ' sideMenu--open' : ''}`} aria-hidden={!open}>
         <button type="button" className="menuItem" onClick={() => { onNavigate('profile'); onClose() }}>
           Профиль
         </button>

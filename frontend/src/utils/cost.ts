@@ -18,17 +18,30 @@ export function formatCalculationMeta(item: {
   per_person?: number | null
   passengers?: number | null
   node_type: string
+  values?: Record<string, number>
 }): string {
-  if (item.is_per_person && item.per_person != null && item.passengers != null) {
-    return `$${item.per_person}/чел × ${item.passengers} чел. = $${item.result}`
+  const money = (value: number) => {
+    const rounded = roundMoney(value)
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/\.?0+$/, '')
   }
-  if (item.node_type === 'transport' && item.per_person != null && item.passengers != null) {
-    return `$${item.per_person}/чел × ${item.passengers} чел. = $${item.result}`
+
+  if (item.per_person != null && item.passengers != null) {
+    return `$${money(item.per_person)}/чел × ${item.passengers} чел.`
   }
-  if (item.node_type === 'accommodation') {
-    return `${item.formula} = $${item.result}`
+
+  if (
+    item.node_type === 'accommodation' &&
+    item.values?.price_per_night != null &&
+    item.values?.nights != null
+  ) {
+    return `$${money(item.values.price_per_night)}/ночь × ${item.values.nights} ноч.`
   }
-  return `${item.formula} = $${item.result}`
+
+  if (item.values?.per_person != null && item.values?.passengers != null) {
+    return `$${money(item.values.per_person)}/чел × ${item.values.passengers} чел.`
+  }
+
+  return 'Расчет по выбранной опции'
 }
 
 export function appendCostToSubtitle(description: string, unitCost: number, passengers: number): string {
