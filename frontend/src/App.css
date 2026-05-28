@@ -1145,6 +1145,16 @@
   padding-left: 1.1rem;
 }
 
+.historyActions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.historyPdfBtn {
+  min-width: 150px;
+}
+
 .historyCardContent {
   flex: 1;
   padding: 28px 24px 20px;

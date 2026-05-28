@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api } from '../api'
+import { api, apiDownload } from '../api'
 import { AppFooter } from './AppFooter'
 import { BrandLogo } from './BrandLogo'
 import type { HistoryDetail, HistoryListItem } from '../types/history'
@@ -21,6 +21,8 @@ export function HistoryPage({ onClose }: Props) {
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [detail, setDetail] = useState<HistoryDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [pdfLoadingId, setPdfLoadingId] = useState<number | null>(null)
+  const [pdfError, setPdfError] = useState('')
 
   useEffect(() => {
     void (async () => {
@@ -50,6 +52,28 @@ export function HistoryPage({ onClose }: Props) {
       setDetail(null)
     } finally {
       setDetailLoading(false)
+    }
+  }
+
+  async function downloadPdf(trip: HistoryListItem) {
+    setPdfLoadingId(trip.id)
+    setPdfError('')
+    try {
+      const blob = await apiDownload(`/history/${trip.id}/pdf`)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${(trip.destination ?? trip.trip_name ?? `trip-${trip.id}`)
+        .replace(/[^a-zA-Z0-9а-яА-ЯёЁ._-]+/g, '_')
+        .slice(0, 60)}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setPdfError(err instanceof Error ? err.message : 'Не удалось скачать PDF')
+    } finally {
+      setPdfLoadingId(null)
     }
   }
 
@@ -108,68 +132,81 @@ export function HistoryPage({ onClose }: Props) {
                       {detailLoading ? (
                         <p className="panelHint">Загрузка деталей…</p>
                       ) : snap ? (
-                        <dl className="historyDetailList">
-                          <div>
-                            <dt>Откуда</dt>
-                            <dd>{snap.origin ?? '—'}</dd>
-                          </div>
-                          <div>
-                            <dt>Куда</dt>
-                            <dd>{snap.destination ?? '—'}</dd>
-                          </div>
-                          <div>
-                            <dt>Даты</dt>
-                            <dd>{snap.date || '—'}</dd>
-                          </div>
-                          <div>
-                            <dt>Пассажиры</dt>
-                            <dd>{formatPassengers(snap.passengers)}</dd>
-                          </div>
-                          <div>
-                            <dt>Отель</dt>
-                            <dd>{snap.hotel ?? '—'}</dd>
-                          </div>
-                          <div>
-                            <dt>Номер</dt>
-                            <dd>{snap.room ?? '—'}</dd>
-                          </div>
-                          <div>
-                            <dt>Рейс</dt>
-                            <dd>{snap.flight ?? '—'}</dd>
-                          </div>
-                          <div>
-                            <dt>Багаж</dt>
-                            <dd>{snap.baggage ?? '—'}</dd>
-                          </div>
-                          <div>
-                            <dt>Возврат</dt>
-                            <dd>{snap.refund ?? '—'}</dd>
-                          </div>
-                          {snap.snapshot?.calculation &&
-                          typeof snap.snapshot.calculation === 'object' &&
-                          snap.snapshot.calculation !== null &&
-                          'items' in snap.snapshot.calculation &&
-                          Array.isArray(
-                            (snap.snapshot.calculation as { items: unknown[] }).items
-                          ) ? (
-                            <div className="historyDetailList__breakdown">
-                              <dt>Состав суммы</dt>
-                              <dd>
-                                <ul>
-                                  {(
-                                    snap.snapshot.calculation as {
-                                      items: Array<{ title: string; result: number }>
-                                    }
-                                  ).items.map((line) => (
-                                    <li key={line.title}>
-                                      {line.title}: ${line.result}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </dd>
+                        <>
+                          <dl className="historyDetailList">
+                            <div>
+                              <dt>Откуда</dt>
+                              <dd>{snap.origin ?? '—'}</dd>
                             </div>
-                          ) : null}
-                        </dl>
+                            <div>
+                              <dt>Куда</dt>
+                              <dd>{snap.destination ?? '—'}</dd>
+                            </div>
+                            <div>
+                              <dt>Даты</dt>
+                              <dd>{snap.date || '—'}</dd>
+                            </div>
+                            <div>
+                              <dt>Пассажиры</dt>
+                              <dd>{formatPassengers(snap.passengers)}</dd>
+                            </div>
+                            <div>
+                              <dt>Отель</dt>
+                              <dd>{snap.hotel ?? '—'}</dd>
+                            </div>
+                            <div>
+                              <dt>Номер</dt>
+                              <dd>{snap.room ?? '—'}</dd>
+                            </div>
+                            <div>
+                              <dt>Рейс</dt>
+                              <dd>{snap.flight ?? '—'}</dd>
+                            </div>
+                            <div>
+                              <dt>Багаж</dt>
+                              <dd>{snap.baggage ?? '—'}</dd>
+                            </div>
+                            <div>
+                              <dt>Возврат</dt>
+                              <dd>{snap.refund ?? '—'}</dd>
+                            </div>
+                            {snap.snapshot?.calculation &&
+                            typeof snap.snapshot.calculation === 'object' &&
+                            snap.snapshot.calculation !== null &&
+                            'items' in snap.snapshot.calculation &&
+                            Array.isArray(
+                              (snap.snapshot.calculation as { items: unknown[] }).items
+                            ) ? (
+                              <div className="historyDetailList__breakdown">
+                                <dt>Состав суммы</dt>
+                                <dd>
+                                  <ul>
+                                    {(
+                                      snap.snapshot.calculation as {
+                                        items: Array<{ title: string; result: number }>
+                                      }
+                                    ).items.map((line) => (
+                                      <li key={line.title}>
+                                        {line.title}: ${line.result}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </dd>
+                              </div>
+                            ) : null}
+                          </dl>
+                          <div className="historyActions">
+                            <button
+                              type="button"
+                              className="btn btnAccent historyPdfBtn"
+                              onClick={() => void downloadPdf(trip)}
+                              disabled={pdfLoadingId === trip.id}
+                            >
+                              {pdfLoadingId === trip.id ? 'Готовим PDF…' : 'Скачать в PDF'}
+                            </button>
+                          </div>
+                          {pdfError ? <p className="panelHint">{pdfError}</p> : null}
+                        </>
                       ) : (
                         <p className="panelHint">Не удалось загрузить детали</p>
                       )}

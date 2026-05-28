@@ -1,7 +1,9 @@
 import json
+import re
 from datetime import date
+from html import escape
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -74,6 +76,197 @@ def _serialize_history(row: TripHistory, include_snapshot: bool = False) -> dict
     }
 
 
+def _label_value(label: str, value: str | None) -> str:
+    return f"""
+      <div class="row">
+        <div class="label">{escape(label)}</div>
+        <div class="value">{escape(value) if value else "—"}</div>
+      </div>
+    """
+
+
+def _build_pdf_html(row: TripHistory) -> str:
+    snapshot: dict | None = None
+    if row.snapshot_json:
+        try:
+            snapshot = json.loads(row.snapshot_json)
+        except json.JSONDecodeError:
+            snapshot = None
+
+    calc_html = ""
+    calc_items = (
+        snapshot.get("calculation", {}).get("items", [])
+        if isinstance(snapshot, dict)
+        else []
+    )
+    if isinstance(calc_items, list) and calc_items:
+        lines: list[str] = []
+        for item in calc_items:
+            if not isinstance(item, dict):
+                continue
+            title = escape(str(item.get("title") or "Позиция"))
+            result = item.get("result")
+            result_text = f"${result}" if isinstance(result, (int, float)) else "—"
+            lines.append(
+                f'<li><span class="calc-title">{title}</span><span class="calc-price">{result_text}</span></li>'
+            )
+        if lines:
+            calc_html = f"""
+              <div class="section">
+                <h3>Состав стоимости</h3>
+                <ul class="calc-list">
+                  {"".join(lines)}
+                </ul>
+              </div>
+            """
+
+    total = f"${row.total_cost}" if row.total_cost is not None else row.total_cost_label or "—"
+    start_label = row.start_date.strftime("%d.%m.%Y") if row.start_date else "—"
+    end_label = row.end_date.strftime("%d.%m.%Y") if row.end_date else "—"
+    trip_dates = f"{start_label} – {end_label}"
+
+    return f"""
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    @page {{ size: A4; margin: 20mm 15mm; }}
+    body {{
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: #1d1d1d;
+      font-size: 12px;
+      line-height: 1.45;
+    }}
+    .header {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #e5dfd6;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }}
+    .brand {{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }}
+    .brand h1 {{
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+    }}
+    .brand p {{
+      margin: 1px 0 0;
+      color: #746a5f;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+    }}
+    .trip-title {{
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }}
+    .section {{
+      border: 1px solid #e6e1da;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-top: 10px;
+    }}
+    .section h3 {{
+      margin: 0 0 8px;
+      font-size: 13px;
+    }}
+    .row {{
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 8px;
+      padding: 4px 0;
+      border-bottom: 1px dashed #ece8e2;
+    }}
+    .row:last-child {{ border-bottom: none; }}
+    .label {{ color: #776d62; font-weight: 700; }}
+    .value {{ color: #1e1e1e; }}
+    .calc-list {{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+    }}
+    .calc-list li {{
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 4px 0;
+      border-bottom: 1px dashed #ece8e2;
+    }}
+    .calc-list li:last-child {{ border-bottom: none; }}
+    .calc-title {{ color: #383028; }}
+    .calc-price {{ font-weight: 700; color: #6b3f28; }}
+    .total {{
+      margin-top: 12px;
+      text-align: right;
+      font-size: 20px;
+      font-weight: 800;
+      color: #6b3f28;
+    }}
+    .muted {{
+      color: #7f7468;
+      font-size: 11px;
+      margin-top: 16px;
+      text-align: right;
+    }}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="favGradientPdf" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#D98A5F"/>
+            <stop offset="100%" stop-color="#B44A12"/>
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r="29" stroke="url(#favGradientPdf)" stroke-width="2.8" fill="none"/>
+        <path d="M20 10C13 18 11 29 13 41C15 50 20 56 23 59" stroke="#D27A4F" stroke-width="2" stroke-linecap="round"/>
+        <path d="M44 10C51 18 53 29 51 41C49 50 44 56 41 59" stroke="#D27A4F" stroke-width="2" stroke-linecap="round"/>
+        <path d="M10 24H54" stroke="#D27A4F" stroke-width="2" stroke-linecap="round"/>
+        <path d="M12 38H52" stroke="#D27A4F" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h1>AI Traveler</h1>
+        <p>SMART TRAVEL PLANNER</p>
+      </div>
+    </div>
+    <div>{escape(row.saved_at.strftime("%d.%m.%Y %H:%M")) if row.saved_at else ""}</div>
+  </div>
+
+  <p class="trip-title">{escape(row.destination or row.trip_name or "Поездка")}</p>
+
+  <div class="section">
+    {_label_value("Откуда", row.origin)}
+    {_label_value("Куда", row.destination)}
+    {_label_value("Даты", trip_dates)}
+    {_label_value("Пассажиры", str(row.passengers) if row.passengers else "—")}
+    {_label_value("Отель", row.hotel_title)}
+    {_label_value("Номер", row.room_title)}
+    {_label_value("Рейс", row.flight_title)}
+    {_label_value("Багаж", row.baggage_title)}
+    {_label_value("Возврат", row.refund_title)}
+  </div>
+
+  {calc_html}
+
+  <div class="total">Итого: {escape(total)}</div>
+  <div class="muted">Сформировано AI Traveler</div>
+</body>
+</html>
+    """
+
+
 @router.get("")
 def list_history(
     db: Session = Depends(get_db),
@@ -97,6 +290,35 @@ def get_history_item(
     if not row or row.user_id != user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History item not found")
     return _serialize_history(row, include_snapshot=True)
+
+
+@router.get("/{history_id}/pdf")
+def download_history_pdf(
+    history_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Response:
+    row = db.get(TripHistory, history_id)
+    if not row or row.user_id != user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History item not found")
+
+    try:
+        from weasyprint import HTML
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="PDF сервис временно недоступен на сервере",
+        ) from exc
+
+    pdf = HTML(string=_build_pdf_html(row)).write_pdf()
+    base_name = row.destination or row.trip_name or f"trip-{row.id}"
+    safe_name = re.sub(r"[^A-Za-z0-9._-]+", "_", base_name).strip("_") or f"trip-{row.id}"
+    filename = f"{safe_name}.pdf"
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.post("")
