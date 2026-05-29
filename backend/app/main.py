@@ -9,6 +9,7 @@ from app.core.database import Base, engine
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.PROJECT_VERSION,
+    redirect_slashes=False,
 )
 
 app.add_middleware(
