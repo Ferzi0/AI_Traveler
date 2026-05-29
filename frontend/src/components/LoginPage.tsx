@@ -8,7 +8,7 @@ type Props = {
   onGoRegister: () => void
 }
 
-const API_BASE = 'http://localhost:8000/api/v1'
+const API_BASE = 'https://onrender.com'
 
 export function LoginPage({ onSuccess, onGoRegister }: Props) {
   const [login, setLogin] = useState('')

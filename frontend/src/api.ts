@@ -1,4 +1,4 @@
-export const API_BASE = 'http://localhost:8000/api/v1'
+export const API_BASE = 'https://onrender.com'
 
 async function extractErrorMessage(response: Response): Promise<string> {
   const details = await response.text()
@@ -30,7 +30,7 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
     })
   } catch {
     throw new Error(
-      'Нет связи с API (http://localhost:8000). Запустите Docker: docker compose up -d'
+      'Нет связи с API (https://onrender.com). Запустите Docker: docker compose up -d'
     )
   }
   if (!response.ok) {
@@ -52,7 +52,7 @@ export async function apiDownload(path: string): Promise<Blob> {
     })
   } catch {
     throw new Error(
-      'Нет связи с API (http://localhost:8000). Запустите Docker: docker compose up -d'
+      'Нет связи с API (https://onrender.com). Запустите Docker: docker compose up -d'
     )
   }
 
