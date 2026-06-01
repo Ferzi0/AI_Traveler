@@ -34,7 +34,7 @@ class RegisterRequest(BaseModel):
     @classmethod
     def validate_phone(cls, value: str) -> str:
         if not PHONE_RE.match(value):
-            raise ValueError("Phone must be in format +7(999)999-99-99")
+            raise ValueError("Номер телефона должен быть в формате +7(999)999-99-99")
         return value
 
 
@@ -60,7 +60,7 @@ class UpdateProfileRequest(BaseModel):
     @classmethod
     def validate_phone(cls, value: str | None) -> str | None:
         if value is not None and not PHONE_RE.match(value):
-            raise ValueError("Phone must be in format +7(999)999-99-99")
+            raise ValueError("Номер телефона должен быть в формате +7(999)999-99-99")
         return value
 
 
@@ -114,7 +114,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> dict[st
     )
     db.add(user)
     db.commit()
-    return {"message": "User registered successfully"}
+    return {"message": "Успешная регистрация"}
 
 
 @router.post("/login", response_model=TokenResponse)

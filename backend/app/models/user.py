@@ -32,7 +32,7 @@ class User(Base):
     @validates("phone")
     def validate_phone(self, key: str, value: str) -> str:
         if not PHONE_RE.match(value):
-            raise ValueError("Phone must be in format +7(999)999-99-99")
+            raise ValueError("Номер телефона должен быть в формате +7(999)999-99-99")
         return value
 
     @property
