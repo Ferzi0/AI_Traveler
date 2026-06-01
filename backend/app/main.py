@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Request 
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.router import api_router
 from app.core.config import settings
@@ -12,11 +11,11 @@ app = FastAPI(
     version=settings.PROJECT_VERSION,
 )
 
-class ProxyHeadersMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        if request.headers.get("x-forwarded-proto") == "https":
-            request.scope["scheme"] = "https"
-        return await call_next(request)
+@app.middleware("http")
+async def proxy_headers_middleware(request, call_next):
+    if request.headers.get("x-forwarded-proto") == "https":
+        request.scope["scheme"] = "https"
+    return await call_next(request)
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,8 +26,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.add_middleware(ProxyHeadersMiddleware)
 
 @app.on_event("startup")
 def on_startup() -> None:
