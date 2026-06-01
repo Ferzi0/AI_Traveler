@@ -9,7 +9,7 @@ type Props = {
   onGoLogin: () => void
 }
 
-const API_BASE = 'https://onrender.com'
+const API_BASE = 'https://ai-traveler-1.onrender.com'
 
 export function RegisterPage({ onSuccess, onGoLogin }: Props) {
   const [form, setForm] = useState({
@@ -88,14 +88,14 @@ export function RegisterPage({ onSuccess, onGoLogin }: Props) {
   }
 
   const fields: { key: keyof typeof form; placeholder: string; type?: string }[] = [
-    { key: 'email',       placeholder: 'Почта',                            type: 'email'    },
-    { key: 'phone',       placeholder: 'Номер телефона +7(999)999-99-99'                    },
-    { key: 'last_name',   placeholder: 'Фамилия'                                            },
-    { key: 'first_name',  placeholder: 'Имя'                                                },
-    { key: 'middle_name', placeholder: 'Отчество'                                           },
-    { key: 'login',       placeholder: 'Логин'                                              },
-    { key: 'password',    placeholder: 'Пароль',                           type: 'password' },
-    { key: 'password2',   placeholder: 'Повторите пароль',                 type: 'password' },
+    { key: 'email', placeholder: 'Почта', type: 'email' },
+    { key: 'phone', placeholder: 'Номер телефона +7(999)999-99-99' },
+    { key: 'last_name', placeholder: 'Фамилия' },
+    { key: 'first_name', placeholder: 'Имя' },
+    { key: 'middle_name', placeholder: 'Отчество' },
+    { key: 'login', placeholder: 'Логин' },
+    { key: 'password', placeholder: 'Пароль', type: 'password' },
+    { key: 'password2', placeholder: 'Повторите пароль', type: 'password' },
   ]
 
   return (
