@@ -9,7 +9,7 @@ type Props = {
   onGoLogin: () => void
 }
 
-const API_BASE = 'https://ai-traveler-1.onrender.com'
+const API_BASE = 'https://ai-traveler-0jhd.onrender.com'
 
 export function RegisterPage({ onSuccess, onGoLogin }: Props) {
   const [form, setForm] = useState({
