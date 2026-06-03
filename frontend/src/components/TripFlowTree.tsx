@@ -42,7 +42,7 @@ export type TripFlowTreeProps = {
   onToggleFavorite: (
     itemType: 'city' | 'hotel',
     itemKey: string,
-    meta: { title: string; subtitle?: string; country?: string }
+    meta: { title: string; subtitle?: string; country?: string; imageUrls?: string[] }
   ) => void
   onSearchHotels: (filters: HotelSearchFilters) => Promise<AccommodationSearchResponse>
   onPickHotel: (hotelId: string) => Promise<void>
@@ -228,6 +228,7 @@ export function TripFlowTree({
                         title: selectedHotel.title,
                         subtitle: `${selectedHotel.stars}★ · $${selectedHotel.price}`,
                         country: destination.country,
+                        imageUrls: selectedHotel.image_url ? [selectedHotel.image_url] : [],
                       })
                   : undefined
               }
@@ -312,6 +313,7 @@ export function TripFlowTree({
             title: hotel.title,
             subtitle: `${hotel.stars}★ · $${hotel.price}`,
             country: destination.country,
+            imageUrls: hotel.image_url ? [hotel.image_url] : [],
           })
         }
       />

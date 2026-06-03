@@ -124,7 +124,7 @@ function App() {
   async function toggleFavorite(
     itemType: 'city' | 'hotel',
     itemKey: string,
-    meta: { title: string; subtitle?: string; country?: string }
+    meta: { title: string; subtitle?: string; country?: string; imageUrls?: string[] }
   ) {
     const key = favoriteKey(itemType, itemKey)
     const existing = favorites.find((f) => favoriteKey(f.item_type, f.item_key) === key)
@@ -145,6 +145,7 @@ function App() {
           title: meta.title,
           subtitle: meta.subtitle ?? null,
           country: meta.country ?? null,
+          image_urls: meta.imageUrls ?? [],
         }
         const created = await api<FavoriteItem>('/favorites', 'POST', payload)
         setFavorites((prev) => [created, ...prev])

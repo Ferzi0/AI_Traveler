@@ -504,6 +504,16 @@ DESTINATION_COORDS: dict[str, tuple[float, float]] = {
     "Стамбул": (41.0082, 28.9784),
 }
 
+# Внешние изображения для карточек отелей (Unsplash).
+# Можно свободно заменять на свои ссылки.
+ACCOMMODATION_IMAGE_URLS: dict[str, str] = {
+    # Phuket
+    "acc_phuket_laguna": "https://images.unsplash.com/photo-1759805583363-87fdee48b581?auto=format&fit=crop&w=1600&q=80&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "acc_phuket_hostel": "https://images.unsplash.com/photo-1709805619372-40de3f158e83?auto=format&fit=crop&w=1600&q=80&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    # London
+    "acc_london_hotel": "https://images.unsplash.com/photo-1772339164384-e4eba87f08c0?auto=format&fit=crop&w=1600&q=80&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+}
+
 
 def _accommodation_meta(acc: ConstructorAccommodation) -> dict[str, float | int | bool]:
     digest = int(hashlib.md5(acc.public_id.encode(), usedforsecurity=False).hexdigest()[:8], 16)
@@ -544,7 +554,7 @@ def _serialize_accommodation(
         "has_pool": meta["has_pool"],
         "latitude": lat,
         "longitude": lng,
-        "image_url": None,
+        "image_url": ACCOMMODATION_IMAGE_URLS.get(acc.public_id),
     }
 
 
