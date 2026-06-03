@@ -11,6 +11,7 @@ import { ProfilePage } from './components/ProfilePage'
 import { LoginPage } from './components/LoginPage'
 import { RegisterPage } from './components/RegisterPage'
 import { BrandLogo } from './components/BrandLogo'
+import { LandingPage } from './components/LandingPage'
 import type {
   AccommodationItem,
   AccommodationSearchResponse,
@@ -41,7 +42,7 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [activePage, setActivePage] = useState<'history' | 'favorites' | 'profile' | null>(null)
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
-  const [authScreen, setAuthScreen] = useState<'login' | 'register'>('login')
+  const [authScreen, setAuthScreen] = useState<'landing' | 'login' | 'register'>('landing')
 
   const [destinationQuery, setDestinationQuery] = useState('')
   const [destinations, setDestinations] = useState<DestinationItem[]>([])
@@ -204,7 +205,6 @@ function App() {
         })
         await refreshSummary()
       } catch {
-        /* summary обновится при следующем выборе в дереве */
       }
     })()
   }, [passengers])
@@ -444,9 +444,27 @@ function App() {
 
   if (!token) {
     if (authScreen === 'register') {
-      return <RegisterPage onSuccess={() => setAuthScreen('login')} onGoLogin={() => setAuthScreen('login')} />
+      return (
+        <RegisterPage
+          onSuccess={() => setAuthScreen('login')}
+          onGoLogin={() => setAuthScreen('login')}
+        />
+      )
     }
-    return <LoginPage onSuccess={(t) => setToken(t)} onGoRegister={() => setAuthScreen('register')} />
+    if (authScreen === 'login') {
+      return (
+        <LoginPage
+          onSuccess={(t) => { setToken(t); setAuthScreen('landing') }}
+          onGoRegister={() => setAuthScreen('register')}
+        />
+      )
+    }
+    return (
+      <LandingPage
+        onLogin={() => setAuthScreen('login')}
+        onRegister={() => setAuthScreen('register')}
+      />
+    )
   }
   return (
     <>

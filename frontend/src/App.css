@@ -2062,3 +2062,212 @@
     border-bottom: 1px solid var(--border);
   }
 }
+
+/* ─── LANDING PAGE ──────────────────────────────────────── */
+
+.landingPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.landingHeaderBtns {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.landingBtnGhost {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.landingBtnGhost:hover {
+  border-color: var(--accent);
+  background: rgba(232, 93, 42, 0.05);
+}
+
+.landingBtnAccent {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.12s;
+}
+
+.landingBtnAccent:hover {
+  filter: brightness(1.07);
+}
+
+.landingTags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+.landingTag {
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.landingTag:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.landingSectionLabel {
+  text-align: center;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.destCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.destCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.destCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.destCard__img {
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.destCard__emoji {
+  font-size: 2.5rem;
+}
+
+.destCard__badge {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.destCard__body {
+  padding: 0.85rem 1rem;
+}
+
+.destCard__city {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.destCard__country {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.55rem;
+}
+
+.destCard__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.destCard__from {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.destCard__val {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.destCard__flight {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.landingStats {
+  display: flex;
+  justify-content: center;
+  gap: 4rem;
+  padding: 2.5rem 1rem 1rem;
+}
+
+.landingStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.landingStat--divider {
+  border-left: 1px solid var(--border);
+  padding-left: 4rem;
+}
+
+.landingStat__num {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.landingStat__label {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+@media (max-width: 720px) {
+  .destCards { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .destCards { grid-template-columns: 1fr; }
+  .landingBtnGhost, .landingBtnAccent { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
+}
