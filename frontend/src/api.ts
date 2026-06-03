@@ -1,4 +1,4 @@
-export const API_BASE = 'https://ai-traveler-0jhd.onrender.com'
+export const API_BASE = 'https://ai-traveler-0jhd.onrender.com/api/v1'
 
 async function extractErrorMessage(response: Response): Promise<string> {
   const details = await response.text()
@@ -30,7 +30,7 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
     })
   } catch {
     throw new Error(
-      'Нет связи с API (https://ai-traveler-0jhd.onrender.com). Перезапустите хост.'
+      'Нет связи с API (https://ai-traveler-0jhd.onrender.com/api/v1). Перезапустите хост.'
     )
   }
   if (!response.ok) {
