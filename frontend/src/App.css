@@ -1987,6 +1987,34 @@
 
 /* ——— Дерево поездки (Layla-style) ——— */
 
+.tripTreeToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  max-width: min(960px, 100%);
+  margin: 0 auto 0.75rem;
+  padding: 0 0.25rem;
+}
+
+.tripTreeToolbar__hint {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.tripTreeToolbar__hint strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.tripTreeToolbar__reset {
+  flex-shrink: 0;
+  padding: 0.45rem 1rem;
+  font-size: 0.9rem;
+}
+
 .tripFlow {
   width: 100%;
   overflow-x: auto;

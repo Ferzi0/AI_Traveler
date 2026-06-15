@@ -966,6 +966,24 @@ def _reset_choice_branch(db: Session, trip_id: int, node_type: str) -> None:
         db.execute(delete(TripNode).where(TripNode.id.in_(node_ids)))
 
 
+def _reset_tree_selections(db: Session, trip_id: int) -> None:
+    nodes = db.execute(
+        select(TripNode.id).where(
+            TripNode.trip_id == trip_id,
+            TripNode.node_type != "destination",
+        )
+    ).scalars()
+    node_ids = list(nodes)
+    if node_ids:
+        db.execute(
+            delete(TripEdge).where(
+                TripEdge.trip_id == trip_id,
+                (TripEdge.source_node_id.in_(node_ids) | TripEdge.target_node_id.in_(node_ids)),
+            )
+        )
+        db.execute(delete(TripNode).where(TripNode.id.in_(node_ids)))
+
+
 def _get_node_by_type(db: Session, trip_id: int, node_type: str) -> TripNode | None:
     return db.execute(
         select(TripNode).where(TripNode.trip_id == trip_id, TripNode.node_type == node_type)
@@ -1186,6 +1204,19 @@ def get_trip_tree(trip_id: int, db: Session = Depends(get_db)) -> dict[str, list
             for edge in edges
         ],
     }
+
+
+@router.post("/{trip_id}/selections/reset")
+def reset_trip_selections(trip_id: int, db: Session = Depends(get_db)) -> dict[str, str]:
+    trip = _get_trip_or_404(db, trip_id)
+    if not trip.destination:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Select destination first",
+        )
+    _reset_tree_selections(db, trip_id)
+    db.commit()
+    return {"status": "ok"}
 
 
 @router.post("/{trip_id}/nodes")

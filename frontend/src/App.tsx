@@ -64,6 +64,7 @@ function App() {
     {}
   )
   const [detailsItinerary, setDetailsItinerary] = useState<TransportItinerary | null>(null)
+  const [treeResetKey, setTreeResetKey] = useState(0)
 
   const [summary, setSummary] = useState<TripSummary | null>(null)
   const [showBreakdown, setShowBreakdown] = useState(false)
@@ -82,6 +83,14 @@ function App() {
       selectedRoomId &&
       selectedTransportId &&
       selectedTransportExtraIds.baggage &&
+      selectedTransportExtraIds.refund_policy
+  )
+
+  const hasTreeSelections = Boolean(
+    selectedHotelId ||
+      selectedRoomId ||
+      selectedTransportId ||
+      selectedTransportExtraIds.baggage ||
       selectedTransportExtraIds.refund_policy
   )
 
@@ -352,6 +361,42 @@ function App() {
       await refreshSummary()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка выбора направления')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function resetTripTree() {
+    if (!tripId || !selectedDestination || !hasTreeSelections) return
+    setLoading(true)
+    setError('')
+    try {
+      await api(`/trips/${tripId}/selections/reset`, 'POST')
+      const hotels = await api<AccommodationSearchResponse>(
+        `/trips/${tripId}/accommodations/search`,
+        'POST',
+        { kinds: ['hotel', 'hostel'], sort_by: 'price' }
+      )
+      const flights = await api<{ items: TransportItinerary[] }>(
+        `/trips/${tripId}/transport/search`,
+        'POST',
+        { sort_by: 'price' }
+      )
+      setAccommodations(hotels.items)
+      setTransport(flights.items)
+      setSelectedHotelId('')
+      setSelectedRoomId('')
+      setSelectedTransportId('')
+      setSelectedTransportExtraIds({})
+      setTransportExtras(null)
+      setRooms([])
+      setDetailsItinerary(null)
+      setSaveMessage('')
+      setShowBreakdown(false)
+      setTreeResetKey((k) => k + 1)
+      await refreshSummary()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка сброса дерева')
     } finally {
       setLoading(false)
     }
@@ -637,8 +682,23 @@ function App() {
               ) : null}
             </section>
           ) : tripId && selectedDestination ? (
-            <TripFlowTree
-              destination={selectedDestination}
+            <>
+              <div className="tripTreeToolbar">
+                <p className="tripTreeToolbar__hint">
+                  Направление: <strong>{selectedDestination.title}</strong>
+                </p>
+                <button
+                  type="button"
+                  className="btn btnGhost tripTreeToolbar__reset"
+                  disabled={loading || !hasTreeSelections}
+                  onClick={() => void resetTripTree()}
+                >
+                  Сбросить
+                </button>
+              </div>
+              <TripFlowTree
+                key={treeResetKey}
+                destination={selectedDestination}
               tripId={tripId}
               passengers={passengers}
               loading={loading}
@@ -661,6 +721,7 @@ function App() {
               onPickTransportExtra={pickTransportExtra}
               onShowFlightDetails={setDetailsItinerary}
             />
+            </>
           ) : null}
         </main>
 
