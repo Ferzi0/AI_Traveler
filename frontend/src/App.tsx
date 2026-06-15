@@ -34,6 +34,9 @@ import { RUSSIAN_CITIES } from './data/russianCities'
 import type { UserProfile } from './types/user'
 import type { FavoriteCreatePayload, FavoriteItem } from './types/favorites'
 import { favoriteKey } from './types/favorites'
+import type { BuilderPhase } from './types/builder'
+import { DetailOfferCard } from './components/builder/DetailOfferCard'
+import { DetailStepPlaceholder } from './components/builder/DetailStepPlaceholder'
 import './App.css'
 
 function App() {
@@ -65,6 +68,7 @@ function App() {
   )
   const [detailsItinerary, setDetailsItinerary] = useState<TransportItinerary | null>(null)
   const [treeResetKey, setTreeResetKey] = useState(0)
+  const [builderPhase, setBuilderPhase] = useState<BuilderPhase>('core')
 
   const [summary, setSummary] = useState<TripSummary | null>(null)
   const [showBreakdown, setShowBreakdown] = useState(false)
@@ -93,6 +97,17 @@ function App() {
       selectedTransportExtraIds.baggage ||
       selectedTransportExtraIds.refund_policy
   )
+
+  const showCoreTree =
+    selectedDestination && (builderPhase === 'core' || builderPhase === 'detail-offer')
+
+  useEffect(() => {
+    if (!canSaveTrip) {
+      setBuilderPhase('core')
+      return
+    }
+    setBuilderPhase((phase) => (phase === 'core' ? 'detail-offer' : phase))
+  }, [canSaveTrip])
 
   useEffect(() => {
     function onAuthExpired() {
@@ -358,6 +373,7 @@ function App() {
       setSelectedTransportExtraIds({})
       setTransportExtras(null)
       setRooms([])
+      setBuilderPhase('core')
       await refreshSummary()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка выбора направления')
@@ -394,6 +410,7 @@ function App() {
       setSaveMessage('')
       setShowBreakdown(false)
       setTreeResetKey((k) => k + 1)
+      setBuilderPhase('core')
       await refreshSummary()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка сброса дерева')
@@ -681,7 +698,7 @@ function App() {
                 </div>
               ) : null}
             </section>
-          ) : tripId && selectedDestination ? (
+          ) : tripId && selectedDestination && showCoreTree ? (
             <>
               <div className="tripTreeToolbar">
                 <p className="tripTreeToolbar__hint">
@@ -722,6 +739,11 @@ function App() {
               onShowFlightDetails={setDetailsItinerary}
             />
             </>
+          ) : tripId && selectedDestination && builderPhase === 'detail' ? (
+            <DetailStepPlaceholder
+              destinationTitle={selectedDestination.title}
+              onBack={() => setBuilderPhase('detail-offer')}
+            />
           ) : null}
         </main>
 
@@ -754,14 +776,22 @@ function App() {
                 ) : null}
               </div>
             </div>
-            <button
-              type="button"
-              className="btn saveTripBtn"
-              disabled={loading || !canSaveTrip}
-              onClick={() => void saveTrip()}
-            >
-              Сохранить поездку
-            </button>
+            {builderPhase === 'detail-offer' && canSaveTrip ? (
+              <DetailOfferCard
+                loading={loading}
+                onDetailize={() => setBuilderPhase('detail')}
+                onSaveAsIs={() => void saveTrip()}
+              />
+            ) : (
+              <button
+                type="button"
+                className="btn saveTripBtn"
+                disabled={loading || !canSaveTrip}
+                onClick={() => void saveTrip()}
+              >
+                Сохранить поездку
+              </button>
+            )}
           </div>
         ) : null}
 
