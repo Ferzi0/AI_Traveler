@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { FavoriteButton } from '../FavoriteButton'
 import type { AccommodationItem, AccommodationSearchResponse } from '../../types/trip'
+import { imageBackgroundStyle } from '../../utils/images'
 import { FilterToolbar } from './FilterToolbar'
 import { FullscreenPanel } from './FullscreenPanel'
 import { HotelMap } from './HotelMap'
@@ -141,7 +142,7 @@ export function HotelExplorerPanel({
             >
               <div
                 className="catalogCard__media"
-                style={hotel.image_url ? { backgroundImage: `url(${hotel.image_url})` } : undefined}
+                style={imageBackgroundStyle(hotel.image_url)}
               >
                 {!hotel.image_url ? <span>Фото</span> : null}
                 <FavoriteButton

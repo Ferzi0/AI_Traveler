@@ -32,7 +32,12 @@ export type TransportItinerary = {
   details: TransportItineraryDetails
 }
 
-export type DestinationItem = { id: string; title: string; country: string }
+export type DestinationItem = {
+  id: string
+  title: string
+  country: string
+  image_url?: string
+}
 
 export type AccommodationItem = {
   id: string

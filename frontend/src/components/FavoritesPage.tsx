@@ -3,6 +3,7 @@ import { AppFooter } from './AppFooter'
 import { BrandLogo } from './BrandLogo'
 import { PhotoSlider } from './PhotoSlider'
 import type { FavoriteItem } from '../types/favorites'
+import { imageBackgroundStyle } from '../utils/images'
 
 type Props = {
   items: FavoriteItem[]
@@ -52,11 +53,7 @@ export function FavoritesPage({ items, loading, onClose, onRemove }: Props) {
                   >
                     <div
                       className="favoriteCard__thumb"
-                      style={
-                        item.image_urls[0]
-                          ? { backgroundImage: `url(${item.image_urls[0]})` }
-                          : undefined
-                      }
+                      style={imageBackgroundStyle(item.image_urls[0])}
                     >
                       {!item.image_urls[0] ? <span>Фото</span> : null}
                     </div>

@@ -495,7 +495,12 @@ DAY_PLAN_CATALOG_BY_DESTINATION: dict[str, dict[str, list[dict]]] = {
 
 
 def _serialize_destination(row: ConstructorDestination) -> dict[str, str]:
-    return {"id": row.slug, "title": row.title, "country": row.country}
+    return {
+        "id": row.slug,
+        "title": row.title,
+        "country": row.country,
+        "image_url": DESTINATION_IMAGE_URLS.get(row.title, ""),
+    }
 
 
 DESTINATION_COORDS: dict[str, tuple[float, float]] = {
@@ -504,15 +509,24 @@ DESTINATION_COORDS: dict[str, tuple[float, float]] = {
     "Стамбул": (41.0082, 28.9784),
 }
 
-# Внешние изображения для карточек отелей (Unsplash).
-# Можно свободно заменять на свои ссылки.
+# Локальные изображения отелей — статика фронтенда (frontend/public/images/hotels/).
 ACCOMMODATION_IMAGE_URLS: dict[str, str] = {
-    # Phuket
-    "acc_phuket_laguna": "https://images.unsplash.com/photo-1759805583363-87fdee48b581?auto=format&fit=crop&w=1600&q=80&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "acc_phuket_hostel": "https://images.unsplash.com/photo-1709805619372-40de3f158e83?auto=format&fit=crop&w=1600&q=80&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    # London
-    "acc_london_hotel": "https://images.unsplash.com/photo-1772339164384-e4eba87f08c0?auto=format&fit=crop&w=1600&q=80&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "acc_phuket_laguna": "/images/hotels/acc_phuket_laguna.jpg",
+    "acc_phuket_hostel": "/images/hotels/acc_phuket_hostel.jpg",
+    "acc_london_hotel": "/images/hotels/acc_london_hotel.jpg",
 }
+
+DEFAULT_ACCOMMODATION_IMAGE = "/images/hotels/default.jpg"
+
+DESTINATION_IMAGE_URLS: dict[str, str] = {
+    "Пхукет": "/images/destinations/phuket.jpg",
+    "Лондон": "/images/destinations/london.jpg",
+    "Стамбул": "/images/destinations/istanbul.jpg",
+}
+
+
+def _accommodation_image_url(public_id: str) -> str:
+    return ACCOMMODATION_IMAGE_URLS.get(public_id, DEFAULT_ACCOMMODATION_IMAGE)
 
 
 def _accommodation_meta(acc: ConstructorAccommodation) -> dict[str, float | int | bool]:
@@ -554,7 +568,7 @@ def _serialize_accommodation(
         "has_pool": meta["has_pool"],
         "latitude": lat,
         "longitude": lng,
-        "image_url": ACCOMMODATION_IMAGE_URLS.get(acc.public_id),
+        "image_url": _accommodation_image_url(acc.public_id),
     }
 
 

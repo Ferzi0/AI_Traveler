@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { FavoriteButton } from '../FavoriteButton'
+import { imageBackgroundStyle } from '../../utils/images'
 
 type Props = {
   nodeId?: string
@@ -74,7 +75,7 @@ export function StepCard({
         {showPhoto ? (
           <div
             className="stepCard__media"
-            style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : undefined}
+            style={imageBackgroundStyle(imageUrl)}
           >
             {!imageUrl ? <span className="stepCard__mediaPlaceholder">Фото</span> : null}
             {onFavoriteToggle ? (

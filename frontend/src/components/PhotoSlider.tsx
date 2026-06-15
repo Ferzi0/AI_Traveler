@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { imageBackgroundStyle } from '../utils/images'
 
 const PLACEHOLDER_SLIDES = 3
 
@@ -47,11 +48,7 @@ export function PhotoSlider({ images, autoMs = 3000 }: Props) {
             <div
               key={`${src}-${i}`}
               className="photoSlider__slide"
-              style={
-                images.length > 0 && src.startsWith('http')
-                  ? { backgroundImage: `url(${src})` }
-                  : undefined
-              }
+              style={images.length > 0 ? imageBackgroundStyle(src) : undefined}
             >
               {images.length === 0 ? <span>Фото {i + 1}</span> : null}
             </div>
