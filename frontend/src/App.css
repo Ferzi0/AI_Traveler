@@ -2134,6 +2134,7 @@
 
   .fullscreenPanel__body {
     min-height: 0;
+    overflow: hidden;
   }
 
   .hotelExplorer {
@@ -2143,6 +2144,7 @@
     min-height: 0;
     grid-template-columns: unset;
     grid-template-rows: unset;
+    overflow: hidden;
   }
 
   .hotelExplorer__list {
@@ -2151,21 +2153,35 @@
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     border-right: none;
     border-bottom: none;
-    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.65rem 0.75rem;
+    scroll-padding-bottom: 5rem;
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .catalogCard--hotel .catalogCard__body {
-    padding: 0.85rem 0.85rem 1rem;
+    padding: 0.65rem 0.75rem 0.75rem;
+    gap: 0.15rem;
+  }
+
+  .catalogCard--hotel .catalogCard__title {
+    font-size: 0.95rem;
+  }
+
+  .catalogCard--hotel .catalogCard__meta,
+  .catalogCard--hotel .catalogCard__tags {
+    font-size: 0.78rem;
   }
 
   .catalogCard__selectBtn {
-    min-height: 48px;
+    min-height: 44px;
+    margin-top: 0.4rem;
   }
 
   .panelFiltersFold__toggle {
-    min-height: 48px;
+    min-height: 44px;
   }
 
   .hotelExplorer__map {
@@ -2177,7 +2193,25 @@
   }
 
   .photoSlider--catalog .photoSlider__slide {
-    height: 180px;
+    height: 112px;
+  }
+
+  .photoSlider--catalog .photoSlider__arrow {
+    width: 24px;
+    height: 24px;
+    font-size: 0.85rem;
+  }
+
+  .photoSlider--catalog .photoSlider__counter {
+    top: 0.35rem;
+    right: 0.35rem;
+    font-size: 0.68rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .catalogCard__mediaWrap .favoriteBtn {
+    top: 0.3rem;
+    right: 0.3rem;
   }
 
   .roomCatalog {
@@ -2426,7 +2460,15 @@
   flex-direction: column;
   animation: panelIn 0.35s ease;
   padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: 100dvh;
+  max-height: 100dvh;
+}
+
+@supports (height: 100dvh) {
+  .fullscreenPanel {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
 }
 
 @keyframes panelIn {
@@ -2546,6 +2588,11 @@
   background: #fff;
 }
 
+.hotelExplorer__list > .catalogCard,
+.hotelExplorer__list > .panelHint {
+  flex-shrink: 0;
+}
+
 .hotelExplorer__map {
   min-height: 320px;
   position: relative;
@@ -2575,6 +2622,10 @@
   text-align: left;
   padding: 0;
   transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.catalogCard--hotel {
+  flex-shrink: 0;
 }
 
 .catalogCard--row {
