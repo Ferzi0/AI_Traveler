@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { FavoriteButton } from '../FavoriteButton'
-import { imageBackgroundStyle } from '../../utils/images'
+import { imageBackgroundStyle, resolveImageUrl } from '../../utils/images'
 
 type Props = {
   nodeId?: string
@@ -35,6 +35,7 @@ export function StepCard({
 }: Props) {
   const isFlow = variant === 'flow'
   const showPhoto = !isFlow && (imageUrl || onFavoriteToggle)
+  const bannerSrc = resolveImageUrl(imageUrl)
 
   return (
     <div
@@ -72,8 +73,10 @@ export function StepCard({
         onClick={onClick}
         disabled={disabled}
       >
-        {isFlow && imageUrl ? (
-          <div className="stepCard__media stepCard__media--flowBanner" style={imageBackgroundStyle(imageUrl)} />
+        {isFlow && bannerSrc ? (
+          <div className="stepCard__media stepCard__media--flowBanner">
+            <img className="stepCard__flowImg" src={bannerSrc} alt="" loading="lazy" decoding="async" />
+          </div>
         ) : null}
         {showPhoto ? (
           <div

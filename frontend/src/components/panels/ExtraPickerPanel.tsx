@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FilterToolbar } from './FilterToolbar'
 import { FullscreenPanel } from './FullscreenPanel'
 import type { TransportExtraItem } from '../../types/trip'
 import { appendCostToSubtitle } from '../../utils/cost'
+
+const DEFAULT_SORT = 'price'
 
 type Props = {
   open: boolean
@@ -23,7 +25,12 @@ export function ExtraPickerPanel({
   onClose,
   onSelect,
 }: Props) {
-  const [sortBy, setSortBy] = useState('price')
+  const [sortBy, setSortBy] = useState(DEFAULT_SORT)
+
+  useEffect(() => {
+    if (!open) setSortBy(DEFAULT_SORT)
+  }, [open])
+
   const sorted = useMemo(() => {
     const list = [...items]
     if (sortBy === 'price_desc') list.sort((a, b) => b.estimated_cost - a.estimated_cost)
@@ -40,7 +47,7 @@ export function ExtraPickerPanel({
           { value: 'price', label: 'Дешевле' },
           { value: 'price_desc', label: 'Дороже' },
         ]}
-        onReset={() => setSortBy('price')}
+        onReset={() => setSortBy(DEFAULT_SORT)}
       />
       <div className="catalogList">
         {sorted.map((item) => (

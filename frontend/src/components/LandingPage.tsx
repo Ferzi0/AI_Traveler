@@ -6,6 +6,7 @@ import { CityCombobox } from './CityCombobox'
 import { api } from '../api'
 import { LANDING_DESTINATIONS } from '../data/landingDestinations'
 import type { PlatformStats } from '../types/stats'
+import { adjustDatesOnEndChange, adjustDatesOnStartChange, todayIsoLocal } from '../utils/tripDates'
 import { imageBackgroundStyle } from '../utils/images'
 
 type Props = {
@@ -50,13 +51,30 @@ export function LandingPage({ onLogin, onRegister }: Props) {
           </div>
           <div className="paramsCell">
             <label htmlFor="l-start">Когда</label>
-            <input id="l-start" type="date" value={startDate}
-              onChange={e => setStartDate(e.target.value)} />
+            <input
+              id="l-start"
+              type="date"
+              value={startDate}
+              min={todayIsoLocal()}
+              onChange={(e) => {
+                const next = adjustDatesOnStartChange(e.target.value, endDate)
+                setStartDate(next.startDate)
+                setEndDate(next.endDate)
+              }}
+            />
           </div>
           <div className="paramsCell">
             <label htmlFor="l-end">Обратно</label>
-            <input id="l-end" type="date" value={endDate}
-              onChange={e => setEndDate(e.target.value)} />
+            <input
+              id="l-end"
+              type="date"
+              value={endDate}
+              min={startDate}
+              onChange={(e) => {
+                const next = adjustDatesOnEndChange(startDate, e.target.value)
+                setEndDate(next.endDate)
+              }}
+            />
           </div>
           <div className="paramsCell">
             <label htmlFor="l-pax">Пассажиры</label>

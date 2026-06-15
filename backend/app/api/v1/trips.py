@@ -5,7 +5,7 @@ import math
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
@@ -51,6 +51,16 @@ class UpdateTripParamsRequest(BaseModel):
     end_date: date | None = None
     passengers: int = Field(default=1, ge=1, le=12)
     round_trip: bool = True
+
+    @model_validator(mode="after")
+    def validate_dates(self) -> "UpdateTripParamsRequest":
+        if (
+            self.start_date is not None
+            and self.end_date is not None
+            and self.end_date < self.start_date
+        ):
+            raise ValueError("Дата возвращения не может быть раньше даты вылета")
+        return self
 
 
 class DestinationSelectRequest(BaseModel):

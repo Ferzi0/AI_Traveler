@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { TransportItinerary } from '../../types/trip'
 import { formatCatalogPerPersonCost, roundMoney } from '../../utils/cost'
+import { useAsyncSearchSeq } from '../../hooks/useAsyncSearchSeq'
 import { FilterToolbar } from './FilterToolbar'
 import { FullscreenPanel } from './FullscreenPanel'
 
@@ -43,30 +44,51 @@ export function FlightExplorerPanel({
   onDetails,
   loading,
 }: Props) {
+  const { nextSeq, isLatest } = useAsyncSearchSeq()
+  const onSearchRef = useRef(onSearch)
+  onSearchRef.current = onSearch
   const [filters, setFilters] = useState<FlightSearchFilters>(DEFAULT_FILTERS)
+  const [filterFormKey, setFilterFormKey] = useState(0)
   const [items, setItems] = useState<TransportItinerary[]>([])
   const [searching, setSearching] = useState(false)
 
   const runSearch = useCallback(
     async (next: FlightSearchFilters) => {
+      const seq = nextSeq()
       setSearching(true)
       try {
-        setItems(await onSearch(next))
+        const result = await onSearchRef.current(next)
+        if (!isLatest(seq)) return
+        setItems(result)
       } finally {
-        setSearching(false)
+        if (isLatest(seq)) setSearching(false)
       }
     },
-    [onSearch]
+    [isLatest, nextSeq]
   )
 
   useEffect(() => {
-    if (!open) return
-    void runSearch(filters)
-  }, [open])
+    if (!open) {
+      setFilters({ ...DEFAULT_FILTERS })
+      setItems([])
+      setFilterFormKey((k) => k + 1)
+      return
+    }
+    const initial = { ...DEFAULT_FILTERS }
+    setFilters(initial)
+    setFilterFormKey((k) => k + 1)
+    void runSearch(initial)
+  }, [open, runSearch])
+
+  function applyFilters(next: FlightSearchFilters) {
+    setFilters(next)
+    void runSearch(next)
+  }
 
   function resetFilters() {
     const next = { ...DEFAULT_FILTERS }
     setFilters(next)
+    setFilterFormKey((k) => k + 1)
     void runSearch(next)
   }
 
@@ -74,11 +96,7 @@ export function FlightExplorerPanel({
     <FullscreenPanel title="Рейсы" open={open} onClose={onClose}>
       <FilterToolbar
         sortValue={filters.sort_by}
-        onSortChange={(v) => {
-          const next = { ...filters, sort_by: v }
-          setFilters(next)
-          void runSearch(next)
-        }}
+        onSortChange={(v) => applyFilters({ ...filters, sort_by: v })}
         sortOptions={[
           { value: 'price', label: 'Дешевле' },
           { value: 'price_desc', label: 'Дороже' },
@@ -87,7 +105,7 @@ export function FlightExplorerPanel({
         ]}
         onReset={resetFilters}
       >
-        <div className="filterToolbar__filters filterToolbar__filters--inline">
+        <div key={filterFormKey} className="filterToolbar__filters filterToolbar__filters--inline">
           <label>
             Цена от $
             <input
@@ -96,9 +114,7 @@ export function FlightExplorerPanel({
               value={filters.price_from ?? ''}
               onChange={(e) => {
                 const v = e.target.value === '' ? null : Number(e.target.value)
-                const next = { ...filters, price_from: v }
-                setFilters(next)
-                void runSearch(next)
+                applyFilters({ ...filters, price_from: v })
               }}
             />
           </label>
@@ -110,9 +126,7 @@ export function FlightExplorerPanel({
               value={filters.price_to ?? ''}
               onChange={(e) => {
                 const v = e.target.value === '' ? null : Number(e.target.value)
-                const next = { ...filters, price_to: v }
-                setFilters(next)
-                void runSearch(next)
+                applyFilters({ ...filters, price_to: v })
               }}
             />
           </label>

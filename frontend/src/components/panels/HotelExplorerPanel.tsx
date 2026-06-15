@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FavoriteButton } from '../FavoriteButton'
 import { PhotoSlider } from '../PhotoSlider'
 import type { AccommodationItem, AccommodationSearchResponse } from '../../types/trip'
 import { accommodationGallery } from '../../data/imageCatalog'
+import { useAsyncSearchSeq } from '../../hooks/useAsyncSearchSeq'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { MOBILE_FLOW_MEDIA } from '../tree/tripFlowLayout'
 import { FilterToolbar } from './FilterToolbar'
@@ -49,7 +50,11 @@ export function HotelExplorerPanel({
   onToggleFavorite,
 }: Props) {
   const isMobile = useMediaQuery(MOBILE_FLOW_MEDIA)
+  const { nextSeq, isLatest } = useAsyncSearchSeq()
+  const onSearchRef = useRef(onSearch)
+  onSearchRef.current = onSearch
   const [filters, setFilters] = useState<HotelSearchFilters>(DEFAULT_FILTERS)
+  const [filterFormKey, setFilterFormKey] = useState(0)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [items, setItems] = useState<AccommodationItem[]>([])
   const [mapCenter, setMapCenter] = useState({ latitude: 0, longitude: 0 })
@@ -58,22 +63,33 @@ export function HotelExplorerPanel({
 
   const runSearch = useCallback(
     async (next: HotelSearchFilters) => {
+      const seq = nextSeq()
       setSearching(true)
       try {
-        const res = await onSearch(next)
+        const res = await onSearchRef.current(next)
+        if (!isLatest(seq)) return
         setItems(res.items)
         setMapCenter(res.map_center)
       } finally {
-        setSearching(false)
+        if (isLatest(seq)) setSearching(false)
       }
     },
-    [onSearch]
+    [isLatest, nextSeq]
   )
 
   useEffect(() => {
-    if (!open) return
-    void runSearch(filters)
-  }, [open])
+    if (!open) {
+      setFilters({ ...DEFAULT_FILTERS })
+      setItems([])
+      setActiveId('')
+      setFilterFormKey((k) => k + 1)
+      return
+    }
+    const initial = { ...DEFAULT_FILTERS }
+    setFilters(initial)
+    setFilterFormKey((k) => k + 1)
+    void runSearch(initial)
+  }, [open, runSearch])
 
   useEffect(() => {
     if (!open) return
@@ -83,13 +99,26 @@ export function HotelExplorerPanel({
   function resetFilters() {
     const next = { ...DEFAULT_FILTERS }
     setFilters(next)
+    setFilterFormKey((k) => k + 1)
     void runSearch(next)
   }
 
-  function applyFilter<K extends keyof HotelSearchFilters>(key: K, value: HotelSearchFilters[K]) {
-    const next = { ...filters, [key]: value }
+  function applyFilters(next: HotelSearchFilters) {
     setFilters(next)
     void runSearch(next)
+  }
+
+  function applyStarFilter(which: 'stars_min' | 'stars_max', value: number) {
+    let stars_min = filters.stars_min
+    let stars_max = filters.stars_max
+    if (which === 'stars_min') {
+      stars_min = value
+      if (stars_min > stars_max) stars_max = stars_min
+    } else {
+      stars_max = value
+      if (stars_max < stars_min) stars_min = stars_max
+    }
+    applyFilters({ ...filters, stars_min, stars_max })
   }
 
   function pickHotel(hotel: AccommodationItem) {
@@ -99,7 +128,7 @@ export function HotelExplorerPanel({
   const filterBlock = (
     <FilterToolbar
       sortValue={filters.sort_by}
-      onSortChange={(v) => applyFilter('sort_by', v)}
+      onSortChange={(v) => applyFilters({ ...filters, sort_by: v })}
       sortOptions={[
         { value: 'price', label: 'Дешевле' },
         { value: 'price_desc', label: 'Дороже' },
@@ -107,7 +136,7 @@ export function HotelExplorerPanel({
       ]}
       onReset={resetFilters}
     >
-      <div className="filterToolbar__filters">
+      <div key={filterFormKey} className="filterToolbar__filters">
         <label className="filterRange">
           Звёзды от {filters.stars_min} до {filters.stars_max}
           <input
@@ -115,21 +144,21 @@ export function HotelExplorerPanel({
             min={1}
             max={5}
             value={filters.stars_min}
-            onChange={(e) => applyFilter('stars_min', Number(e.target.value))}
+            onChange={(e) => applyStarFilter('stars_min', Number(e.target.value))}
           />
           <input
             type="range"
             min={1}
             max={5}
             value={filters.stars_max}
-            onChange={(e) => applyFilter('stars_max', Number(e.target.value))}
+            onChange={(e) => applyStarFilter('stars_max', Number(e.target.value))}
           />
         </label>
         <label className="filterCheck">
           <input
             type="checkbox"
             checked={filters.breakfast_included}
-            onChange={(e) => applyFilter('breakfast_included', e.target.checked)}
+            onChange={(e) => applyFilters({ ...filters, breakfast_included: e.target.checked })}
           />
           Завтрак включён
         </label>
@@ -137,7 +166,7 @@ export function HotelExplorerPanel({
           <input
             type="checkbox"
             checked={filters.has_pool}
-            onChange={(e) => applyFilter('has_pool', e.target.checked)}
+            onChange={(e) => applyFilters({ ...filters, has_pool: e.target.checked })}
           />
           Бассейн
         </label>

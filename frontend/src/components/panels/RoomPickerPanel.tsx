@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { RoomItem } from '../../types/trip'
+import { useAsyncSearchSeq } from '../../hooks/useAsyncSearchSeq'
 import { PhotoSlider } from '../PhotoSlider'
 import { FilterToolbar } from './FilterToolbar'
 import { FullscreenPanel } from './FullscreenPanel'
+
+const DEFAULT_SORT = 'price'
 
 type Props = {
   open: boolean
@@ -14,26 +17,42 @@ type Props = {
 }
 
 export function RoomPickerPanel({ open, hotelTitle, onClose, onSearch, onSelect, loading }: Props) {
-  const [sortBy, setSortBy] = useState('price')
+  const { nextSeq, isLatest } = useAsyncSearchSeq()
+  const onSearchRef = useRef(onSearch)
+  onSearchRef.current = onSearch
+  const [sortBy, setSortBy] = useState(DEFAULT_SORT)
   const [rooms, setRooms] = useState<RoomItem[]>([])
   const [searching, setSearching] = useState(false)
 
   const runSearch = useCallback(
     async (sort: string) => {
+      const seq = nextSeq()
       setSearching(true)
       try {
-        setRooms(await onSearch(sort))
+        const result = await onSearchRef.current(sort)
+        if (!isLatest(seq)) return
+        setRooms(result)
       } finally {
-        setSearching(false)
+        if (isLatest(seq)) setSearching(false)
       }
     },
-    [onSearch]
+    [isLatest, nextSeq]
   )
 
   useEffect(() => {
-    if (!open) return
-    void runSearch(sortBy)
-  }, [open])
+    if (!open) {
+      setSortBy(DEFAULT_SORT)
+      setRooms([])
+      return
+    }
+    setSortBy(DEFAULT_SORT)
+    void runSearch(DEFAULT_SORT)
+  }, [open, runSearch])
+
+  function resetFilters() {
+    setSortBy(DEFAULT_SORT)
+    void runSearch(DEFAULT_SORT)
+  }
 
   return (
     <FullscreenPanel title={`Номера · ${hotelTitle}`} open={open} onClose={onClose}>
@@ -47,10 +66,7 @@ export function RoomPickerPanel({ open, hotelTitle, onClose, onSearch, onSelect,
           { value: 'price', label: 'Дешевле' },
           { value: 'price_desc', label: 'Дороже' },
         ]}
-        onReset={() => {
-          setSortBy('price')
-          void runSearch('price')
-        }}
+        onReset={resetFilters}
       />
       <div className="roomCatalog">
         {(searching || loading) && rooms.length === 0 ? (

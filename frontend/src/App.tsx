@@ -25,6 +25,7 @@ import type {
 import { api, AUTH_EXPIRED_EVENT, clearAuthToken } from './api'
 import { formatCalculationMeta } from './utils/cost'
 import { destinationCoverImage } from './data/imageCatalog'
+import { adjustDatesOnEndChange, adjustDatesOnStartChange, clampEndDate, todayIsoLocal } from './utils/tripDates'
 import { imageBackgroundStyle } from './utils/images'
 import { CityCombobox } from './components/CityCombobox'
 import { DestinationSearch } from './components/DestinationSearch'
@@ -223,9 +224,21 @@ function App() {
         })
         await refreshSummary()
       } catch {
+        /* params bar may update before trip is ready */
       }
     })()
-  }, [passengers])
+  }, [origin, startDate, endDate, passengers, tripId, selectedDestination])
+
+  function handleStartDateChange(value: string) {
+    const next = adjustDatesOnStartChange(value, endDate)
+    setStartDate(next.startDate)
+    setEndDate(next.endDate)
+  }
+
+  function handleEndDateChange(value: string) {
+    const next = adjustDatesOnEndChange(startDate, value)
+    setEndDate(next.endDate)
+  }
 
   async function refreshSummary() {
     if (!tripId) return
@@ -239,10 +252,13 @@ function App() {
   }
 
   async function ensureTrip() {
+    const normalizedEnd = clampEndDate(startDate, endDate)
+    if (normalizedEnd !== endDate) setEndDate(normalizedEnd)
+
     const params = {
       origin,
       start_date: startDate,
-      end_date: endDate,
+      end_date: normalizedEnd,
       passengers,
       round_trip: true,
     }
@@ -544,12 +560,19 @@ function App() {
                 id="start"
                 type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                min={todayIsoLocal()}
+                onChange={(e) => handleStartDateChange(e.target.value)}
               />
             </div>
             <div className="paramsCell">
               <label htmlFor="end">Обратно</label>
-              <input id="end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <input
+                id="end"
+                type="date"
+                value={endDate}
+                min={startDate}
+                onChange={(e) => handleEndDateChange(e.target.value)}
+              />
             </div>
             <div className="paramsCell">
               <label htmlFor="passengers">Пассажиры</label>
