@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { FavoriteButton } from '../FavoriteButton'
 import { PhotoSlider } from '../PhotoSlider'
 import type { AccommodationItem, AccommodationSearchResponse } from '../../types/trip'
+import { accommodationGallery } from '../../data/imageCatalog'
 import { FilterToolbar } from './FilterToolbar'
 import { FullscreenPanel } from './FullscreenPanel'
 import { HotelMap } from './HotelMap'
@@ -33,8 +34,7 @@ type Props = {
 }
 
 function hotelGallery(hotel: AccommodationItem): string[] {
-  if (hotel.image_urls.length > 0) return hotel.image_urls
-  return hotel.image_url ? [hotel.image_url] : []
+  return accommodationGallery(hotel)
 }
 
 export function HotelExplorerPanel({

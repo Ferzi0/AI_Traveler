@@ -83,7 +83,8 @@
   border-radius: var(--radius-md);
   overflow: visible;
   margin: 0 auto 1.5rem;
-  max-width: 960px;
+  max-width: min(960px, 100%);
+  width: 100%;
   box-shadow: 0 0 0 3px var(--accent-ring);
   position: relative;
   z-index: 10;
@@ -95,6 +96,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  min-width: 0;
 }
 
 .paramsCell:last-child {
@@ -508,6 +510,7 @@
 .catalogCard__mediaWrap {
   position: relative;
   flex-shrink: 0;
+  width: 100%;
 }
 
 .catalogCard__mediaWrap .favoriteBtn {
@@ -896,6 +899,21 @@
   box-shadow: 0 8px 22px rgba(192, 96, 58, 0.2);
 }
 
+@media (max-width: 768px) {
+  .paramsBar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .paramsCell:nth-child(2) {
+    border-right: none;
+  }
+
+  .paramsCell:nth-child(1),
+  .paramsCell:nth-child(3) {
+    border-bottom: 1px solid var(--border);
+  }
+}
+
 @media (max-width: 640px) {
   .paramsBar {
     grid-template-columns: 1fr;
@@ -903,6 +921,15 @@
 
   .paramsCell {
     border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .paramsCell:nth-child(2) {
+    border-right: none;
+  }
+
+  .paramsCell:nth-child(1),
+  .paramsCell:nth-child(3) {
     border-bottom: 1px solid var(--border);
   }
 
@@ -1425,11 +1452,13 @@
 .photoSlider {
   position: relative;
   margin-bottom: 0.75rem;
+  width: 100%;
 }
 
 .photoSlider__viewport {
   overflow: hidden;
   border-radius: 0;
+  width: 100%;
 }
 
 .photoSlider__track {
@@ -1961,10 +1990,146 @@
   -webkit-box-orient: vertical;
 }
 
+.tripFlow__canvas--stacked .stepCard__media--flowBanner {
+  height: 120px;
+  background-size: cover;
+  background-position: center;
+}
+
 @media (max-width: 768px) {
+  .main {
+    padding: 1rem 0.85rem 1.25rem;
+    overflow-x: clip;
+  }
+
   .main:has(.tripFlow) {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .app:has(.appSummaryBar) .main {
+    padding-bottom: 0.5rem;
+  }
+
+  .topBar {
+    padding: 0.65rem 0.85rem;
+  }
+
+  .brandLogo {
+    width: 210px;
+  }
+
+  .destinationHero {
+    padding: 1rem 0 1.75rem;
+    min-height: auto;
+  }
+
+  .destinationHero__title {
+    font-size: clamp(1.65rem, 8vw, 2.1rem);
+    margin-bottom: 1rem;
+  }
+
+  .destinationHero__card {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .destinationHero__search {
+    flex-direction: column;
+  }
+
+  .destinationHero__btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .destinationHero__results,
+  .destPickerCards {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .destCard--pick .destCard__img {
+    height: 140px;
+  }
+
+  .filterToolbar__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterToolbar__reset {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .filterToolbar__filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .filterRange {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .fullscreenPanel__body {
+    min-height: 0;
+  }
+
+  .hotelExplorer {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: unset;
+    grid-template-rows: unset;
+  }
+
+  .hotelExplorer__list {
+    flex: 1;
+    max-height: none;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border-right: none;
+    border-bottom: none;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .hotelExplorer__map {
+    display: none;
+  }
+
+  .catalogCard {
+    width: 100%;
+  }
+
+  .photoSlider--catalog .photoSlider__slide {
+    height: 180px;
+  }
+
+  .roomCatalog {
+    padding: 0 0.75rem 1rem;
+  }
+
+  .appSummaryBar {
+    padding: 0.65rem 0.85rem 0;
+    padding-bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .saveTripBtn {
+    max-width: none;
+  }
+
+  .cityCombobox__dropdown {
+    left: 0;
+    right: 0;
   }
 }
 
@@ -2416,19 +2581,19 @@
 }
 
 @media (max-width: 768px) {
-  .hotelExplorer {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 240px;
+  .photoSlider--card .photoSlider__slide {
+    height: 220px;
   }
 
-  .hotelExplorer__list {
-    max-height: 45vh;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
+  .roomCard__priceRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .roomCard__selectBtn {
+    width: 100%;
   }
 }
-
-/* ─── LANDING PAGE ──────────────────────────────────────── */
 
 .landingPage {
   min-height: 100vh;

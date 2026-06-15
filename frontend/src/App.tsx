@@ -24,6 +24,7 @@ import type {
 } from './types/trip'
 import { api, AUTH_EXPIRED_EVENT, clearAuthToken } from './api'
 import { formatCalculationMeta } from './utils/cost'
+import { destinationCoverImage } from './data/imageCatalog'
 import { imageBackgroundStyle } from './utils/images'
 import { CityCombobox } from './components/CityCombobox'
 import { DestinationSearch } from './components/DestinationSearch'
@@ -599,7 +600,7 @@ function App() {
                     >
                       <div
                         className="destCard__img"
-                        style={imageBackgroundStyle(item.image_url)}
+                        style={imageBackgroundStyle(destinationCoverImage(item))}
                       >
                         {!item.image_url ? <span className="destCard__emoji">🌍</span> : null}
                       </div>
