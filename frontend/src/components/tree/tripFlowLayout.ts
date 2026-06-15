@@ -5,6 +5,11 @@ export type FlowNodePosition = {
   y: number
 }
 
+/** Ширина экрана, ниже которой дерево — вертикальный стек карточек */
+export const MOBILE_FLOW_BREAKPOINT = 768
+
+export const MOBILE_FLOW_MEDIA = `(max-width: ${MOBILE_FLOW_BREAKPOINT}px)`
+
 /** Позиции в % по X и px по Y — карточки не накладываются, цепочки идут вправо */
 export function computeFlowLayout(options: {
   showBranches: boolean

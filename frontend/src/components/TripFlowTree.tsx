@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 import type {
   AccommodationItem,
   AccommodationSearchResponse,
@@ -11,7 +12,7 @@ import { formatCatalogPerPersonCost, roundMoney } from '../utils/cost'
 import { FlowNodeSlot } from './tree/FlowNodeSlot'
 import { StepCard } from './tree/StepCard'
 import { TreeConnectorLines, type TreeEdge } from './tree/TreeConnectorLines'
-import { canvasMinWidth, computeFlowLayout } from './tree/tripFlowLayout'
+import { canvasMinWidth, computeFlowLayout, MOBILE_FLOW_MEDIA } from './tree/tripFlowLayout'
 import {
   FlightExplorerPanel,
   type FlightSearchFilters,
@@ -79,6 +80,7 @@ export function TripFlowTree({
 }: TripFlowTreeProps) {
   const [panel, setPanel] = useState<Panel>(null)
   const flowRef = useRef<HTMLDivElement>(null)
+  const isStacked = useMediaQuery(MOBILE_FLOW_MEDIA)
 
   const selectedHotel = accommodations.find((h) => h.id === selectedHotelId)
   const selectedRoom = rooms.find((r) => r.room_id === selectedRoomId)
@@ -141,6 +143,7 @@ export function TripFlowTree({
   )
 
   const edges = useMemo<TreeEdge[]>(() => {
+    if (isStacked) return []
     const list: TreeEdge[] = []
     if (showBranches) {
       list.push(
@@ -167,7 +170,7 @@ export function TripFlowTree({
       }
     }
     return list
-  }, [showBranches, showRoomsBranch, showFlightExtras, layout.rooms, layout.baggage, layout.refund])
+  }, [isStacked, showBranches, showRoomsBranch, showFlightExtras, layout.rooms, layout.baggage, layout.refund])
 
   async function handlePickHotel(id: string) {
     await onPickHotel(id)
@@ -185,13 +188,17 @@ export function TripFlowTree({
   }
 
   return (
-    <div className="tripFlow">
+    <div className={`tripFlow${isStacked ? ' tripFlow--stacked' : ''}`}>
       <div
         ref={flowRef}
-        className="tripFlow__canvas"
-        style={{ minWidth: `${minWidth}px`, minHeight: showBranches ? 300 : 200 }}
+        className={`tripFlow__canvas${isStacked ? ' tripFlow__canvas--stacked' : ''}`}
+        style={
+          isStacked
+            ? undefined
+            : { minWidth: `${minWidth}px`, minHeight: showBranches ? 300 : 200 }
+        }
       >
-        <TreeConnectorLines containerRef={flowRef} edges={edges} />
+        {!isStacked ? <TreeConnectorLines containerRef={flowRef} edges={edges} /> : null}
 
         {layout.dest ? (
           <FlowNodeSlot position={layout.dest}>
