@@ -66,3 +66,18 @@ export function detailCanvasMinWidth(hotelCategories: string[], cityCategories: 
   if (total >= 6) return 920
   return 760
 }
+
+/** Absolute nodes do not stretch the canvas — reserve enough height for the lowest row. */
+export function detailCanvasMinHeight(
+  hotelCategories: string[],
+  cityCategories: string[]
+): number {
+  const layout = computeDetailFlowLayout({ hotelCategories, cityCategories })
+  const CARD_HEIGHT = 152
+  const PAD = 36
+  let maxBottom = 0
+  for (const pos of Object.values(layout)) {
+    maxBottom = Math.max(maxBottom, pos.y + CARD_HEIGHT)
+  }
+  return maxBottom + PAD
+}

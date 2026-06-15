@@ -20,6 +20,7 @@ import { StepCard } from './tree/StepCard'
 import { TreeConnectorLines, type TreeEdge } from './tree/TreeConnectorLines'
 import {
   computeDetailFlowLayout,
+  detailCanvasMinHeight,
   detailCanvasMinWidth,
   detailNodeKey,
   parseDetailNodeKey,
@@ -73,6 +74,7 @@ export function TripDetailFlowTree({
   )
 
   const minWidth = detailCanvasMinWidth(hotelCategoryIds, cityCategoryIds)
+  const minHeight = detailCanvasMinHeight(hotelCategoryIds, cityCategoryIds)
 
   const activePanel = useMemo(() => {
     if (!panel) return null
@@ -173,7 +175,7 @@ export function TripDetailFlowTree({
       <div
         ref={flowRef}
         className={`tripFlow__canvas${isStacked ? ' tripFlow__canvas--stacked' : ''}`}
-        style={isStacked ? undefined : { minWidth: `${minWidth}px`, minHeight: 320 }}
+        style={isStacked ? undefined : { minWidth: `${minWidth}px`, minHeight: `${minHeight}px` }}
       >
         {!isStacked ? <TreeConnectorLines containerRef={flowRef} edges={edges} /> : null}
 
