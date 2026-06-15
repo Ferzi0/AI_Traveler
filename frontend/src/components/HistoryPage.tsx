@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api, apiDownload } from '../api'
 import { AppFooter } from './AppFooter'
 import { BrandLogo } from './BrandLogo'
+import { ScrollToTopButton } from './ScrollToTopButton'
 import type { HistoryDetail, HistoryListItem } from '../types/history'
 
 type Props = {
@@ -16,6 +17,7 @@ function formatPassengers(n: number | null): string {
 }
 
 export function HistoryPage({ onClose }: Props) {
+  const overlayRef = useRef<HTMLDivElement>(null)
   const [items, setItems] = useState<HistoryListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<number | null>(null)
@@ -78,7 +80,7 @@ export function HistoryPage({ onClose }: Props) {
   }
 
   return (
-    <div className="pagePanelOverlay">
+    <div className="pagePanelOverlay" ref={overlayRef}>
       <div className="pagePanel">
         <header className="topBar">
           <div className="topBarInner">
@@ -220,6 +222,7 @@ export function HistoryPage({ onClose }: Props) {
 
         <AppFooter />
       </div>
+      <ScrollToTopButton scrollRoot={overlayRef} />
     </div>
   )
 }

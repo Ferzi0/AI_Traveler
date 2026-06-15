@@ -5,7 +5,12 @@
 }
 
 .topBar {
-  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
   padding: 0.75rem 1.25rem;
 }
@@ -865,6 +870,30 @@
   flex-shrink: 0;
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+.scrollToTopBtn {
+  position: fixed;
+  right: 1.25rem;
+  z-index: 95;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 4px 18px rgba(60, 40, 20, 0.14);
+  color: var(--accent);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+
+.scrollToTopBtn:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 8px 22px rgba(192, 96, 58, 0.2);
 }
 
 @media (max-width: 640px) {

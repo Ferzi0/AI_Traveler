@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { AppFooter } from './AppFooter'
 import { BrandLogo } from './BrandLogo'
 import { PhotoSlider } from './PhotoSlider'
+import { ScrollToTopButton } from './ScrollToTopButton'
 import type { FavoriteItem } from '../types/favorites'
 import { imageBackgroundStyle } from '../utils/images'
 
@@ -13,10 +14,11 @@ type Props = {
 }
 
 export function FavoritesPage({ items, loading, onClose, onRemove }: Props) {
+  const overlayRef = useRef<HTMLDivElement>(null)
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
   return (
-    <div className="pagePanelOverlay">
+    <div className="pagePanelOverlay" ref={overlayRef}>
       <div className="pagePanel">
         <header className="topBar">
           <div className="topBarInner">
@@ -95,6 +97,7 @@ export function FavoritesPage({ items, loading, onClose, onRemove }: Props) {
 
         <AppFooter />
       </div>
+      <ScrollToTopButton scrollRoot={overlayRef} />
     </div>
   )
 }

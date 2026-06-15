@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BrandLogo } from './BrandLogo'
 import { AppFooter } from './AppFooter'
+import { ScrollToTopButton } from './ScrollToTopButton'
 import { CityCombobox } from './CityCombobox'
 import { api } from '../api'
 import { LANDING_DESTINATIONS } from '../data/landingDestinations'
@@ -131,6 +132,7 @@ export function LandingPage({ onLogin, onRegister }: Props) {
       </main>
 
       <AppFooter />
+      <ScrollToTopButton />
     </div>
   )
 }

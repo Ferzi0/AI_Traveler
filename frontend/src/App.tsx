@@ -4,6 +4,7 @@ import { TripFlowTree } from './components/TripFlowTree'
 import type { HotelSearchFilters } from './components/panels/HotelExplorerPanel'
 import type { FlightSearchFilters } from './components/panels/FlightExplorerPanel'
 import { AppFooter } from './components/AppFooter'
+import { ScrollToTopButton } from './components/ScrollToTopButton'
 import { SideMenu } from './components/SideMenu'
 import { HistoryPage } from './components/HistoryPage'
 import { FavoritesPage } from './components/FavoritesPage'
@@ -510,6 +511,7 @@ function App() {
               onClick={() => {
                 setActivePage(null)
                 setMenuOpen(false)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
               }}
               aria-label="На главную"
             >
@@ -679,6 +681,8 @@ function App() {
         ) : null}
 
         <AppFooter />
+
+        <ScrollToTopButton bottom={selectedDestination ? '6.5rem' : '1.25rem'} />
 
         {detailsItinerary ? (
           <TransportDetailsPanel

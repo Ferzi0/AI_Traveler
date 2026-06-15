@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import type { UserProfile } from '../types/user'
 import { formatPhone } from '../utils/phone'
 import { AppFooter } from './AppFooter'
 import { BrandLogo } from './BrandLogo'
+import { ScrollToTopButton } from './ScrollToTopButton'
 import '../App.css'
 
 type Props = {
@@ -35,6 +36,7 @@ function profileToForm(user: UserProfile): ProfileForm {
 }
 
 export function ProfilePage({ onClose, onLogout, onUpdated }: Props) {
+  const overlayRef = useRef<HTMLDivElement>(null)
   const [form, setForm] = useState<ProfileForm | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -104,7 +106,7 @@ export function ProfilePage({ onClose, onLogout, onUpdated }: Props) {
     : ''
 
   return (
-    <div className="pagePanelOverlay">
+    <div className="pagePanelOverlay" ref={overlayRef}>
       <div className="pagePanel">
         <header className="topBar">
           <div className="topBarInner">
@@ -217,6 +219,7 @@ export function ProfilePage({ onClose, onLogout, onUpdated }: Props) {
 
         <AppFooter />
       </div>
+      <ScrollToTopButton scrollRoot={overlayRef} />
     </div>
   )
 }
