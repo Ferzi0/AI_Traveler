@@ -18,6 +18,14 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     AUTO_CREATE_TABLES: bool = False
 
+    FRONTEND_URL: str = "https://ai-traveler-1.onrender.com"
+    API_PUBLIC_URL: str = "https://ai-traveler-0jhd.onrender.com"
+    CORS_ORIGINS: str = "https://ai-traveler-1.onrender.com"
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:  # noqa: N802
         return (

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { API_BASE } from '../config'
 import { AppFooter } from './AppFooter'
 import { BrandLogo } from './BrandLogo'
 import '../App.css'
@@ -7,8 +8,6 @@ type Props = {
   onSuccess: (token: string) => void
   onGoRegister: () => void
 }
-
-const API_BASE = 'https://ai-traveler-0jhd.onrender.com/api/v1'
 
 export function LoginPage({ onSuccess, onGoRegister }: Props) {
   const [login, setLogin] = useState('')

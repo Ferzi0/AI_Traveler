@@ -1,4 +1,6 @@
-export const API_BASE = 'https://ai-traveler-0jhd.onrender.com/api/v1'
+import { API_BASE } from './config'
+
+export { API_BASE } from './config'
 
 async function extractErrorMessage(response: Response): Promise<string> {
   const details = await response.text()
@@ -29,9 +31,7 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
       body: body ? JSON.stringify(body) : undefined,
     })
   } catch {
-    throw new Error(
-      'Нет связи с API (https://ai-traveler-0jhd.onrender.com/api/v1). Перезапустите хост.'
-    )
+    throw new Error(`Нет связи с API (${API_BASE}). Перезапустите хост.`)
   }
   if (!response.ok) {
     throw new Error(await extractErrorMessage(response))
@@ -51,9 +51,7 @@ export async function apiDownload(path: string): Promise<Blob> {
       headers: Object.keys(headers).length > 0 ? headers : undefined,
     })
   } catch {
-    throw new Error(
-      'Нет связи с API (https://ai-traveler-0jhd.onrender.com). Перезапустите хост.'
-    )
+    throw new Error(`Нет связи с API (${API_BASE}). Перезапустите хост.`)
   }
 
   if (!response.ok) {
