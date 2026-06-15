@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 type Props = {
   title: string
@@ -8,9 +9,22 @@ type Props = {
 }
 
 export function FullscreenPanel({ title, open, onClose, children }: Props) {
+  useEffect(() => {
+    if (!open) return
+
+    document.body.classList.add('panel-open')
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.classList.remove('panel-open')
+      document.body.style.overflow = prevOverflow
+    }
+  }, [open])
+
   if (!open) return null
 
-  return (
+  return createPortal(
     <div className="fullscreenPanel" role="dialog" aria-modal="true">
       <header className="fullscreenPanel__header">
         <button type="button" className="fullscreenPanel__back" onClick={onClose} aria-label="Назад">
@@ -19,6 +33,7 @@ export function FullscreenPanel({ title, open, onClose, children }: Props) {
         <h2 className="fullscreenPanel__title">{title}</h2>
       </header>
       <div className="fullscreenPanel__body">{children}</div>
-    </div>
+    </div>,
+    document.body
   )
 }
