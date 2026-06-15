@@ -13,7 +13,7 @@ import { FlowNodeSlot } from './tree/FlowNodeSlot'
 import { StepCard } from './tree/StepCard'
 import { TreeConnectorLines, type TreeEdge } from './tree/TreeConnectorLines'
 import { canvasMinWidth, computeFlowLayout, MOBILE_FLOW_MEDIA } from './tree/tripFlowLayout'
-import { accommodationCover, accommodationGallery, destinationCoverImage } from '../data/imageCatalog'
+import { accommodationCover, accommodationGallery, destinationCoverImage, roomCover } from '../data/imageCatalog'
 import {
   FlightExplorerPanel,
   type FlightSearchFilters,
@@ -250,13 +250,14 @@ export function TripFlowTree({
             <StepCard
               nodeId="rooms"
               variant="flow"
-              title="Номера"
+              title={selectedRoom ? selectedRoom.room_name : 'Номера'}
               subtitle={roomsSubtitle}
               visible={showRoomsBranch}
               delayMs={200}
               selected={Boolean(selectedRoomId)}
               onClick={() => selectedHotelId && setPanel('rooms')}
               disabled={loading || !selectedHotelId}
+              imageUrl={selectedRoom ? roomCover(selectedRoom) : undefined}
             />
           </FlowNodeSlot>
         ) : null}

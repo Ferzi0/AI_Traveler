@@ -226,7 +226,16 @@ export function TripDetailFlowTree({
                 selected={Boolean(selectedHotelExtraIds[category.category])}
                 onClick={() => setPanel(nodeId)}
                 disabled={loading || category.items.length === 0}
-                imageUrl={detailHotelCategoryCover(category.category, hotel?.id ?? '', destination)}
+                imageUrl={
+                  selectedHotelExtraIds[category.category]
+                    ? detailHotelItemCover(
+                        selectedHotelExtraIds[category.category],
+                        category.category,
+                        hotel?.id ?? '',
+                        destination
+                      )
+                    : detailHotelCategoryCover(category.category, hotel?.id ?? '', destination)
+                }
               />
             </FlowNodeSlot>
           )
@@ -248,7 +257,15 @@ export function TripDetailFlowTree({
                 selected={Boolean(selectedCityTransportIds[category.category])}
                 onClick={() => setPanel(nodeId)}
                 disabled={loading || category.items.length === 0}
-                imageUrl={detailCityCategoryCover(category.category, destination)}
+                imageUrl={
+                  selectedCityTransportIds[category.category]
+                    ? detailCityItemCover(
+                        selectedCityTransportIds[category.category],
+                        category.category,
+                        destination
+                      )
+                    : detailCityCategoryCover(category.category, destination)
+                }
               />
             </FlowNodeSlot>
           )
