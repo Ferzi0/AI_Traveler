@@ -21,7 +21,7 @@ import type {
   TransportItinerary,
   TripSummary,
 } from './types/trip'
-import { api } from './api'
+import { api, AUTH_EXPIRED_EVENT, clearAuthToken } from './api'
 import { formatCalculationMeta } from './utils/cost'
 import { CityCombobox } from './components/CityCombobox'
 import { DestinationSearch } from './components/DestinationSearch'
@@ -82,13 +82,28 @@ function App() {
   )
 
   useEffect(() => {
+    function onAuthExpired() {
+      setToken(null)
+      setCurrentUser(null)
+      setError('')
+      setAuthScreen('login')
+    }
+    window.addEventListener(AUTH_EXPIRED_EVENT, onAuthExpired)
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, onAuthExpired)
+  }, [])
+
+  useEffect(() => {
     if (!token) {
       setCurrentUser(null)
       return
     }
     void api<UserProfile>('/auth/me')
       .then(setCurrentUser)
-      .catch(() => setCurrentUser(null))
+      .catch(() => {
+        clearAuthToken()
+        setToken(null)
+        setCurrentUser(null)
+      })
   }, [token])
 
   useEffect(() => {

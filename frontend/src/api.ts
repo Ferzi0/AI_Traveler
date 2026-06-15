@@ -2,6 +2,13 @@ import { API_BASE } from './config'
 
 export { API_BASE } from './config'
 
+export const AUTH_EXPIRED_EVENT = 'auth-expired'
+
+export function clearAuthToken() {
+  localStorage.removeItem('token')
+  window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT))
+}
+
 async function extractErrorMessage(response: Response): Promise<string> {
   const details = await response.text()
   let message = details
@@ -34,6 +41,9 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
     throw new Error(`Нет связи с API (${API_BASE}). Перезапустите хост.`)
   }
   if (!response.ok) {
+    if (response.status === 401) {
+      clearAuthToken()
+    }
     throw new Error(await extractErrorMessage(response))
   }
   return response.json() as Promise<T>
@@ -55,6 +65,9 @@ export async function apiDownload(path: string): Promise<Blob> {
   }
 
   if (!response.ok) {
+    if (response.status === 401) {
+      clearAuthToken()
+    }
     throw new Error(await extractErrorMessage(response))
   }
 
