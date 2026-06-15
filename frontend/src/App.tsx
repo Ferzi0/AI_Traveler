@@ -23,6 +23,7 @@ import type {
 } from './types/trip'
 import { api, AUTH_EXPIRED_EVENT, clearAuthToken } from './api'
 import { formatCalculationMeta } from './utils/cost'
+import { imageBackgroundStyle } from './utils/images'
 import { CityCombobox } from './components/CityCombobox'
 import { DestinationSearch } from './components/DestinationSearch'
 import type { TouristDestination } from './data/touristDestinations'
@@ -585,16 +586,25 @@ function App() {
                 </div>
               </div>
               {destinations.length > 0 ? (
-                <div className="destinationHero__results destPicker">
+                <div className="destinationHero__results destPickerCards">
                   {destinations.map((item) => (
                     <button
                       key={item.id}
                       type="button"
-                      className="destChip"
+                      className="destCard destCard--pick"
                       disabled={loading}
                       onClick={() => void pickDestination(item)}
                     >
-                      {item.title}, {item.country}
+                      <div
+                        className="destCard__img"
+                        style={imageBackgroundStyle(item.image_url)}
+                      >
+                        {!item.image_url ? <span className="destCard__emoji">🌍</span> : null}
+                      </div>
+                      <div className="destCard__body">
+                        <div className="destCard__city">{item.title}</div>
+                        <div className="destCard__country">{item.country}</div>
+                      </div>
                     </button>
                   ))}
                 </div>

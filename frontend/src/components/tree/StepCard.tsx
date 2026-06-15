@@ -72,6 +72,9 @@ export function StepCard({
         onClick={onClick}
         disabled={disabled}
       >
+        {isFlow && imageUrl ? (
+          <div className="stepCard__media stepCard__media--flowBanner" style={imageBackgroundStyle(imageUrl)} />
+        ) : null}
         {showPhoto ? (
           <div
             className="stepCard__media"

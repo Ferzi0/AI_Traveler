@@ -203,6 +203,7 @@ export function TripFlowTree({
               visible={hasDestination}
               selected
               disabled
+              imageUrl={destination.image_url}
             />
           </FlowNodeSlot>
         ) : null}
@@ -228,7 +229,12 @@ export function TripFlowTree({
                         title: selectedHotel.title,
                         subtitle: `${selectedHotel.stars}★ · $${selectedHotel.price}`,
                         country: destination.country,
-                        imageUrls: selectedHotel.image_url ? [selectedHotel.image_url] : [],
+                        imageUrls:
+                          selectedHotel.image_urls.length > 0
+                            ? selectedHotel.image_urls
+                            : selectedHotel.image_url
+                              ? [selectedHotel.image_url]
+                              : [],
                       })
                   : undefined
               }
@@ -313,7 +319,12 @@ export function TripFlowTree({
             title: hotel.title,
             subtitle: `${hotel.stars}★ · $${hotel.price}`,
             country: destination.country,
-            imageUrls: hotel.image_url ? [hotel.image_url] : [],
+            imageUrls:
+              hotel.image_urls.length > 0
+                ? hotel.image_urls
+                : hotel.image_url
+                  ? [hotel.image_url]
+                  : [],
           })
         }
       />

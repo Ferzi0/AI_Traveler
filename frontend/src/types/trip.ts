@@ -52,6 +52,7 @@ export type AccommodationItem = {
   latitude: number
   longitude: number
   image_url: string | null
+  image_urls: string[]
   destination?: string
 }
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { FavoriteButton } from '../FavoriteButton'
+import { PhotoSlider } from '../PhotoSlider'
 import type { AccommodationItem, AccommodationSearchResponse } from '../../types/trip'
-import { imageBackgroundStyle } from '../../utils/images'
 import { FilterToolbar } from './FilterToolbar'
 import { FullscreenPanel } from './FullscreenPanel'
 import { HotelMap } from './HotelMap'
@@ -30,6 +30,11 @@ type Props = {
   loading?: boolean
   isFavorite: (hotelId: string) => boolean
   onToggleFavorite: (hotel: AccommodationItem) => void
+}
+
+function hotelGallery(hotel: AccommodationItem): string[] {
+  if (hotel.image_urls.length > 0) return hotel.image_urls
+  return hotel.image_url ? [hotel.image_url] : []
 }
 
 export function HotelExplorerPanel({
@@ -141,10 +146,12 @@ export function HotelExplorerPanel({
               onClick={() => onSelect(hotel.id)}
             >
               <div
-                className="catalogCard__media"
-                style={imageBackgroundStyle(hotel.image_url)}
+                className="catalogCard__mediaWrap"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                role="presentation"
               >
-                {!hotel.image_url ? <span>Фото</span> : null}
+                <PhotoSlider images={hotelGallery(hotel)} variant="catalog" autoMs={5000} />
                 <FavoriteButton
                   active={isFavorite(hotel.id)}
                   onClick={() => onToggleFavorite(hotel)}

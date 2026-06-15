@@ -6,7 +6,7 @@ const PLACEHOLDER_SLIDES = 3
 type Props = {
   images: string[]
   autoMs?: number
-  variant?: 'default' | 'card'
+  variant?: 'default' | 'card' | 'catalog'
   className?: string
 }
 
@@ -48,6 +48,7 @@ export function PhotoSlider({
   const rootClass = [
     'photoSlider',
     variant === 'card' ? 'photoSlider--card' : '',
+    variant === 'catalog' ? 'photoSlider--catalog' : '',
     className,
   ]
     .filter(Boolean)

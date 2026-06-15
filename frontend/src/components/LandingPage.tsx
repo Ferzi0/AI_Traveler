@@ -3,21 +3,14 @@ import { BrandLogo } from './BrandLogo'
 import { AppFooter } from './AppFooter'
 import { CityCombobox } from './CityCombobox'
 import { api } from '../api'
+import { LANDING_DESTINATIONS } from '../data/landingDestinations'
 import type { PlatformStats } from '../types/stats'
+import { imageBackgroundStyle } from '../utils/images'
 
 type Props = {
   onLogin: () => void
   onRegister: () => void
 }
-
-const DESTINATIONS = [
-  { city: 'Стамбул',   country: 'Турция',   emoji: '🕌', price: '28 400', direct: true,  days: 7,  bg: '#fde8d8' },
-  { city: 'Пхукет',    country: 'Таиланд',  emoji: '🌴', price: '54 200', direct: false, days: 14, bg: '#ddf0e8' },
-  { city: 'Париж',     country: 'Франция',  emoji: '🗼', price: '41 800', direct: true,  days: 5,  bg: '#e8e4f8' },
-  { city: 'Дубай',     country: 'ОАЭ',      emoji: '🏙️', price: '36 900', direct: true,  days: 10, bg: '#fff8dd' },
-  { city: 'Барселона', country: 'Испания',  emoji: '⛲', price: '38 500', direct: false, days: 12, bg: '#fde0e0' },
-  { city: 'Токио',     country: 'Япония',   emoji: '⛩️', price: '67 300', direct: false, days: 10, bg: '#dceef8' },
-]
 
 const TAGS = ['🏖 Пляж', '🏙 Города', '🏔 Горы', '🎭 Культура', '🍜 Гастро']
 
@@ -101,10 +94,9 @@ export function LandingPage({ onLogin, onRegister }: Props) {
         <p className="landingSectionLabel">ПОПУЛЯРНЫЕ НАПРАВЛЕНИЯ</p>
 
         <div className="destCards">
-          {DESTINATIONS.map(dest => (
+          {LANDING_DESTINATIONS.map(dest => (
             <button key={dest.city} type="button" className="destCard" onClick={onLogin}>
-              <div className="destCard__img" style={{ background: dest.bg }}>
-                <span className="destCard__emoji">{dest.emoji}</span>
+              <div className="destCard__img" style={imageBackgroundStyle(dest.imageUrl)}>
                 <span className="destCard__badge">{dest.days} дней</span>
               </div>
               <div className="destCard__body">

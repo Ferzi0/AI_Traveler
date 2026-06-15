@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.data.hotel_catalog import accommodation_cover_image, accommodation_image_urls
 from app.data.room_catalog import get_room_catalog_entry
 from app.api.deps import get_current_user
 from app.core.database import get_db
@@ -510,11 +511,13 @@ DESTINATION_COORDS: dict[str, tuple[float, float]] = {
     "Стамбул": (41.0082, 28.9784),
 }
 
-# Локальные изображения отелей — статика фронтенда (frontend/public/images/hotels/).
+# Обложка отеля (первое фото галереи) — для обратной совместимости.
 ACCOMMODATION_IMAGE_URLS: dict[str, str] = {
-    "acc_phuket_laguna": "/images/hotels/acc_phuket_laguna.jpg",
-    "acc_phuket_hostel": "/images/hotels/acc_phuket_hostel.jpg",
-    "acc_london_hotel": "/images/hotels/acc_london_hotel.jpg",
+    public_id: accommodation_cover_image(public_id) for public_id in (
+        "acc_phuket_laguna",
+        "acc_phuket_hostel",
+        "acc_london_hotel",
+    )
 }
 
 DEFAULT_ACCOMMODATION_IMAGE = "/images/hotels/default.jpg"
@@ -527,7 +530,7 @@ DESTINATION_IMAGE_URLS: dict[str, str] = {
 
 
 def _accommodation_image_url(public_id: str) -> str:
-    return ACCOMMODATION_IMAGE_URLS.get(public_id, DEFAULT_ACCOMMODATION_IMAGE)
+    return accommodation_cover_image(public_id)
 
 
 def _accommodation_meta(acc: ConstructorAccommodation) -> dict[str, float | int | bool]:
@@ -570,6 +573,7 @@ def _serialize_accommodation(
         "latitude": lat,
         "longitude": lng,
         "image_url": _accommodation_image_url(acc.public_id),
+        "image_urls": accommodation_image_urls(acc.public_id),
     }
 
 
