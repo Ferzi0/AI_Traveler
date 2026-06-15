@@ -43,6 +43,68 @@ def _extra_title(nodes: list[TripNode], prefix: str) -> str | None:
     return None
 
 
+def _calculation_items(snapshot: dict | None) -> list[dict]:
+    if not isinstance(snapshot, dict):
+        return []
+    calculation = snapshot.get("calculation")
+    if not isinstance(calculation, dict):
+        return []
+    items = calculation.get("items")
+    if not isinstance(items, list):
+        return []
+    return [item for item in items if isinstance(item, dict)]
+
+
+def _detail_calculation_items(snapshot: dict | None) -> list[dict]:
+    detail: list[dict] = []
+    for item in _calculation_items(snapshot):
+        node_type = str(item.get("node_type") or "")
+        if node_type.startswith("hotel_extra:") or node_type.startswith("city_transport:"):
+            detail.append(item)
+    return detail
+
+
+def _format_calc_price(item: dict) -> str:
+    result = item.get("result")
+    if isinstance(result, (int, float)):
+        return f"${result}"
+    return "—"
+
+
+def _detail_section_html(snapshot: dict | None) -> str:
+    items = _detail_calculation_items(snapshot)
+    if not items:
+        return ""
+
+    hotel_items = [item for item in items if str(item.get("node_type", "")).startswith("hotel_extra:")]
+    city_items = [item for item in items if str(item.get("node_type", "")).startswith("city_transport:")]
+
+    def render_group(title: str, group: list[dict]) -> str:
+        if not group:
+            return ""
+        lines = []
+        for item in group:
+            label = escape(str(item.get("title") or "Позиция"))
+            lines.append(
+                f'<li><span class="calc-title">{label}</span><span class="calc-price">{_format_calc_price(item)}</span></li>'
+            )
+        return f"""
+          <div class="detail-group">
+            <h4>{escape(title)}</h4>
+            <ul class="calc-list">
+              {"".join(lines)}
+            </ul>
+          </div>
+        """
+
+    groups = render_group("Рядом с отелем", hotel_items) + render_group("Транспорт по городу", city_items)
+    return f"""
+      <div class="section">
+        <h3>Детализация</h3>
+        {groups}
+      </div>
+    """
+
 def _serialize_history(row: TripHistory, include_snapshot: bool = False) -> dict:
     snapshot = None
     if include_snapshot and row.snapshot_json:
@@ -94,19 +156,12 @@ def _build_pdf_html(row: TripHistory) -> str:
             snapshot = None
 
     calc_html = ""
-    calc_items = (
-        snapshot.get("calculation", {}).get("items", [])
-        if isinstance(snapshot, dict)
-        else []
-    )
-    if isinstance(calc_items, list) and calc_items:
+    calc_items = _calculation_items(snapshot)
+    if calc_items:
         lines: list[str] = []
         for item in calc_items:
-            if not isinstance(item, dict):
-                continue
             title = escape(str(item.get("title") or "Позиция"))
-            result = item.get("result")
-            result_text = f"${result}" if isinstance(result, (int, float)) else "—"
+            result_text = _format_calc_price(item)
             lines.append(
                 f'<li><span class="calc-title">{title}</span><span class="calc-price">{result_text}</span></li>'
             )
@@ -119,6 +174,8 @@ def _build_pdf_html(row: TripHistory) -> str:
                 </ul>
               </div>
             """
+
+    detail_html = _detail_section_html(snapshot)
 
     total = f"${row.total_cost}" if row.total_cost is not None else row.total_cost_label or "—"
     start_label = row.start_date.strftime("%d.%m.%Y") if row.start_date else "—"
@@ -177,6 +234,16 @@ def _build_pdf_html(row: TripHistory) -> str:
     .section h3 {{
       margin: 0 0 8px;
       font-size: 13px;
+    }}
+    .section h4 {{
+      margin: 8px 0 6px;
+      font-size: 12px;
+      color: #5a5046;
+    }}
+    .detail-group + .detail-group {{
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #ece8e2;
     }}
     .row {{
       display: grid;
@@ -257,6 +324,8 @@ def _build_pdf_html(row: TripHistory) -> str:
     {_label_value("Багаж", row.baggage_title)}
     {_label_value("Возврат", row.refund_title)}
   </div>
+
+  {detail_html}
 
   {calc_html}
 
