@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type MouseEvent } from 'react'
 import { imageBackgroundStyle } from '../utils/images'
 
 const PLACEHOLDER_SLIDES = 3
@@ -6,9 +6,21 @@ const PLACEHOLDER_SLIDES = 3
 type Props = {
   images: string[]
   autoMs?: number
+  variant?: 'default' | 'card'
+  className?: string
 }
 
-export function PhotoSlider({ images, autoMs = 3000 }: Props) {
+function stopBubble(e: MouseEvent) {
+  e.preventDefault()
+  e.stopPropagation()
+}
+
+export function PhotoSlider({
+  images,
+  autoMs = 4000,
+  variant = 'default',
+  className = '',
+}: Props) {
   const slides =
     images.length > 0
       ? images
@@ -24,18 +36,33 @@ export function PhotoSlider({ images, autoMs = 3000 }: Props) {
   )
 
   useEffect(() => {
+    setIndex(0)
+  }, [images])
+
+  useEffect(() => {
     if (slides.length <= 1) return
     const timer = window.setInterval(() => go(1), autoMs)
     return () => window.clearInterval(timer)
   }, [go, autoMs, slides.length])
 
+  const rootClass = [
+    'photoSlider',
+    variant === 'card' ? 'photoSlider--card' : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <div className="photoSlider">
+    <div className={rootClass}>
       <button
         type="button"
         className="photoSlider__arrow photoSlider__arrow--prev"
         aria-label="Предыдущее фото"
-        onClick={() => go(-1)}
+        onClick={(e) => {
+          stopBubble(e)
+          go(-1)
+        }}
       >
         ‹
       </button>
@@ -54,12 +81,20 @@ export function PhotoSlider({ images, autoMs = 3000 }: Props) {
             </div>
           ))}
         </div>
+        {images.length > 1 ? (
+          <span className="photoSlider__counter" aria-hidden>
+            {index + 1}/{images.length}
+          </span>
+        ) : null}
       </div>
       <button
         type="button"
         className="photoSlider__arrow photoSlider__arrow--next"
         aria-label="Следующее фото"
-        onClick={() => go(1)}
+        onClick={(e) => {
+          stopBubble(e)
+          go(1)
+        }}
       >
         ›
       </button>
@@ -70,7 +105,10 @@ export function PhotoSlider({ images, autoMs = 3000 }: Props) {
             type="button"
             className={`photoSlider__dot${i === index ? ' photoSlider__dot--active' : ''}`}
             aria-label={`Слайд ${i + 1}`}
-            onClick={() => setIndex(i)}
+            onClick={(e) => {
+              stopBubble(e)
+              setIndex(i)
+            }}
           />
         ))}
       </div>

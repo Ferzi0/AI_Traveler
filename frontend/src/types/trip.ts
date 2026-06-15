@@ -65,10 +65,19 @@ export type AccommodationSearchResponse = {
 export type RoomItem = {
   room_id: string
   accommodation_id: string
+  room_key: string
   room_name: string
   price_total: number
+  price_per_night: number
   nights: number
   persons: number
+  max_persons: number
+  image_urls: string[]
+  area_sqm: number
+  bed_type: string
+  view: string
+  amenities: string[]
+  description: string
 }
 
 export type HotelExtraItem = {

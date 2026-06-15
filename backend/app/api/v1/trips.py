@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.data.room_catalog import get_room_catalog_entry
 from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models.constructor_catalog import (
@@ -973,15 +974,24 @@ def _build_room_options(trip: Trip, accommodation: ConstructorAccommodation) -> 
         if passengers > room.max_persons:
             continue
         total_price = round(base * room.price_multiplier * nights, 2)
+        catalog = get_room_catalog_entry(accommodation.public_id, room.room_key)
         options.append(
             {
                 "room_id": f"{accommodation.public_id}__{room.room_key}",
                 "accommodation_id": accommodation.public_id,
+                "room_key": room.room_key,
                 "room_name": room.room_name,
                 "nights": nights,
                 "persons": passengers,
+                "max_persons": room.max_persons,
                 "price_total": total_price,
                 "price_per_night": round(total_price / nights, 2),
+                "image_urls": catalog["image_urls"],
+                "area_sqm": catalog["area_sqm"],
+                "bed_type": catalog["bed_type"],
+                "view": catalog["view"],
+                "amenities": catalog["amenities"],
+                "description": catalog["description"],
             }
         )
     return options

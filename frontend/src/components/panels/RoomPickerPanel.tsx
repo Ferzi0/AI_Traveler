@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { RoomItem } from '../../types/trip'
+import { PhotoSlider } from '../PhotoSlider'
 import { FilterToolbar } from './FilterToolbar'
 import { FullscreenPanel } from './FullscreenPanel'
 
@@ -51,24 +52,57 @@ export function RoomPickerPanel({ open, hotelTitle, onClose, onSearch, onSelect,
           void runSearch('price')
         }}
       />
-      <div className="catalogList">
-        {(searching || loading) && rooms.length === 0 ? <p className="panelHint">Загрузка…</p> : null}
-        {rooms.map((room, index) => (
-          <button
-            key={room.room_id}
-            type="button"
-            className="catalogCard catalogCard--row"
-            onClick={() => onSelect(room.room_id, room.accommodation_id)}
-          >
-            <div className="catalogCard__media catalogCard__media--small">
-              <span>Фото</span>
+      <div className="roomCatalog">
+        {(searching || loading) && rooms.length === 0 ? (
+          <p className="panelHint">Загрузка…</p>
+        ) : null}
+        {rooms.map((room) => (
+          <article key={room.room_id} className="roomCard">
+            <div
+              className="roomCard__gallery"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              role="presentation"
+            >
+              <PhotoSlider images={room.image_urls} variant="card" autoMs={4500} />
             </div>
-            <div className="catalogCard__body">
-              <strong>Номер {index + 1}</strong>
-              <span className="catalogCard__meta">{room.room_name}</span>
-              <span className="catalogCard__price">${room.price_total} за {room.nights} ноч.</span>
+            <div className="roomCard__body">
+              <div className="roomCard__head">
+                <h3 className="roomCard__title">{room.room_name}</h3>
+                <p className="roomCard__description">{room.description}</p>
+              </div>
+              <div className="roomCard__facts">
+                <span>{room.area_sqm} м²</span>
+                <span>{room.bed_type}</span>
+                <span>{room.view}</span>
+              </div>
+              <div className="roomCard__amenities">
+                {room.amenities.map((item) => (
+                  <span key={item} className="roomCard__tag">
+                    {item}
+                  </span>
+                ))}
+              </div>
+              <div className="roomCard__guests">
+                До {room.max_persons} гостей · {room.persons} в поездке · {room.nights} ноч.
+              </div>
+              <div className="roomCard__priceRow">
+                <div>
+                  <span className="roomCard__price">${room.price_total}</span>
+                  <span className="roomCard__priceMeta">
+                    ${room.price_per_night}/ночь · всего за {room.nights} ноч.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="btn roomCard__selectBtn"
+                  onClick={() => onSelect(room.room_id, room.accommodation_id)}
+                >
+                  Выбрать
+                </button>
+              </div>
             </div>
-          </button>
+          </article>
         ))}
         {!searching && rooms.length === 0 ? <p className="panelHint">Нет номеров</p> : null}
       </div>
