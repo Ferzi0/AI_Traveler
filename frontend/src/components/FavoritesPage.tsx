@@ -4,6 +4,7 @@ import { BrandLogo } from './BrandLogo'
 import { PhotoSlider } from './PhotoSlider'
 import { ScrollToTopButton } from './ScrollToTopButton'
 import type { FavoriteItem } from '../types/favorites'
+import { favoriteGallery } from '../utils/favoriteImages'
 import { imageBackgroundStyle } from '../utils/images'
 
 type Props = {
@@ -43,6 +44,7 @@ export function FavoritesPage({ items, loading, onClose, onRemove }: Props) {
           <div className="favoritesGrid">
             {items.map((item) => {
               const expanded = expandedId === item.id
+              const gallery = favoriteGallery(item)
               return (
                 <article
                   key={item.id}
@@ -55,9 +57,9 @@ export function FavoritesPage({ items, loading, onClose, onRemove }: Props) {
                   >
                     <div
                       className="favoriteCard__thumb"
-                      style={imageBackgroundStyle(item.image_urls[0])}
+                      style={imageBackgroundStyle(gallery[0])}
                     >
-                      {!item.image_urls[0] ? <span>Фото</span> : null}
+                      {!gallery[0] ? <span>Фото</span> : null}
                     </div>
                     <div className="favoriteCardContent">
                       <span className="favoriteCardTitle">{item.title}</span>
@@ -82,7 +84,7 @@ export function FavoritesPage({ items, loading, onClose, onRemove }: Props) {
 
                   {expanded ? (
                     <div className="favoriteCard__body">
-                      <PhotoSlider images={item.image_urls} />
+                      <PhotoSlider images={gallery} />
                       <p className="favoriteCard__description">{item.description}</p>
                       {item.subtitle ? (
                         <p className="favoriteCard__meta">{item.subtitle}</p>
