@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { TransportDetailsPanel } from './components/TransportDetailsPanel'
 import { TripFlowTree } from './components/TripFlowTree'
+import { TripDetailFlowTree } from './components/TripDetailFlowTree'
 import type { HotelSearchFilters } from './components/panels/HotelExplorerPanel'
 import type { FlightSearchFilters } from './components/panels/FlightExplorerPanel'
 import { AppFooter } from './components/AppFooter'
@@ -16,7 +17,9 @@ import { LandingPage } from './components/LandingPage'
 import type {
   AccommodationItem,
   AccommodationSearchResponse,
+  CityTransportResponse,
   DestinationItem,
+  HotelExtrasResponse,
   RoomItem,
   TransportExtrasResponse,
   TransportItinerary,
@@ -36,7 +39,6 @@ import type { FavoriteCreatePayload, FavoriteItem } from './types/favorites'
 import { favoriteKey } from './types/favorites'
 import type { BuilderPhase } from './types/builder'
 import { DetailOfferCard } from './components/builder/DetailOfferCard'
-import { DetailStepPlaceholder } from './components/builder/DetailStepPlaceholder'
 import './App.css'
 
 function App() {
@@ -59,11 +61,17 @@ function App() {
   const [rooms, setRooms] = useState<RoomItem[]>([])
   const [transport, setTransport] = useState<TransportItinerary[]>([])
   const [transportExtras, setTransportExtras] = useState<TransportExtrasResponse | null>(null)
+  const [hotelExtras, setHotelExtras] = useState<HotelExtrasResponse | null>(null)
+  const [cityTransport, setCityTransport] = useState<CityTransportResponse | null>(null)
 
   const [selectedHotelId, setSelectedHotelId] = useState('')
   const [selectedRoomId, setSelectedRoomId] = useState('')
   const [selectedTransportId, setSelectedTransportId] = useState('')
   const [selectedTransportExtraIds, setSelectedTransportExtraIds] = useState<Record<string, string>>(
+    {}
+  )
+  const [selectedHotelExtraIds, setSelectedHotelExtraIds] = useState<Record<string, string>>({})
+  const [selectedCityTransportIds, setSelectedCityTransportIds] = useState<Record<string, string>>(
     {}
   )
   const [detailsItinerary, setDetailsItinerary] = useState<TransportItinerary | null>(null)
@@ -100,6 +108,19 @@ function App() {
 
   const showCoreTree =
     selectedDestination && (builderPhase === 'core' || builderPhase === 'detail-offer')
+
+  const selectedHotel = useMemo(
+    () => accommodations.find((h) => h.id === selectedHotelId),
+    [accommodations, selectedHotelId]
+  )
+
+  const hasDetailSelections = Boolean(
+    Object.keys(selectedHotelExtraIds).length || Object.keys(selectedCityTransportIds).length
+  )
+
+  const hasDetailCatalog =
+    Boolean(hotelExtras?.categories.some((c) => c.items.length > 0)) ||
+    Boolean(cityTransport?.categories.some((c) => c.items.length > 0))
 
   useEffect(() => {
     if (!canSaveTrip) {
@@ -373,6 +394,10 @@ function App() {
       setSelectedTransportExtraIds({})
       setTransportExtras(null)
       setRooms([])
+      setHotelExtras(null)
+      setCityTransport(null)
+      setSelectedHotelExtraIds({})
+      setSelectedCityTransportIds({})
       setBuilderPhase('core')
       await refreshSummary()
     } catch (err) {
@@ -406,6 +431,10 @@ function App() {
       setSelectedTransportExtraIds({})
       setTransportExtras(null)
       setRooms([])
+      setHotelExtras(null)
+      setCityTransport(null)
+      setSelectedHotelExtraIds({})
+      setSelectedCityTransportIds({})
       setDetailsItinerary(null)
       setSaveMessage('')
       setShowBreakdown(false)
@@ -414,6 +443,78 @@ function App() {
       await refreshSummary()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка сброса дерева')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function loadDetailCatalogs() {
+    if (!tripId || !selectedHotelId) return
+    setError('')
+    try {
+      const [extras, city] = await Promise.all([
+        api<HotelExtrasResponse>(`/trips/${tripId}/accommodations/${selectedHotelId}/extras`),
+        api<CityTransportResponse>(`/trips/${tripId}/city-transport/options`),
+      ])
+      setHotelExtras(extras)
+      setCityTransport(city)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки детализации')
+    }
+  }
+
+  useEffect(() => {
+    if (builderPhase !== 'detail' || !tripId || !selectedHotelId) return
+    void loadDetailCatalogs()
+  }, [builderPhase, tripId, selectedHotelId])
+
+  async function pickHotelExtra(category: string, itemId: string) {
+    if (!tripId || !selectedHotelId) return
+    setLoading(true)
+    setError('')
+    try {
+      await api(`/trips/${tripId}/accommodations/${selectedHotelId}/extras/select`, 'POST', {
+        category,
+        item_id: itemId,
+      })
+      setSelectedHotelExtraIds((prev) => ({ ...prev, [category]: itemId }))
+      await refreshSummary()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка выбора места')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function pickCityTransport(category: string, itemId: string) {
+    if (!tripId) return
+    setLoading(true)
+    setError('')
+    try {
+      await api(`/trips/${tripId}/city-transport/select`, 'POST', {
+        category,
+        item_id: itemId,
+      })
+      setSelectedCityTransportIds((prev) => ({ ...prev, [category]: itemId }))
+      await refreshSummary()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка выбора транспорта')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function resetDetailSelections() {
+    if (!tripId || !hasDetailSelections) return
+    setLoading(true)
+    setError('')
+    try {
+      await api(`/trips/${tripId}/detail/reset`, 'POST')
+      setSelectedHotelExtraIds({})
+      setSelectedCityTransportIds({})
+      await refreshSummary()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка сброса детализации')
     } finally {
       setLoading(false)
     }
@@ -740,10 +841,45 @@ function App() {
             />
             </>
           ) : tripId && selectedDestination && builderPhase === 'detail' ? (
-            <DetailStepPlaceholder
-              destinationTitle={selectedDestination.title}
-              onBack={() => setBuilderPhase('detail-offer')}
-            />
+            <>
+              <div className="tripTreeToolbar tripTreeToolbar--detail">
+                <button
+                  type="button"
+                  className="btn btnGhost tripTreeToolbar__back"
+                  onClick={() => setBuilderPhase('detail-offer')}
+                >
+                  ← Назад к основе
+                </button>
+                <p className="tripTreeToolbar__hint">
+                  Детализация · <strong>{selectedDestination.title}</strong>
+                </p>
+                <button
+                  type="button"
+                  className="btn btnGhost tripTreeToolbar__reset"
+                  disabled={loading || !hasDetailSelections}
+                  onClick={() => void resetDetailSelections()}
+                >
+                  Сбросить
+                </button>
+              </div>
+              {!hasDetailCatalog && !loading ? (
+                <p className="builderStepPlaceholder__hint builderEmptyDetail">
+                  Для этого направления пока нет дополнительных мест и транспорта в каталоге.
+                </p>
+              ) : null}
+              <TripDetailFlowTree
+                destination={selectedDestination}
+                hotel={selectedHotel}
+                passengers={passengers}
+                loading={loading}
+                hotelExtras={hotelExtras}
+                cityTransport={cityTransport}
+                selectedHotelExtraIds={selectedHotelExtraIds}
+                selectedCityTransportIds={selectedCityTransportIds}
+                onPickHotelExtra={pickHotelExtra}
+                onPickCityTransport={pickCityTransport}
+              />
+            </>
           ) : null}
         </main>
 

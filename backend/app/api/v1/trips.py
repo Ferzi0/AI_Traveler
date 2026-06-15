@@ -984,6 +984,28 @@ def _reset_tree_selections(db: Session, trip_id: int) -> None:
         db.execute(delete(TripNode).where(TripNode.id.in_(node_ids)))
 
 
+def _reset_detail_selections(db: Session, trip_id: int) -> None:
+    nodes = db.execute(
+        select(TripNode.id).where(
+            TripNode.trip_id == trip_id,
+            or_(
+                TripNode.node_type.like("hotel_extra:%"),
+                TripNode.node_type.like("city_transport:%"),
+                TripNode.node_type.like("day_plan:%"),
+            ),
+        )
+    ).scalars()
+    node_ids = list(nodes)
+    if node_ids:
+        db.execute(
+            delete(TripEdge).where(
+                TripEdge.trip_id == trip_id,
+                (TripEdge.source_node_id.in_(node_ids) | TripEdge.target_node_id.in_(node_ids)),
+            )
+        )
+        db.execute(delete(TripNode).where(TripNode.id.in_(node_ids)))
+
+
 def _get_node_by_type(db: Session, trip_id: int, node_type: str) -> TripNode | None:
     return db.execute(
         select(TripNode).where(TripNode.trip_id == trip_id, TripNode.node_type == node_type)
@@ -1163,6 +1185,7 @@ def select_destination(
     destination_node = _ensure_destination_node(db, trip)
     _reset_choice_branch(db, trip_id, "accommodation")
     _reset_choice_branch(db, trip_id, "transport")
+    _reset_detail_selections(db, trip_id)
 
     db.commit()
 
@@ -1215,6 +1238,14 @@ def reset_trip_selections(trip_id: int, db: Session = Depends(get_db)) -> dict[s
             detail="Select destination first",
         )
     _reset_tree_selections(db, trip_id)
+    db.commit()
+    return {"status": "ok"}
+
+
+@router.post("/{trip_id}/detail/reset")
+def reset_trip_detail_selections(trip_id: int, db: Session = Depends(get_db)) -> dict[str, str]:
+    _get_trip_or_404(db, trip_id)
+    _reset_detail_selections(db, trip_id)
     db.commit()
     return {"status": "ok"}
 

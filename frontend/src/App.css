@@ -2094,6 +2094,36 @@
   font-size: 0.9rem;
 }
 
+.tripTreeToolbar--detail {
+  max-width: min(1040px, 100%);
+}
+
+.tripTreeToolbar__back {
+  flex-shrink: 0;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.88rem;
+}
+
+.builderEmptyDetail {
+  max-width: min(560px, 100%);
+  margin: 0 auto 1rem;
+  text-align: center;
+}
+
+.tripFlow--detail {
+  padding-top: 0.25rem;
+}
+
+.catalogCard--detail {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.catalogCard__media--detail {
+  height: 140px;
+  width: 100%;
+}
+
 .tripFlow {
   width: 100%;
   overflow-x: auto;

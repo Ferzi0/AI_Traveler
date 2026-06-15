@@ -1,0 +1,79 @@
+import { useEffect, useMemo, useState } from 'react'
+import { FilterToolbar } from './FilterToolbar'
+import { FullscreenPanel } from './FullscreenPanel'
+import type { HotelExtraItem } from '../../types/trip'
+import { appendCostToSubtitle } from '../../utils/cost'
+import { imageBackgroundStyle } from '../../utils/images'
+
+const DEFAULT_SORT = 'price'
+
+type Props = {
+  open: boolean
+  title: string
+  items: HotelExtraItem[]
+  selectedId?: string
+  passengers: number
+  imageUrlForItem: (item: HotelExtraItem) => string
+  onClose: () => void
+  onSelect: (itemId: string) => void
+}
+
+export function DetailExtraPickerPanel({
+  open,
+  title,
+  items,
+  selectedId,
+  passengers,
+  imageUrlForItem,
+  onClose,
+  onSelect,
+}: Props) {
+  const [sortBy, setSortBy] = useState(DEFAULT_SORT)
+
+  useEffect(() => {
+    if (!open) setSortBy(DEFAULT_SORT)
+  }, [open])
+
+  const sorted = useMemo(() => {
+    const list = [...items]
+    if (sortBy === 'price_desc') list.sort((a, b) => b.estimated_cost - a.estimated_cost)
+    else list.sort((a, b) => a.estimated_cost - b.estimated_cost)
+    return list
+  }, [items, sortBy])
+
+  return (
+    <FullscreenPanel title={title} open={open} onClose={onClose}>
+      <FilterToolbar
+        sortValue={sortBy}
+        onSortChange={setSortBy}
+        sortOptions={[
+          { value: 'price', label: 'Дешевле' },
+          { value: 'price_desc', label: 'Дороже' },
+        ]}
+        onReset={() => setSortBy(DEFAULT_SORT)}
+      />
+      <div className="catalogList">
+        {sorted.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={`catalogCard catalogCard--detail${selectedId === item.id ? ' catalogCard--active' : ''}`}
+            onClick={() => onSelect(item.id)}
+          >
+            <div
+              className="catalogCard__media catalogCard__media--detail"
+              style={imageBackgroundStyle(imageUrlForItem(item))}
+              aria-hidden
+            />
+            <div className="catalogCard__body">
+              <strong>{item.title}</strong>
+              <span className="catalogCard__meta">
+                {appendCostToSubtitle(item.description, item.estimated_cost, passengers)}
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </FullscreenPanel>
+  )
+}
