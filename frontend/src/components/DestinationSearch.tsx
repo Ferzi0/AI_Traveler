@@ -166,12 +166,7 @@ export function DestinationSearch({
                       <span className="destinationSearch__label">
                         <HighlightLabel label={label} query={value} />
                       </span>
-                      <span className="destinationSearch__country">
-                        {dest.country}
-                        {dest.inCatalog ? (
-                          <span className="destinationSearch__badge">Маршрут</span>
-                        ) : null}
-                      </span>
+                      <span className="destinationSearch__country">{dest.country}</span>
                     </button>
                   </li>
                 )

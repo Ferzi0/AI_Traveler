@@ -16,23 +16,10 @@ from app.data.iata_catalog import (
     resolve_destination,
 )
 from app.models.trip import Trip
-from app.services.travelpayouts import fetch_prices_for_route
+from app.services.travelpayouts import fetch_prices_for_route, build_aviasales_search_url
 
 ITINERARY_CACHE_TTL_SEC = 3600
 _trip_itinerary_cache: dict[int, tuple[float, dict[str, dict[str, Any]]]] = {}
-
-
-def build_aviasales_search_url(link: str | None) -> str | None:
-    if not link:
-        return None
-    path = link if link.startswith("/") else f"/{link}"
-    base = "https://www.aviasales.ru/search"
-    url = f"{base}{path}"
-    marker = settings.TRAVELPAYOUTS_MARKER.strip()
-    if marker:
-        sep = "&" if "?" in url else "?"
-        url = f"{url}{sep}marker={marker}"
-    return url
 
 
 def _itinerary_id_from_row(row: dict[str, Any]) -> str:

@@ -1,4 +1,8 @@
-/** Пути к локальным ассетам — зеркало backend/app/data/hotel_catalog.py и room_catalog.py */
+import {
+  DEFAULT_DESTINATION_COVER,
+  DESTINATION_COVER_BY_TITLE,
+  destinationCoverByTitle,
+} from './destinationImages'
 
 const ACCOMMODATION_GALLERY_SIZE = 4
 const ROOM_GALLERY_SIZE = 4
@@ -46,23 +50,21 @@ export function roomGallery(room: {
 }
 
 const DESTINATION_IMAGE_BY_SLUG: Record<string, string> = {
-  istanbul: '/images/destinations/istanbul.jpg',
-  phuket: '/images/destinations/phuket.jpg',
-  london: '/images/destinations/london.jpg',
-}
-
-const DESTINATION_IMAGE_BY_TITLE: Record<string, string> = {
-  Стамбул: '/images/destinations/istanbul.jpg',
-  Пхукет: '/images/destinations/phuket.jpg',
-  Лондон: '/images/destinations/london.jpg',
+  istanbul: DESTINATION_COVER_BY_TITLE['Стамбул'],
+  phuket: DESTINATION_COVER_BY_TITLE['Пхукет'],
+  london: DESTINATION_COVER_BY_TITLE['Лондон'],
 }
 
 export function destinationImage(itemKey: string, title: string): string | undefined {
-  return DESTINATION_IMAGE_BY_SLUG[itemKey] ?? DESTINATION_IMAGE_BY_TITLE[title]
+  return DESTINATION_IMAGE_BY_SLUG[itemKey] ?? DESTINATION_COVER_BY_TITLE[title]
 }
 
 export function destinationCoverImage(item: { id: string; title: string; image_url?: string }): string {
-  return destinationImage(item.id, item.title) ?? item.image_url ?? '/images/destinations/phuket.jpg'
+  return (
+    destinationImage(item.id, item.title) ??
+    (item.image_url && item.image_url.length > 0 ? item.image_url : undefined) ??
+    DEFAULT_DESTINATION_COVER
+  )
 }
 
 export function accommodationGallery(hotel: {

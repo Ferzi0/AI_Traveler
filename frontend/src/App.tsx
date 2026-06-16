@@ -28,6 +28,9 @@ import { api, AUTH_EXPIRED_EVENT, clearAuthToken } from './api'
 import { formatCalculationMeta, formatSummaryTotal } from './utils/cost'
 import { destinationCoverImage } from './data/imageCatalog'
 import { adjustDatesOnEndChange, adjustDatesOnStartChange, clampEndDate, todayIsoLocal } from './utils/tripDates'
+import { PriceCalendarPanel } from './components/panels/PriceCalendarPanel'
+import { SpecialOffersPanel } from './components/panels/SpecialOffersPanel'
+import type { SpecialOffer, SpecialOffersResponse } from './types/flights'
 import { imageBackgroundStyle } from './utils/images'
 import { CityCombobox } from './components/CityCombobox'
 import { DestinationSearch } from './components/DestinationSearch'
@@ -38,6 +41,7 @@ import type { FavoriteCreatePayload, FavoriteItem } from './types/favorites'
 import { favoriteKey } from './types/favorites'
 import type { BuilderPhase } from './types/builder'
 import { DetailOfferCard } from './components/builder/DetailOfferCard'
+import { TripBuildProgress } from './components/TripBuildProgress'
 import './App.css'
 
 function App() {
@@ -77,6 +81,12 @@ function App() {
   )
   const [treeResetKey, setTreeResetKey] = useState(0)
   const [builderPhase, setBuilderPhase] = useState<BuilderPhase>('core')
+  const [flexDatesOpen, setFlexDatesOpen] = useState(false)
+  const [routeOffers, setRouteOffers] = useState<SpecialOffer[]>([])
+  const [routeOffersCurrency, setRouteOffersCurrency] = useState('rub')
+  const [routeOffersOriginLabel, setRouteOffersOriginLabel] = useState('')
+  const [routeOffersLoading, setRouteOffersLoading] = useState(false)
+  const [routeOffersError, setRouteOffersError] = useState<string | null>(null)
 
   const [summary, setSummary] = useState<TripSummary | null>(null)
   const [showBreakdown, setShowBreakdown] = useState(false)
@@ -275,6 +285,41 @@ function App() {
     })()
   }, [origin, startDate, endDate, passengers, tripId, selectedDestination])
 
+  useEffect(() => {
+    if (!selectedDestination) {
+      setRouteOffers([])
+      setRouteOffersError(null)
+      setRouteOffersLoading(false)
+      return
+    }
+    let cancelled = false
+    setRouteOffersLoading(true)
+    setRouteOffersError(null)
+    const params = new URLSearchParams({
+      origin,
+      destination: selectedDestination.title,
+      limit: '6',
+    })
+    void api<SpecialOffersResponse>(`/flights/special-offers?${params.toString()}`)
+      .then((res) => {
+        if (cancelled) return
+        setRouteOffers(res.items)
+        setRouteOffersCurrency(res.currency)
+        setRouteOffersOriginLabel(res.origin_label)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        setRouteOffers([])
+        setRouteOffersError(err instanceof Error ? err.message : 'Не удалось загрузить спецпредложения')
+      })
+      .finally(() => {
+        if (!cancelled) setRouteOffersLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [origin, selectedDestination])
+
   function handleStartDateChange(value: string) {
     const next = adjustDatesOnStartChange(value, endDate)
     setStartDate(next.startDate)
@@ -283,6 +328,12 @@ function App() {
 
   function handleEndDateChange(value: string) {
     const next = adjustDatesOnEndChange(startDate, value)
+    setEndDate(next.endDate)
+  }
+
+  function handleCalendarPickDates(nextStart: string, nextEnd: string) {
+    const next = adjustDatesOnStartChange(nextStart, nextEnd)
+    setStartDate(next.startDate)
     setEndDate(next.endDate)
   }
 
@@ -356,11 +407,6 @@ function App() {
 
   async function handleDestinationSuggest(dest: TouristDestination) {
     setDestinationQuery(dest.title)
-    if (!dest.inCatalog) {
-      setDestinations([])
-      setError('Маршрут для этого города скоро появится. Сейчас доступны: Пхукет, Лондон, Стамбул.')
-      return
-    }
     setError('')
     const items = await searchDestinations(dest.title)
     const match = items?.find((item) => item.title === dest.title)
@@ -783,7 +829,41 @@ function App() {
                 onChange={(e) => setPassengers(Number(e.target.value))}
               />
             </div>
+            {selectedDestination ? (
+              <div className="paramsCell paramsCell--flexDates">
+                <label htmlFor="flex-dates">Даты</label>
+                <button
+                  id="flex-dates"
+                  type="button"
+                  className={`btn btnGhost paramsFlexDatesBtn${flexDatesOpen ? ' paramsFlexDatesBtn--active' : ''}`}
+                  onClick={() => setFlexDatesOpen((v) => !v)}
+                >
+                  {flexDatesOpen ? 'Скрыть календарь' : 'Гибкие даты'}
+                </button>
+              </div>
+            ) : null}
           </div>
+
+          {selectedDestination && flexDatesOpen ? (
+            <PriceCalendarPanel
+              origin={origin}
+              destinationTitle={selectedDestination.title}
+              startDate={startDate}
+              endDate={endDate}
+              onPickDates={handleCalendarPickDates}
+            />
+          ) : null}
+
+          {selectedDestination ? (
+            <SpecialOffersPanel
+              originLabel={routeOffersOriginLabel || origin}
+              destinationLabel={selectedDestination.title}
+              currency={routeOffersCurrency}
+              items={routeOffers}
+              loading={routeOffersLoading}
+              error={routeOffersError}
+            />
+          ) : null}
 
           {!selectedDestination ? (
             <section className="destinationHero" aria-labelledby="destination-hero-title">
@@ -836,6 +916,12 @@ function App() {
             </section>
           ) : tripId && selectedDestination && showCoreTree ? (
             <>
+              <TripBuildProgress
+                selectedHotelId={selectedHotelId}
+                selectedRoomId={selectedRoomId}
+                selectedTransportId={selectedTransportId}
+                selectedTransportExtraIds={selectedTransportExtraIds}
+              />
               <div className="tripTreeToolbar">
                 <p className="tripTreeToolbar__hint">
                   Направление: <strong>{selectedDestination.title}</strong>

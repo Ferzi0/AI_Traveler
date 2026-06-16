@@ -4,8 +4,10 @@ import { AppFooter } from './AppFooter'
 import { ScrollToTopButton } from './ScrollToTopButton'
 import { CityCombobox } from './CityCombobox'
 import { PopularDirectionsPanel } from './PopularDirectionsPanel'
+import { LandingPriceCalendarSection } from './LandingPriceCalendarSection'
+import { SpecialOffersPanel } from './panels/SpecialOffersPanel'
 import { api } from '../api'
-import type { PopularDestination, PopularDirectionsResponse } from '../types/flights'
+import type { PopularDestination, PopularDirectionsResponse, SpecialOffer, SpecialOffersResponse } from '../types/flights'
 import type { PlatformStats } from '../types/stats'
 import { adjustDatesOnEndChange, adjustDatesOnStartChange, todayIsoLocal } from '../utils/tripDates'
 
@@ -27,6 +29,10 @@ export function LandingPage({ onLogin, onRegister }: Props) {
   const [popularCurrency, setPopularCurrency] = useState('rub')
   const [popularError, setPopularError] = useState<string | null>(null)
   const [popularLoading, setPopularLoading] = useState(true)
+  const [specialOffers, setSpecialOffers] = useState<SpecialOffer[]>([])
+  const [specialOffersCurrency, setSpecialOffersCurrency] = useState('rub')
+  const [specialOffersError, setSpecialOffersError] = useState<string | null>(null)
+  const [specialOffersLoading, setSpecialOffersLoading] = useState(true)
 
   useEffect(() => {
     void api<PlatformStats>('/stats').then(setStats).catch(() => null)
@@ -52,6 +58,31 @@ export function LandingPage({ onLogin, onRegister }: Props) {
       })
       .finally(() => {
         if (!cancelled) setPopularLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [origin])
+
+  useEffect(() => {
+    let cancelled = false
+    setSpecialOffersLoading(true)
+    setSpecialOffersError(null)
+    void api<SpecialOffersResponse>(
+      `/flights/special-offers?origin=${encodeURIComponent(origin)}&limit=6`
+    )
+      .then((res) => {
+        if (cancelled) return
+        setSpecialOffers(res.items)
+        setSpecialOffersCurrency(res.currency)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        setSpecialOffers([])
+        setSpecialOffersError(err instanceof Error ? err.message : 'Не удалось загрузить спецпредложения')
+      })
+      .finally(() => {
+        if (!cancelled) setSpecialOffersLoading(false)
       })
     return () => {
       cancelled = true
@@ -147,7 +178,28 @@ export function LandingPage({ onLogin, onRegister }: Props) {
           items={popular}
           loading={popularLoading}
           error={popularError}
-          onSelect={onLogin}
+          onBuildTrip={onLogin}
+        />
+
+        <LandingPriceCalendarSection
+          origin={origin}
+          startDate={startDate}
+          endDate={endDate}
+          destinations={popular}
+          loading={popularLoading}
+          onPickDates={(nextStart, nextEnd) => {
+            const next = adjustDatesOnStartChange(nextStart, nextEnd)
+            setStartDate(next.startDate)
+            setEndDate(next.endDate)
+          }}
+        />
+
+        <SpecialOffersPanel
+          originLabel={popularOriginLabel}
+          currency={specialOffersCurrency}
+          items={specialOffers}
+          loading={specialOffersLoading}
+          error={specialOffersError}
         />
 
         {stats && (

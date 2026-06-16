@@ -1,3 +1,4 @@
+import { FlightOffersSkeleton } from './FlightOffersSkeleton'
 import type { PopularDestination } from '../types/flights'
 import {
   airlineLogoUrl,
@@ -15,7 +16,7 @@ type Props = {
   items: PopularDestination[]
   loading: boolean
   error: string | null
-  onSelect: () => void
+  onBuildTrip: () => void
 }
 
 export function PopularDirectionsPanel({
@@ -24,8 +25,10 @@ export function PopularDirectionsPanel({
   items,
   loading,
   error,
-  onSelect,
+  onBuildTrip,
 }: Props) {
+  const showSkeleton = loading && items.length === 0
+
   return (
     <section className="flightOffers" aria-labelledby="popular-directions-title">
       <header className="flightOffers__header">
@@ -48,6 +51,8 @@ export function PopularDirectionsPanel({
         </p>
       ) : null}
 
+      {showSkeleton ? <FlightOffersSkeleton rows={6} /> : null}
+
       {!error && !loading && items.length === 0 ? (
         <p className="flightOffers__message">Направления не найдены</p>
       ) : null}
@@ -59,10 +64,11 @@ export function PopularDirectionsPanel({
             const days = tripDaysFromApi(dest.departure_at, dest.return_at)
             const duration = durationLabel(dest.duration ?? dest.duration_to)
             const dates = formatTripDates(dest.departure_at, dest.return_at)
+            const aviasalesUrl = dest.aviasales_url
 
             return (
               <li key={`${dest.origin}-${dest.destination}-${dest.departure_at ?? ''}`}>
-                <button type="button" className="flightOffer" onClick={onSelect}>
+                <div className="flightOffer flightOffer--withActions">
                   <div className="flightOffer__route">
                     <span className="flightOffer__codes">
                       {routeLabel(dest.origin, dest.destination)}
@@ -107,7 +113,27 @@ export function PopularDirectionsPanel({
                     <span className="flightOffer__priceLabel">от</span>
                     <span className="flightOffer__price">{formatPrice(dest.price, currency)}</span>
                   </div>
-                </button>
+
+                  <div className="flightOffer__actions">
+                    {aviasalesUrl ? (
+                      <a
+                        href={aviasalesUrl}
+                        className="btn btnGhost flightOffer__actionBtn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Aviasales ↗
+                      </a>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="btn btnAccent flightOffer__actionBtn"
+                      onClick={onBuildTrip}
+                    >
+                      Собрать поездку
+                    </button>
+                  </div>
+                </div>
               </li>
             )
           })}

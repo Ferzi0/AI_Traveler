@@ -4,19 +4,17 @@ export type TouristDestination = {
   country: string
   /** Штат, провинция, регион — для США, Канады и т.п. */
   region?: string
-  /** Есть полный маршрут в конструкторе (каталог backend) */
-  inCatalog?: boolean
 }
 
 export const TOURIST_DESTINATIONS: readonly TouristDestination[] = [
-  { title: 'Пхукет', country: 'Таиланд', inCatalog: true },
+  { title: 'Пхукет', country: 'Таиланд' },
   { title: 'Бангкок', country: 'Таиланд' },
   { title: 'Паттайя', country: 'Таиланд' },
   { title: 'Краби', country: 'Таиланд' },
-  { title: 'Лондон', country: 'Великобритания', inCatalog: true },
+  { title: 'Лондон', country: 'Великобритания' },
   { title: 'Эдинбург', country: 'Великобритания' },
   { title: 'Манчестер', country: 'Великобритания' },
-  { title: 'Стамбул', country: 'Турция', inCatalog: true },
+  { title: 'Стамбул', country: 'Турция' },
   { title: 'Анталья', country: 'Турция' },
   { title: 'Измир', country: 'Турция' },
   { title: 'Париж', country: 'Франция' },

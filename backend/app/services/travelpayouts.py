@@ -17,7 +17,34 @@ logger = logging.getLogger(__name__)
 BASE_URL = "https://api.travelpayouts.com"
 CACHE_TTL_SEC = 3600
 
-_cache: dict[str, tuple[float, list[dict[str, Any]]]] = {}
+_cache: dict[str, tuple[float, Any]] = {}
+
+
+def build_aviasales_search_url(link: str | None) -> str | None:
+    if not link:
+        return None
+    path = link if link.startswith("/") else f"/{link}"
+    url = f"https://www.aviasales.ru/search{path}"
+    marker = settings.TRAVELPAYOUTS_MARKER.strip()
+    if marker:
+        sep = "&" if "?" in url else "?"
+        url = f"{url}{sep}marker={marker}"
+    return url
+
+
+def _cache_get(key: str) -> Any | None:
+    entry = _cache.get(key)
+    if not entry:
+        return None
+    expires_at, value = entry
+    if time.time() >= expires_at:
+        _cache.pop(key, None)
+        return None
+    return value
+
+
+def _cache_set(key: str, value: Any) -> None:
+    _cache[key] = (time.time() + CACHE_TTL_SEC, value)
 
 
 def _http_get_json(url: str, token: str) -> dict[str, Any]:
@@ -79,6 +106,7 @@ def _normalize_row(row: dict[str, Any], default_origin: str) -> dict[str, Any] |
         "duration_to": row.get("duration_to"),
         "duration_back": row.get("duration_back"),
         "link": row.get("link"),
+        "aviasales_url": build_aviasales_search_url(row.get("link")),
         "expires_at": row.get("expires_at"),
     }
     return item
@@ -217,19 +245,11 @@ def _fetch_city_directions(origin_iata: str, limit: int, token: str) -> list[dic
     return _dedupe_items(items, limit)
 
 
-def _cache_get(key: str) -> list[dict[str, Any]] | None:
-    entry = _cache.get(key)
-    if not entry:
-        return None
-    expires_at, items = entry
-    if time.time() >= expires_at:
-        _cache.pop(key, None)
-        return None
-    return items
-
-
-def _cache_set(key: str, items: list[dict[str, Any]]) -> None:
-    _cache[key] = (time.time() + CACHE_TTL_SEC, items)
+def _cache_get_list(key: str) -> list[dict[str, Any]] | None:
+    value = _cache_get(key)
+    if isinstance(value, list):
+        return value
+    return None
 
 
 def get_popular_destinations(origin_iata: str, limit: int = 6) -> dict[str, Any]:
@@ -239,7 +259,7 @@ def get_popular_destinations(origin_iata: str, limit: int = 6) -> dict[str, Any]
 
     origin = origin_iata.strip().upper()
     cache_key = f"popular:{origin}:{limit}"
-    cached = _cache_get(cache_key)
+    cached = _cache_get_list(cache_key)
     if cached is not None:
         return {
             "origin": origin,
@@ -259,3 +279,139 @@ def get_popular_destinations(origin_iata: str, limit: int = 6) -> dict[str, Any]
         "currency": settings.TRAVELPAYOUTS_CURRENCY,
         "items": items,
     }
+
+
+def fetch_price_calendar(
+    origin_iata: str,
+    destination_iata: str,
+    depart_month: str,
+    return_month: str | None = None,
+    trip_length: int | None = None,
+) -> list[dict[str, Any]]:
+    token = settings.TRAVELPAYOUTS_API_TOKEN.strip()
+    if not token:
+        raise RuntimeError("TRAVELPAYOUTS_API_TOKEN is not configured")
+
+    origin = origin_iata.upper()
+    destination = destination_iata.upper()
+    cache_key = f"cal:{origin}:{destination}:{depart_month}:{return_month}:{trip_length}"
+    cached = _cache_get(cache_key)
+    if isinstance(cached, list):
+        return cached
+
+    params: dict[str, str] = {
+        "origin": origin,
+        "destination": destination,
+        "depart_date": depart_month,
+        "calendar_type": "departure_date",
+        "currency": settings.TRAVELPAYOUTS_CURRENCY,
+        "market": settings.TRAVELPAYOUTS_MARKET,
+        "token": token,
+    }
+    if return_month:
+        params["return_date"] = return_month
+    if trip_length is not None and trip_length > 0:
+        params["length"] = str(trip_length)
+
+    url = f"{BASE_URL}/v1/prices/calendar?{urllib.parse.urlencode(params)}"
+    payload = _http_get_json(url, token)
+    if not payload.get("success"):
+        raise RuntimeError(str(payload.get("error") or "Travelpayouts calendar failed"))
+
+    raw = payload.get("data") or {}
+    items: list[dict[str, Any]] = []
+    if isinstance(raw, dict):
+        for date_key, row in raw.items():
+            if not isinstance(row, dict) or row.get("price") is None:
+                continue
+            item = {
+                "date": date_key,
+                "origin": row.get("origin") or origin,
+                "destination": row.get("destination") or destination,
+                "price": row.get("price"),
+                "transfers": row.get("transfers"),
+                "airline": row.get("airline"),
+                "flight_number": row.get("flight_number"),
+                "departure_at": row.get("departure_at"),
+                "return_at": row.get("return_at"),
+                "expires_at": row.get("expires_at"),
+            }
+            items.append(enrich_place_names(item))
+
+    items.sort(key=lambda row: row["date"])
+    _cache_set(cache_key, items)
+    return items
+
+
+def _normalize_special_offer(row: dict[str, Any]) -> dict[str, Any] | None:
+    price_raw = row.get("price")
+    destination = row.get("destination")
+    if price_raw is None or not destination:
+        return None
+    link = row.get("link")
+    item: dict[str, Any] = {
+        "origin": str(row.get("origin", "")).upper(),
+        "destination": str(destination).upper(),
+        "origin_airport": row.get("origin_airport"),
+        "destination_airport": row.get("destination_airport"),
+        "origin_name": row.get("origin_name"),
+        "destination_name": row.get("destination_name"),
+        "price": price_raw,
+        "airline": row.get("airline"),
+        "airline_title": row.get("airline_title"),
+        "flight_number": row.get("flight_number"),
+        "departure_at": row.get("departure_at"),
+        "return_at": row.get("return_at"),
+        "duration": row.get("duration"),
+        "title": row.get("title"),
+        "mini_title": row.get("mini_title"),
+        "link": link,
+        "aviasales_url": build_aviasales_search_url(link),
+        "color": row.get("color"),
+    }
+    return enrich_place_names(item)
+
+
+def fetch_special_offers(
+    origin_iata: str,
+    destination_iata: str | None = None,
+    limit: int = 6,
+) -> list[dict[str, Any]]:
+    token = settings.TRAVELPAYOUTS_API_TOKEN.strip()
+    if not token:
+        raise RuntimeError("TRAVELPAYOUTS_API_TOKEN is not configured")
+
+    origin = origin_iata.upper()
+    dest_part = destination_iata.upper() if destination_iata else "-"
+    cache_key = f"offers:{origin}:{dest_part}:{limit}"
+    cached = _cache_get_list(cache_key)
+    if cached is not None:
+        return cached
+
+    params: dict[str, str] = {
+        "origin": origin,
+        "locale": "ru",
+        "currency": settings.TRAVELPAYOUTS_CURRENCY,
+        "market": settings.TRAVELPAYOUTS_MARKET,
+        "token": token,
+    }
+    if destination_iata:
+        params["destination"] = destination_iata.upper()
+
+    url = f"{BASE_URL}/aviasales/v3/get_special_offers?{urllib.parse.urlencode(params)}"
+    payload = _http_get_json(url, token)
+    if not payload.get("success"):
+        raise RuntimeError(str(payload.get("error") or "Travelpayouts special offers failed"))
+
+    rows = payload.get("data") or []
+    items: list[dict[str, Any]] = []
+    for row in rows:
+        if isinstance(row, dict):
+            normalized = _normalize_special_offer(row)
+            if normalized:
+                items.append(normalized)
+        if len(items) >= limit:
+            break
+
+    _cache_set(cache_key, items)
+    return items

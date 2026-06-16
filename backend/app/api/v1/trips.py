@@ -9,8 +9,14 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.data.destination_images import destination_cover_url
 from app.data.hotel_catalog import accommodation_cover_image, accommodation_image_urls
 from app.data.room_catalog import get_room_catalog_entry
+from app.data.tourist_destinations import (
+    destination_slug,
+    find_tourist_destination,
+    search_tourist_destinations,
+)
 from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models.constructor_catalog import (
@@ -24,6 +30,16 @@ from app.models.trip_edge import TripEdge
 from app.models.trip_node import TripNode
 from app.models.user import User
 from app.services.flight_search import find_trip_itinerary, search_trip_flights
+from app.services.virtual_catalog import (
+    CatalogAccommodation,
+    destination_coords as virtual_destination_coords,
+    find_city_transport_item as virtual_find_city_transport_item,
+    find_hotel_extra as virtual_find_hotel_extra,
+    serialize_accommodation as serialize_catalog_accommodation,
+    serialize_city_transport as virtual_serialize_city_transport,
+    serialize_hotel_extras as virtual_serialize_hotel_extras,
+    virtual_accommodations,
+)
 
 router = APIRouter()
 
@@ -508,13 +524,32 @@ DAY_PLAN_CATALOG_BY_DESTINATION: dict[str, dict[str, list[dict]]] = {
 }
 
 
-def _serialize_destination(row: ConstructorDestination) -> dict[str, str]:
+def _destination_country(title: str) -> str:
+    meta = find_tourist_destination(title)
+    return meta["country"] if meta else ""
+
+
+def _serialize_destination_row(row: ConstructorDestination) -> dict[str, str]:
     return {
         "id": row.slug,
         "title": row.title,
         "country": row.country,
-        "image_url": DESTINATION_IMAGE_URLS.get(row.title, ""),
+        "image_url": destination_cover_url(row.title),
     }
+
+
+def _serialize_tourist_destination(row: dict[str, str]) -> dict[str, str]:
+    title = row["title"]
+    return {
+        "id": destination_slug(title),
+        "title": title,
+        "country": row["country"],
+        "image_url": destination_cover_url(title),
+    }
+
+
+def _serialize_destination(row: ConstructorDestination) -> dict[str, str]:
+    return _serialize_destination_row(row)
 
 
 DESTINATION_COORDS: dict[str, tuple[float, float]] = {
@@ -522,6 +557,14 @@ DESTINATION_COORDS: dict[str, tuple[float, float]] = {
     "Лондон": (51.5074, -0.1278),
     "Стамбул": (41.0082, 28.9784),
 }
+
+
+def _map_center_for_destination(title: str) -> dict[str, float]:
+    lat, lng = virtual_destination_coords(title, _destination_country(title))
+    legacy = DESTINATION_COORDS.get(title)
+    if legacy:
+        lat, lng = legacy
+    return {"latitude": lat, "longitude": lng}
 
 # Обложка отеля (первое фото галереи) — для обратной совместимости.
 ACCOMMODATION_IMAGE_URLS: dict[str, str] = {
@@ -533,13 +576,6 @@ ACCOMMODATION_IMAGE_URLS: dict[str, str] = {
 }
 
 DEFAULT_ACCOMMODATION_IMAGE = "/images/hotels/default.jpg"
-
-DESTINATION_IMAGE_URLS: dict[str, str] = {
-    "Пхукет": "/images/destinations/phuket.jpg",
-    "Лондон": "/images/destinations/london.jpg",
-    "Стамбул": "/images/destinations/istanbul.jpg",
-}
-
 
 def _accommodation_image_url(public_id: str) -> str:
     return accommodation_cover_image(public_id)
@@ -656,26 +692,30 @@ def _build_itinerary_details(
     }
 
 
-def _serialize_hotel_extras(accommodation_id: str) -> dict:
-    payload = HOTEL_EXTRA_CATALOG.get(accommodation_id, {})
-    categories = []
-    for category, items in payload.items():
-        categories.append(
-            {
-                "category": category,
-                "title": EXTRA_CATEGORY_LABELS.get(category, category),
-                "items": items,
-            }
-        )
-    return {"categories": categories}
+def _serialize_hotel_extras(accommodation_id: str, destination_title: str) -> dict:
+    payload = HOTEL_EXTRA_CATALOG.get(accommodation_id)
+    if payload:
+        categories = []
+        for category, items in payload.items():
+            categories.append(
+                {
+                    "category": category,
+                    "title": EXTRA_CATEGORY_LABELS.get(category, category),
+                    "items": items,
+                }
+            )
+        return {"categories": categories}
+    return virtual_serialize_hotel_extras(accommodation_id, destination_title)
 
 
-def _find_hotel_extra(accommodation_id: str, category: str, item_id: str) -> dict | None:
+def _find_hotel_extra(
+    accommodation_id: str, destination_title: str, category: str, item_id: str
+) -> dict | None:
     payload = HOTEL_EXTRA_CATALOG.get(accommodation_id, {})
     for item in payload.get(category, []):
         if item["id"] == item_id:
             return item
-    return None
+    return virtual_find_hotel_extra(accommodation_id, destination_title, category, item_id)
 
 
 def _reset_hotel_extra_category(db: Session, trip_id: int, category: str) -> None:
@@ -761,21 +801,23 @@ def _reset_transport_extra_category(db: Session, trip_id: int, category: str) ->
 
 
 def _serialize_city_transport(destination_title: str) -> dict:
-    city_payload = CITY_TRANSPORT_CATALOG.get(destination_title, {})
-    labels = CITY_TRANSPORT_LABELS_BY_CITY.get(destination_title, {})
-    categories = []
-    for category, items in city_payload.items():
-        categories.append(
-            {
-                "category": category,
-                "title": labels.get(
-                    category,
-                    CITY_TRANSPORT_LABELS_DEFAULT.get(category, category),
-                ),
-                "items": items,
-            }
-        )
-    return {"categories": categories}
+    city_payload = CITY_TRANSPORT_CATALOG.get(destination_title)
+    if city_payload:
+        labels = CITY_TRANSPORT_LABELS_BY_CITY.get(destination_title, {})
+        categories = []
+        for category, items in city_payload.items():
+            categories.append(
+                {
+                    "category": category,
+                    "title": labels.get(
+                        category,
+                        CITY_TRANSPORT_LABELS_DEFAULT.get(category, category),
+                    ),
+                    "items": items,
+                }
+            )
+        return {"categories": categories}
+    return virtual_serialize_city_transport(destination_title)
 
 
 def _find_city_transport_item(destination_title: str, category: str, item_id: str) -> dict | None:
@@ -783,7 +825,7 @@ def _find_city_transport_item(destination_title: str, category: str, item_id: st
     for item in city_payload.get(category, []):
         if item["id"] == item_id:
             return item
-    return None
+    return virtual_find_city_transport_item(destination_title, category, item_id)
 
 
 def _reset_city_transport_category(db: Session, trip_id: int, category: str) -> None:
@@ -871,13 +913,16 @@ def _destination_by_title(db: Session, title: str) -> ConstructorDestination | N
     ).scalar_one_or_none()
 
 
-def _accommodations_for_trip(db: Session, trip: Trip) -> list[ConstructorAccommodation]:
+def _accommodations_for_trip(db: Session, trip: Trip) -> list[CatalogAccommodation]:
     stmt = (
         select(ConstructorAccommodation)
         .join(ConstructorDestination)
         .where(ConstructorDestination.title == trip.destination)
     )
-    return list(db.execute(stmt).scalars().all())
+    db_rows = list(db.execute(stmt).scalars().all())
+    if db_rows:
+        return [CatalogAccommodation.from_db(row) for row in db_rows]
+    return virtual_accommodations(trip.destination)
 
 
 def _get_accommodation_for_trip(
@@ -886,7 +931,7 @@ def _get_accommodation_for_trip(
     public_id: str,
     *,
     load_rooms: bool = False,
-) -> ConstructorAccommodation | None:
+) -> CatalogAccommodation | None:
     stmt = (
         select(ConstructorAccommodation)
         .join(ConstructorDestination)
@@ -897,7 +942,13 @@ def _get_accommodation_for_trip(
     )
     if load_rooms:
         stmt = stmt.options(selectinload(ConstructorAccommodation.rooms))
-    return db.execute(stmt).scalar_one_or_none()
+    row = db.execute(stmt).scalar_one_or_none()
+    if row:
+        return CatalogAccommodation.from_db(row)
+    for acc in virtual_accommodations(trip.destination):
+        if acc.public_id == public_id:
+            return acc
+    return None
 
 
 def _transport_legs_for_trip(db: Session, trip: Trip) -> list[ConstructorTransportLeg]:
@@ -1021,7 +1072,7 @@ def _get_nights(trip: Trip) -> int:
     return max(1, delta)
 
 
-def _build_room_options(trip: Trip, accommodation: ConstructorAccommodation) -> list[dict]:
+def _build_room_options(trip: Trip, accommodation: CatalogAccommodation) -> list[dict]:
     nights = _get_nights(trip)
     passengers = max(1, trip.passengers)
     base = accommodation.base_price_per_night
@@ -1144,7 +1195,13 @@ def search_destinations(
             )
         )
     rows = db.execute(stmt).scalars().all()
-    return {"items": [_serialize_destination(r) for r in rows]}
+    items = [_serialize_destination(r) for r in rows]
+    seen = {row.title.casefold() for row in rows}
+    for tourist in search_tourist_destinations(normalized_query):
+        if tourist["title"].casefold() in seen:
+            continue
+        items.append(_serialize_tourist_destination(tourist))
+    return {"items": items}
 
 
 @router.get("/{trip_id}")
@@ -1176,12 +1233,13 @@ def select_destination(
 ) -> dict[str, str]:
     trip = _get_trip_or_404(db, trip_id)
     dest = _destination_by_title(db, payload.destination_title)
-    if not dest:
+    tourist = find_tourist_destination(payload.destination_title)
+    if not dest and not tourist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Destination not found in catalog",
         )
-    trip.destination = dest.title
+    trip.destination = dest.title if dest else tourist["title"]
 
     destination_node = _ensure_destination_node(db, trip)
     _reset_choice_branch(db, trip_id, "accommodation")
@@ -1309,8 +1367,11 @@ def search_accommodations(
             detail="Select destination first",
         )
 
+    country = _destination_country(trip.destination)
     acc_rows = _accommodations_for_trip(db, trip)
-    items = [_serialize_accommodation(a, trip.destination) for a in acc_rows]
+    items = [
+        serialize_catalog_accommodation(acc, trip.destination, country) for acc in acc_rows
+    ]
     if payload.price_from is not None:
         items = [item for item in items if item["price"] >= payload.price_from]
     if payload.price_to is not None:
@@ -1339,10 +1400,7 @@ def search_accommodations(
         "items": items,
         "nights": _get_nights(trip),
         "passengers": trip.passengers,
-        "map_center": {
-            "latitude": DESTINATION_COORDS.get(trip.destination, (0.0, 0.0))[0],
-            "longitude": DESTINATION_COORDS.get(trip.destination, (0.0, 0.0))[1],
-        },
+        "map_center": _map_center_for_destination(trip.destination),
     }
 
 
@@ -1469,8 +1527,8 @@ def select_accommodation_room(
 def get_hotel_extras(
     trip_id: int, accommodation_id: str, db: Session = Depends(get_db)
 ) -> dict:
-    _get_trip_or_404(db, trip_id)
-    return _serialize_hotel_extras(accommodation_id)
+    trip = _get_trip_or_404(db, trip_id)
+    return _serialize_hotel_extras(accommodation_id, trip.destination)
 
 
 @router.post("/{trip_id}/accommodations/{accommodation_id}/extras/select")
@@ -1480,7 +1538,7 @@ def select_hotel_extra(
     payload: HotelExtraSelectRequest,
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
-    _get_trip_or_404(db, trip_id)
+    trip = _get_trip_or_404(db, trip_id)
     accommodation_node = _get_node_by_type(db, trip_id, "accommodation")
     if not accommodation_node:
         raise HTTPException(
@@ -1488,7 +1546,9 @@ def select_hotel_extra(
             detail="Select accommodation room first",
         )
 
-    selected = _find_hotel_extra(accommodation_id, payload.category, payload.item_id)
+    selected = _find_hotel_extra(
+        accommodation_id, trip.destination, payload.category, payload.item_id
+    )
     if not selected:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Extra option not found")
 
