@@ -6,9 +6,10 @@ type Props = {
   open: boolean
   onClose: () => void
   children: ReactNode
+  overlay?: ReactNode
 }
 
-export function FullscreenPanel({ title, open, onClose, children }: Props) {
+export function FullscreenPanel({ title, open, onClose, children, overlay }: Props) {
   useEffect(() => {
     if (!open) return
 
@@ -33,6 +34,7 @@ export function FullscreenPanel({ title, open, onClose, children }: Props) {
         <h2 className="fullscreenPanel__title">{title}</h2>
       </header>
       <div className="fullscreenPanel__body">{children}</div>
+      {overlay}
     </div>,
     document.body
   )

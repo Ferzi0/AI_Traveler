@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     API_PUBLIC_URL: str = "https://ai-traveler-0jhd.onrender.com"
     CORS_ORIGINS: str = "https://ai-traveler-1.onrender.com"
 
+    TRAVELPAYOUTS_API_TOKEN: str = ""
+    TRAVELPAYOUTS_MARKER: str = ""
+    TRAVELPAYOUTS_CURRENCY: str = "rub"
+    TRAVELPAYOUTS_MARKET: str = "ru"
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]

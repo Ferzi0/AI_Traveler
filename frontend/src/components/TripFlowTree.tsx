@@ -8,7 +8,7 @@ import type {
   TransportExtrasResponse,
   TransportItinerary,
 } from '../types/trip'
-import { formatCatalogPerPersonCost, roundMoney } from '../utils/cost'
+import { formatPrice } from '../utils/flightDisplay'
 import { FlowNodeSlot } from './tree/FlowNodeSlot'
 import { StepCard } from './tree/StepCard'
 import { TreeConnectorLines, type TreeEdge } from './tree/TreeConnectorLines'
@@ -17,6 +17,7 @@ import { accommodationCover, accommodationGallery, destinationCoverImage, roomCo
 import {
   FlightExplorerPanel,
   type FlightSearchFilters,
+  type FlightSearchMeta,
 } from './panels/FlightExplorerPanel'
 import {
   HotelExplorerPanel,
@@ -50,10 +51,11 @@ export type TripFlowTreeProps = {
   onPickHotel: (hotelId: string) => Promise<void>
   onSearchRooms: (sortBy: string) => Promise<RoomItem[]>
   onPickRoom: (roomId: string, accommodationId: string) => Promise<void>
-  onSearchFlights: (filters: FlightSearchFilters) => Promise<TransportItinerary[]>
+  onSearchFlights: (
+    filters: FlightSearchFilters
+  ) => Promise<TransportItinerary[] | { items: TransportItinerary[]; search?: FlightSearchMeta }>
   onPickFlight: (itineraryId: string) => Promise<void>
   onPickTransportExtra: (category: string, itemId: string) => Promise<void>
-  onShowFlightDetails?: (item: TransportItinerary) => void
 }
 
 export function TripFlowTree({
@@ -77,7 +79,6 @@ export function TripFlowTree({
   onSearchFlights,
   onPickFlight,
   onPickTransportExtra,
-  onShowFlightDetails,
 }: TripFlowTreeProps) {
   const [panel, setPanel] = useState<Panel>(null)
   const flowRef = useRef<HTMLDivElement>(null)
@@ -126,10 +127,10 @@ export function TripFlowTree({
       ? 'Выберите номер'
       : 'Сначала отель'
   const flightsSubtitle = selectedFlight
-    ? `${selectedFlight.outbound.title.replace('Авиаперелет ', '')} · ${formatCatalogPerPersonCost(
-        roundMoney(selectedFlight.total_price / Math.max(1, passengers)),
-        passengers
-      )}`
+    ? `${selectedFlight.outbound.title.replace('Авиаперелет ', '')} · ${formatPrice(
+        selectedFlight.details.price_per_passenger,
+        'rub'
+      )}/чел`
     : 'Подобрать рейс'
 
   const baggageSubtitle = baggageItem ? baggageItem.title : 'Выбрать багаж'
@@ -343,7 +344,6 @@ export function TripFlowTree({
         passengers={passengers}
         onSearch={onSearchFlights}
         onSelect={(id) => void handlePickFlight(id)}
-        onDetails={onShowFlightDetails}
         loading={loading}
       />
 

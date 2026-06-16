@@ -22,6 +22,7 @@ from app.models.trip import Trip
 from app.models.trip_edge import TripEdge
 from app.models.trip_node import TripNode
 from app.models.user import User
+from app.services.flight_search import find_trip_itinerary, search_trip_flights
 
 router = APIRouter()
 
@@ -1096,11 +1097,10 @@ def _build_transport_itineraries(
 
 
 def _find_itinerary_by_id(db: Session, trip: Trip, itinerary_id: str) -> dict | None:
-    legs = _transport_legs_for_trip(db, trip)
-    for itinerary in _build_transport_itineraries(trip, legs, trip.destination):
-        if itinerary["itinerary_id"] == itinerary_id:
-            return itinerary
-    return None
+    try:
+        return find_trip_itinerary(trip, itinerary_id)
+    except RuntimeError:
+        return None
 
 
 @router.get("")
@@ -1524,16 +1524,42 @@ def search_transport(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Select destination first",
         )
+    if not trip.start_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Set trip start date first",
+        )
+    if trip.round_trip and not trip.end_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Set trip return date for round trip",
+        )
 
-    legs = _transport_legs_for_trip(db, trip)
-    items = _build_transport_itineraries(trip, legs, trip.destination)
+    try:
+        items, search_meta = search_trip_flights(trip)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
+
     if payload.price_from is not None:
-        items = [item for item in items if item["total_price"] >= payload.price_from]
+        items = [
+            item
+            for item in items
+            if item["details"]["price_per_passenger"] >= payload.price_from
+        ]
     if payload.price_to is not None:
-        items = [item for item in items if item["total_price"] <= payload.price_to]
-    if payload.kinds:
-        allowed = {kind.lower() for kind in payload.kinds}
-        items = [item for item in items if item["kind"] in allowed]
+        items = [
+            item
+            for item in items
+            if item["details"]["price_per_passenger"] <= payload.price_to
+        ]
 
     if payload.sort_by == "duration":
         items.sort(key=lambda item: item["total_duration_min"])
@@ -1544,7 +1570,12 @@ def search_transport(
     else:
         items.sort(key=lambda item: item["total_price"])
 
-    return {"items": items, "passengers": trip.passengers, "round_trip": trip.round_trip}
+    return {
+        "items": items,
+        "passengers": trip.passengers,
+        "round_trip": trip.round_trip,
+        "search": search_meta,
+    }
 
 
 @router.get("/{trip_id}/transport/itineraries/{itinerary_id}")

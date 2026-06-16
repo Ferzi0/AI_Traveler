@@ -10,6 +10,8 @@ export type TransportLegDetail = {
   price_includes: string[]
   direction: string
   direction_label: string
+  departure_at?: string | null
+  transfers?: number | null
 }
 
 export type TransportItineraryDetails = {
@@ -21,6 +23,12 @@ export type TransportItineraryDetails = {
   sources: Array<{ airline: string; url: string }>
   cabin_class: string
   data_source_note: string
+  aviasales_url?: string | null
+  expires_at?: string | null
+  origin_iata?: string
+  destination_iata?: string
+  origin_label?: string
+  destination_label?: string
 }
 
 export type TransportItinerary = {

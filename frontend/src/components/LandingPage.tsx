@@ -3,11 +3,11 @@ import { BrandLogo } from './BrandLogo'
 import { AppFooter } from './AppFooter'
 import { ScrollToTopButton } from './ScrollToTopButton'
 import { CityCombobox } from './CityCombobox'
+import { PopularDirectionsPanel } from './PopularDirectionsPanel'
 import { api } from '../api'
-import { LANDING_DESTINATIONS } from '../data/landingDestinations'
+import type { PopularDestination, PopularDirectionsResponse } from '../types/flights'
 import type { PlatformStats } from '../types/stats'
 import { adjustDatesOnEndChange, adjustDatesOnStartChange, todayIsoLocal } from '../utils/tripDates'
-import { imageBackgroundStyle } from '../utils/images'
 
 type Props = {
   onLogin: () => void
@@ -22,10 +22,41 @@ export function LandingPage({ onLogin, onRegister }: Props) {
   const [endDate, setEndDate]     = useState('2026-06-17')
   const [passengers, setPassengers] = useState(2)
   const [stats, setStats] = useState<PlatformStats | null>(null)
+  const [popular, setPopular] = useState<PopularDestination[]>([])
+  const [popularOriginLabel, setPopularOriginLabel] = useState('Москва')
+  const [popularCurrency, setPopularCurrency] = useState('rub')
+  const [popularError, setPopularError] = useState<string | null>(null)
+  const [popularLoading, setPopularLoading] = useState(true)
 
   useEffect(() => {
     void api<PlatformStats>('/stats').then(setStats).catch(() => null)
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setPopularLoading(true)
+    setPopularError(null)
+    void api<PopularDirectionsResponse>(
+      `/flights/popular?origin=${encodeURIComponent(origin)}&limit=6`
+    )
+      .then((res) => {
+        if (cancelled) return
+        setPopular(res.items)
+        setPopularOriginLabel(res.origin_label)
+        setPopularCurrency(res.currency)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        setPopular([])
+        setPopularError(err instanceof Error ? err.message : 'Не удалось загрузить направления')
+      })
+      .finally(() => {
+        if (!cancelled) setPopularLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [origin])
 
   return (
     <div className="landingPage">
@@ -110,30 +141,14 @@ export function LandingPage({ onLogin, onRegister }: Props) {
           </div>
         </section>
 
-        <p className="landingSectionLabel">ПОПУЛЯРНЫЕ НАПРАВЛЕНИЯ</p>
-
-        <div className="destCards">
-          {LANDING_DESTINATIONS.map(dest => (
-            <button key={dest.city} type="button" className="destCard" onClick={onLogin}>
-              <div className="destCard__img" style={imageBackgroundStyle(dest.imageUrl)}>
-                <span className="destCard__badge">{dest.days} дней</span>
-              </div>
-              <div className="destCard__body">
-                <div className="destCard__city">{dest.city}</div>
-                <div className="destCard__country">{dest.country}</div>
-                <div className="destCard__footer">
-                  <div className="destCard__price">
-                    <span className="destCard__from">от </span>
-                    <span className="destCard__val">{dest.price} ₽</span>
-                  </div>
-                  <div className="destCard__flight">
-                    {dest.direct ? 'прямой рейс' : '1 пересадка'}
-                  </div>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
+        <PopularDirectionsPanel
+          originLabel={popularOriginLabel}
+          currency={popularCurrency}
+          items={popular}
+          loading={popularLoading}
+          error={popularError}
+          onSelect={onLogin}
+        />
 
         {stats && (
           <div className="landingStats">

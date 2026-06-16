@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { TransportDetailsPanel } from './components/TransportDetailsPanel'
 import { TripFlowTree } from './components/TripFlowTree'
 import { TripDetailFlowTree } from './components/TripDetailFlowTree'
 import type { HotelSearchFilters } from './components/panels/HotelExplorerPanel'
-import type { FlightSearchFilters } from './components/panels/FlightExplorerPanel'
+import type { FlightSearchFilters, FlightSearchMeta } from './components/panels/FlightExplorerPanel'
 import { AppFooter } from './components/AppFooter'
 import { ScrollToTopButton } from './components/ScrollToTopButton'
 import { SideMenu } from './components/SideMenu'
@@ -74,7 +73,6 @@ function App() {
   const [selectedCityTransportIds, setSelectedCityTransportIds] = useState<Record<string, string>>(
     {}
   )
-  const [detailsItinerary, setDetailsItinerary] = useState<TransportItinerary | null>(null)
   const [treeResetKey, setTreeResetKey] = useState(0)
   const [builderPhase, setBuilderPhase] = useState<BuilderPhase>('core')
 
@@ -435,7 +433,6 @@ function App() {
       setCityTransport(null)
       setSelectedHotelExtraIds({})
       setSelectedCityTransportIds({})
-      setDetailsItinerary(null)
       setSaveMessage('')
       setShowBreakdown(false)
       setTreeResetKey((k) => k + 1)
@@ -588,16 +585,14 @@ function App() {
 
   async function searchFlights(filters: FlightSearchFilters) {
     if (!tripId) throw new Error('Нет поездки')
-    const res = await api<{ items: TransportItinerary[] }>(
-      `/trips/${tripId}/transport/search`,
-      'POST',
-      {
-        sort_by: filters.sort_by,
-        price_from: filters.price_from ?? undefined,
-        price_to: filters.price_to ?? undefined,
-      }
-    )
-    return res.items
+    return api<{
+      items: TransportItinerary[]
+      search?: FlightSearchMeta
+    }>(`/trips/${tripId}/transport/search`, 'POST', {
+      sort_by: filters.sort_by,
+      price_from: filters.price_from ?? undefined,
+      price_to: filters.price_to ?? undefined,
+    })
   }
 
   async function pickTransport(itineraryId: string) {
@@ -607,7 +602,6 @@ function App() {
     try {
       await api(`/trips/${tripId}/transport/select`, 'POST', { itinerary_id: itineraryId })
       setSelectedTransportId(itineraryId)
-      setDetailsItinerary(null)
       const extras = await api<TransportExtrasResponse>(
         `/trips/${tripId}/transport/${itineraryId}/extras`
       )
@@ -837,7 +831,6 @@ function App() {
               isFavorite={isFavorite}
               onToggleFavorite={toggleFavorite}
               onPickTransportExtra={pickTransportExtra}
-              onShowFlightDetails={setDetailsItinerary}
             />
             </>
           ) : tripId && selectedDestination && builderPhase === 'detail' ? (
@@ -934,13 +927,6 @@ function App() {
         <AppFooter />
 
         <ScrollToTopButton bottom={selectedDestination ? '6.5rem' : '1.25rem'} />
-
-        {detailsItinerary ? (
-          <TransportDetailsPanel
-            itinerary={detailsItinerary}
-            onClose={() => setDetailsItinerary(null)}
-          />
-        ) : null}
       </div>
     </>
   )

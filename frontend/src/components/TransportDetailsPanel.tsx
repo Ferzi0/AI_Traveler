@@ -1,8 +1,12 @@
+import { createPortal } from 'react-dom'
 import type { TransportItinerary } from '../types/trip'
+import { formatPrice } from '../utils/flightDisplay'
 
 type Props = {
   itinerary: TransportItinerary
   onClose: () => void
+  /** Внутри fullscreen-панели (рейсы/отели) — без portal, поверх контента */
+  embedded?: boolean
 }
 
 function cabinLabel(cabin: string): string {
@@ -22,11 +26,20 @@ function formatDuration(minutes: number): string {
   return `${h} ч ${m} мин`
 }
 
-export function TransportDetailsPanel({ itinerary, onClose }: Props) {
-  const { details } = itinerary
+function buyUrl(itinerary: TransportItinerary): string | null {
+  return itinerary.details.aviasales_url ?? itinerary.details.sources[0]?.url ?? null
+}
 
-  return (
-    <div className="detailsOverlay" role="presentation" onClick={onClose}>
+export function TransportDetailsPanel({ itinerary, onClose, embedded = false }: Props) {
+  const { details } = itinerary
+  const aviasales = buyUrl(itinerary)
+
+  const content = (
+    <div
+      className={`detailsOverlay${embedded ? ' detailsOverlay--stacked' : ''}`}
+      role="presentation"
+      onClick={onClose}
+    >
       <div
         className="detailsPanel"
         role="dialog"
@@ -57,13 +70,26 @@ export function TransportDetailsPanel({ itinerary, onClose }: Props) {
           </div>
           <div className="detailsStat">
             <span className="detailsStatLabel">На всех пассажиров</span>
-            <strong>${itinerary.total_price}</strong>
+            <strong>{formatPrice(itinerary.total_price, 'rub')}</strong>
           </div>
           <div className="detailsStat">
             <span className="detailsStatLabel">На 1 пассажира</span>
-            <strong>${details.price_per_passenger}</strong>
+            <strong>{formatPrice(details.price_per_passenger, 'rub')}</strong>
           </div>
         </div>
+
+        {aviasales ? (
+          <div className="detailsBuy">
+            <a
+              href={aviasales}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btnAccent detailsBuy__btn"
+            >
+              Купить на Aviasales ↗
+            </a>
+          </div>
+        ) : null}
 
         <section className="detailsSection">
           <h3>Сегменты маршрута</h3>
@@ -75,40 +101,47 @@ export function TransportDetailsPanel({ itinerary, onClose }: Props) {
               </div>
               <ul className="detailsLegMeta">
                 <li>{leg.airline}</li>
-                <li>{leg.aircraft_model}</li>
+                {leg.aircraft_model ? <li>{leg.aircraft_model}</li> : null}
                 <li>{formatDuration(leg.duration_min)}</li>
               </ul>
             </article>
           ))}
         </section>
 
-        <section className="detailsSection">
-          <h3>В стоимость входит</h3>
-          <ul className="detailsIncludes">
-            {details.price_includes.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </section>
+        {details.price_includes.length > 0 ? (
+          <section className="detailsSection">
+            <h3>В стоимость входит</h3>
+            <ul className="detailsIncludes">
+              {details.price_includes.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <section className="detailsSection">
-          <h3>Источники данных</h3>
+          <h3>Источник данных</h3>
           <p className="detailsNote">{details.data_source_note}</p>
-          <div className="detailsSources">
-            {details.sources.map((source) => (
-              <a
-                key={source.url}
-                href={source.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="detailsSourceLink"
-              >
-                {source.airline || 'Сайт авиакомпании'} ↗
-              </a>
-            ))}
-          </div>
+          {details.sources.length > 0 ? (
+            <div className="detailsSources">
+              {details.sources.map((source) => (
+                <a
+                  key={source.url}
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="detailsSourceLink"
+                >
+                  {source.airline || 'Aviasales'} ↗
+                </a>
+              ))}
+            </div>
+          ) : null}
         </section>
       </div>
     </div>
   )
+
+  if (embedded) return content
+  return createPortal(content, document.body)
 }
