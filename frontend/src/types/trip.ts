@@ -12,6 +12,8 @@ export type TransportLegDetail = {
   direction_label: string
   departure_at?: string | null
   transfers?: number | null
+  origin_airport?: string | null
+  destination_airport?: string | null
 }
 
 export type TransportItineraryDetails = {
@@ -167,6 +169,7 @@ export type DayPlanResponse = {
 
 export type TripSummary = {
   total_estimated_cost: number
+  currency?: string
   calculation: {
     items: Array<{
       node_type: string

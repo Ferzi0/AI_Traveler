@@ -18,6 +18,7 @@ from app.models.constructor_catalog import (
     ConstructorDestination,
     ConstructorTransportLeg,
 )
+from app.core.config import settings
 from app.models.trip import Trip
 from app.models.trip_edge import TripEdge
 from app.models.trip_node import TripNode
@@ -1879,7 +1880,7 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)) -> dict:
     ) or "0"
     return {
         "trip_id": trip.id,
-        "currency": "USD",
+        "currency": settings.TRAVELPAYOUTS_CURRENCY,
         "total_estimated_cost": total,
         "breakdown": breakdown,
         "calculation": {

@@ -40,6 +40,7 @@ export type TripFlowTreeProps = {
   selectedHotelId: string
   selectedRoomId: string
   selectedTransportId: string
+  selectedTransport: TransportItinerary | null
   selectedTransportExtraIds: Record<string, string>
   isFavorite: (itemType: 'city' | 'hotel', itemKey: string) => boolean
   onToggleFavorite: (
@@ -69,6 +70,7 @@ export function TripFlowTree({
   selectedHotelId,
   selectedRoomId,
   selectedTransportId,
+  selectedTransport,
   selectedTransportExtraIds,
   isFavorite,
   onToggleFavorite,
@@ -86,7 +88,10 @@ export function TripFlowTree({
 
   const selectedHotel = accommodations.find((h) => h.id === selectedHotelId)
   const selectedRoom = rooms.find((r) => r.room_id === selectedRoomId)
-  const selectedFlight = transport.find((t) => t.itinerary_id === selectedTransportId)
+  const selectedFlight =
+    selectedTransport ??
+    transport.find((t) => t.itinerary_id === selectedTransportId) ??
+    null
 
   const baggageCategory = transportExtras?.categories.find((c) => c.category === 'baggage')
   const refundCategory = transportExtras?.categories.find((c) => c.category === 'refund_policy')
@@ -119,10 +124,10 @@ export function TripFlowTree({
   })
 
   const hotelsSubtitle = selectedHotel
-    ? `${selectedHotel.title} · $${selectedHotel.price}`
+    ? `${selectedHotel.title} · ${formatPrice(selectedHotel.price, 'rub')}/ночь`
     : 'Подобрать отель'
   const roomsSubtitle = selectedRoom
-    ? `${selectedRoom.room_name} · $${selectedRoom.price_total}`
+    ? `${selectedRoom.room_name} · ${formatPrice(selectedRoom.price_total, 'rub')}`
     : selectedHotel
       ? 'Выберите номер'
       : 'Сначала отель'
@@ -236,7 +241,7 @@ export function TripFlowTree({
                   ? () =>
                       onToggleFavorite('hotel', selectedHotel.id, {
                         title: selectedHotel.title,
-                        subtitle: `${selectedHotel.stars}★ · $${selectedHotel.price}`,
+                        subtitle: `${selectedHotel.stars}★ · ${formatPrice(selectedHotel.price, 'rub')}/ночь`,
                         country: destination.country,
                         imageUrls: accommodationGallery(selectedHotel),
                       })
@@ -268,7 +273,7 @@ export function TripFlowTree({
             <StepCard
               nodeId="flights"
               variant="flow"
-              title={selectedFlight ? 'Рейс' : 'Рейсы'}
+              title={selectedFlight ? selectedFlight.outbound.title.split(',')[0] : 'Рейсы'}
               subtitle={flightsSubtitle}
               visible={showBranches}
               delayMs={160}
@@ -322,7 +327,7 @@ export function TripFlowTree({
         onToggleFavorite={(hotel) =>
           onToggleFavorite('hotel', hotel.id, {
             title: hotel.title,
-            subtitle: `${hotel.stars}★ · $${hotel.price}`,
+            subtitle: `${hotel.stars}★ · ${formatPrice(hotel.price, 'rub')}/ночь`,
             country: destination.country,
             imageUrls: accommodationGallery(hotel),
           })

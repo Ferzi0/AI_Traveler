@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.api.deps import get_current_user
 from app.api.v1.trips import _get_trip_or_404, get_trip_summary
 from app.core.database import get_db
@@ -401,9 +402,9 @@ def save_trip_to_history(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your trip")
 
     summary = get_trip_summary(payload.trip_id, db)
-    nodes = db.execute(
-        select(TripNode).where(TripNode.trip_id == payload.trip_id)
-    ).scalars()
+    nodes = list(
+        db.execute(select(TripNode).where(TripNode.trip_id == payload.trip_id)).scalars().all()
+    )
 
     params = summary.get("params") or {}
     destination = params.get("destination") or trip.destination or "Поездка"
@@ -417,17 +418,29 @@ def save_trip_to_history(
     refund_title = _extra_title(nodes, "transport_extra:refund_policy")
 
     if not hotel_title or not flight_title:
+        missing: list[str] = []
+        if not hotel_title:
+            missing.append("отель и номер")
+        if not flight_title:
+            missing.append("рейс")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select hotel room and flight before saving",
+            detail=f"Перед сохранением выберите: {', '.join(missing)}",
         )
 
     total = summary.get("total_estimated_cost", 0)
+    currency = settings.TRAVELPAYOUTS_CURRENCY.upper()
+    rounded = int(round(float(total)))
+    total_label = (
+        f"{rounded:,}".replace(",", " ") + " ₽"
+        if currency == "RUB"
+        else f"{rounded} {currency}"
+    )
     row = TripHistory(
         user_id=user.id,
         trip_id=trip.id,
         trip_name=f"{destination} · {hotel_title}",
-        total_cost_label=f"${total}",
+        total_cost_label=total_label,
         destination=destination,
         origin=params.get("origin") or trip.origin,
         start_date=_parse_date(params.get("start_date")),

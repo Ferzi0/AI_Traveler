@@ -28,15 +28,31 @@ def _http_get_json(url: str, token: str) -> dict[str, Any]:
             "X-Access-Token": token,
         },
     )
-    with urllib.request.urlopen(request, timeout=20) as response:
-        raw = response.read()
-        encoding = response.info().get("Content-Encoding", "")
-        if encoding == "gzip":
-            raw = gzip.decompress(raw)
-        payload = json.loads(raw.decode("utf-8"))
-        if not isinstance(payload, dict):
-            raise ValueError("Unexpected Travelpayouts response shape")
-        return payload
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            raw = response.read()
+            encoding = response.info().get("Content-Encoding", "")
+            if encoding == "gzip":
+                raw = gzip.decompress(raw)
+            payload = json.loads(raw.decode("utf-8"))
+            if not isinstance(payload, dict):
+                raise ValueError("Unexpected Travelpayouts response shape")
+            return payload
+    except urllib.error.HTTPError as exc:
+        raw = exc.read()
+        try:
+            if exc.headers.get("Content-Encoding") == "gzip":
+                raw = gzip.decompress(raw)
+            parsed = json.loads(raw.decode("utf-8"))
+            msg = parsed.get("error") or parsed.get("message") or str(parsed)
+        except Exception:
+            msg = exc.reason or f"HTTP {exc.code}"
+        if exc.code == 400:
+            raise ValueError(
+                "Aviasales отклонил запрос по этим датам или направлению. "
+                "Сократите поездку или измените даты вылета и возврата."
+            ) from exc
+        raise RuntimeError(f"Travelpayouts HTTP {exc.code}: {msg}") from exc
 
 
 def _normalize_row(row: dict[str, Any], default_origin: str) -> dict[str, Any] | None:

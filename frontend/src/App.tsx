@@ -25,7 +25,7 @@ import type {
   TripSummary,
 } from './types/trip'
 import { api, AUTH_EXPIRED_EVENT, clearAuthToken } from './api'
-import { formatCalculationMeta } from './utils/cost'
+import { formatCalculationMeta, formatSummaryTotal } from './utils/cost'
 import { destinationCoverImage } from './data/imageCatalog'
 import { adjustDatesOnEndChange, adjustDatesOnStartChange, clampEndDate, todayIsoLocal } from './utils/tripDates'
 import { imageBackgroundStyle } from './utils/images'
@@ -66,6 +66,8 @@ function App() {
   const [selectedHotelId, setSelectedHotelId] = useState('')
   const [selectedRoomId, setSelectedRoomId] = useState('')
   const [selectedTransportId, setSelectedTransportId] = useState('')
+  const [selectedTransportItinerary, setSelectedTransportItinerary] =
+    useState<TransportItinerary | null>(null)
   const [selectedTransportExtraIds, setSelectedTransportExtraIds] = useState<Record<string, string>>(
     {}
   )
@@ -86,6 +88,7 @@ function App() {
   const [favoriteKeys, setFavoriteKeys] = useState<Set<string>>(new Set())
 
   const total = useMemo(() => summary?.total_estimated_cost ?? 0, [summary])
+  const summaryCurrency = summary?.currency ?? 'rub'
 
   const canSaveTrip = Boolean(
     selectedDestination &&
@@ -378,17 +381,12 @@ function App() {
         'POST',
         { kinds: ['hotel', 'hostel'], sort_by: 'price' }
       )
-      const flights = await api<{ items: TransportItinerary[] }>(
-        `/trips/${id}/transport/search`,
-        'POST',
-        { sort_by: 'price' }
-      )
       setSelectedDestination(item)
       setAccommodations(hotels.items)
-      setTransport(flights.items)
       setSelectedHotelId('')
       setSelectedRoomId('')
       setSelectedTransportId('')
+      setSelectedTransportItinerary(null)
       setSelectedTransportExtraIds({})
       setTransportExtras(null)
       setRooms([])
@@ -397,6 +395,21 @@ function App() {
       setSelectedHotelExtraIds({})
       setSelectedCityTransportIds({})
       setBuilderPhase('core')
+      try {
+        const flights = await api<{ items: TransportItinerary[] }>(
+          `/trips/${id}/transport/search`,
+          'POST',
+          { sort_by: 'price' }
+        )
+        setTransport(flights.items)
+      } catch (flightErr) {
+        setTransport([])
+        setError(
+          flightErr instanceof Error
+            ? flightErr.message
+            : 'Направление выбрано, но рейсы временно недоступны'
+        )
+      }
       await refreshSummary()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка выбора направления')
@@ -416,16 +429,11 @@ function App() {
         'POST',
         { kinds: ['hotel', 'hostel'], sort_by: 'price' }
       )
-      const flights = await api<{ items: TransportItinerary[] }>(
-        `/trips/${tripId}/transport/search`,
-        'POST',
-        { sort_by: 'price' }
-      )
       setAccommodations(hotels.items)
-      setTransport(flights.items)
       setSelectedHotelId('')
       setSelectedRoomId('')
       setSelectedTransportId('')
+      setSelectedTransportItinerary(null)
       setSelectedTransportExtraIds({})
       setTransportExtras(null)
       setRooms([])
@@ -437,6 +445,16 @@ function App() {
       setShowBreakdown(false)
       setTreeResetKey((k) => k + 1)
       setBuilderPhase('core')
+      try {
+        const flights = await api<{ items: TransportItinerary[] }>(
+          `/trips/${tripId}/transport/search`,
+          'POST',
+          { sort_by: 'price' }
+        )
+        setTransport(flights.items)
+      } catch {
+        setTransport([])
+      }
       await refreshSummary()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка сброса дерева')
@@ -601,12 +619,35 @@ function App() {
     setError('')
     try {
       await api(`/trips/${tripId}/transport/select`, 'POST', { itinerary_id: itineraryId })
-      setSelectedTransportId(itineraryId)
-      const extras = await api<TransportExtrasResponse>(
-        `/trips/${tripId}/transport/${itineraryId}/extras`
+      const itinerary = await api<TransportItinerary>(
+        `/trips/${tripId}/transport/itineraries/${itineraryId}`
       )
-      setTransportExtras(extras)
-      setSelectedTransportExtraIds({})
+      setSelectedTransportId(itineraryId)
+      setSelectedTransportItinerary(itinerary)
+      setTransport((prev) => {
+        const idx = prev.findIndex((t) => t.itinerary_id === itineraryId)
+        if (idx >= 0) {
+          const next = [...prev]
+          next[idx] = itinerary
+          return next
+        }
+        return [...prev, itinerary]
+      })
+      try {
+        const extras = await api<TransportExtrasResponse>(
+          `/trips/${tripId}/transport/${itineraryId}/extras`
+        )
+        setTransportExtras(extras)
+        setSelectedTransportExtraIds({})
+      } catch (extrasErr) {
+        setTransportExtras(null)
+        setSelectedTransportExtraIds({})
+        setError(
+          extrasErr instanceof Error
+            ? extrasErr.message
+            : 'Рейс выбран, но не удалось загрузить багаж и возврат'
+        )
+      }
       await refreshSummary()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка выбора рейса')
@@ -821,6 +862,7 @@ function App() {
               selectedHotelId={selectedHotelId}
               selectedRoomId={selectedRoomId}
               selectedTransportId={selectedTransportId}
+              selectedTransport={selectedTransportItinerary}
               selectedTransportExtraIds={selectedTransportExtraIds}
               onSearchHotels={searchHotels}
               onPickHotel={pickHotel}
@@ -883,7 +925,7 @@ function App() {
               <div className="summaryInner">
                 <button type="button" className="summaryPill" onClick={() => setShowBreakdown((v) => !v)}>
                   <span>
-                    Приблизительная сумма: ${total}
+                    Приблизительная сумма: {formatSummaryTotal(total, summaryCurrency)}
                     {passengers > 1 ? ` · ${passengers} пасс.` : ''}
                   </span>
                   <span aria-hidden>{showBreakdown ? '▲' : '▼'}</span>
@@ -896,8 +938,8 @@ function App() {
                       summary.calculation.items.map((item) => (
                         <div key={`${item.node_type}-${item.title}`} className="breakdownItem">
                           <strong>{item.title}</strong>
-                          <span className="meta">{formatCalculationMeta(item)}</span>
-                          <span className="price">${item.result}</span>
+                          <span className="meta">{formatCalculationMeta(item, summaryCurrency)}</span>
+                          <span className="price">{formatSummaryTotal(item.result, summaryCurrency)}</span>
                         </div>
                       ))
                     )}

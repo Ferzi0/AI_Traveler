@@ -28,6 +28,7 @@ export type FlightSearchMeta = {
   departure_at: string | null
   return_at: string | null
   source: string
+  currency?: string
   count: number
 }
 
@@ -130,6 +131,8 @@ export function FlightExplorerPanel({
     setFilterFormKey((k) => k + 1)
     void runSearch(next)
   }
+
+  const displayCurrency = searchMeta?.currency ?? currency
 
   const routeHint = searchMeta
     ? `${searchMeta.origin_label} (${searchMeta.origin_iata}) → ${searchMeta.destination_label} (${searchMeta.destination_iata})`
@@ -242,7 +245,9 @@ export function FlightExplorerPanel({
                           <img src={logo} alt="" width={20} height={20} className="flightExplorer__logo" />
                         ) : null}
                         {outboundLeg.airline}
-                        {outboundLeg.aircraft_model ? ` · ${outboundLeg.aircraft_model}` : ''}
+                        {outboundLeg.origin_airport && outboundLeg.destination_airport
+                          ? ` · ${outboundLeg.origin_airport}→${outboundLeg.destination_airport}`
+                          : ''}
                       </span>
                     ) : null}
                   </div>
@@ -250,9 +255,9 @@ export function FlightExplorerPanel({
 
                 <div className="flightExplorer__aside">
                   <div className="flightExplorer__price">
-                    <span className="flightExplorer__priceLabel">от {formatPrice(details.price_per_passenger, currency)}</span>
+                    <span className="flightExplorer__priceLabel">от {formatPrice(details.price_per_passenger, displayCurrency)}</span>
                     <span className="flightExplorer__priceTotal">
-                      {formatPrice(item.total_price, currency)} · {passengers} пас.
+                      {formatPrice(item.total_price, displayCurrency)} · {passengers} пас.
                     </span>
                   </div>
                   <div className="flightExplorer__actions">

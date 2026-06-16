@@ -110,7 +110,9 @@ def _row_to_itinerary(row: dict[str, Any], trip: Trip) -> dict[str, Any]:
         "duration_min": duration_to or total_duration,
         "price": float(price_per_person),
         "airline": airline,
-        "aircraft_model": row.get("destination_airport") or dest_iata,
+        "aircraft_model": "",
+        "origin_airport": row.get("origin_airport") or origin_iata,
+        "destination_airport": row.get("destination_airport") or dest_iata,
         "cabin_class": "economy",
         "source_url": aviasales_url or "",
         "price_includes": [],
@@ -134,7 +136,9 @@ def _row_to_itinerary(row: dict[str, Any], trip: Trip) -> dict[str, Any]:
             "duration_min": duration_back or 0,
             "price": 0.0,
             "airline": airline,
-            "aircraft_model": row.get("origin_airport") or origin_iata,
+            "aircraft_model": "",
+            "origin_airport": row.get("destination_airport") or dest_iata,
+            "destination_airport": row.get("origin_airport") or origin_iata,
             "cabin_class": "economy",
             "source_url": aviasales_url or "",
             "price_includes": [],
@@ -222,6 +226,15 @@ def search_trip_flights(trip: Trip) -> tuple[list[dict[str, Any]], dict[str, Any
         raise RuntimeError("Set trip start date first")
     if trip.round_trip and not trip.end_date:
         raise RuntimeError("Set trip return date for round trip")
+    if trip.round_trip and trip.start_date and trip.end_date:
+        trip_days = (trip.end_date - trip.start_date).days
+        if trip_days < 1:
+            raise ValueError("Дата возврата должна быть позже даты вылета")
+        if trip_days > 30:
+            raise ValueError(
+                "Слишком длинная поездка для поиска рейсов (больше 30 дней). "
+                "Сократите даты или измените обратный вылет."
+            )
 
     origin_iata = _trip_origin_iata(trip)
     destination_iata = _trip_destination_iata(trip)
@@ -248,6 +261,7 @@ def search_trip_flights(trip: Trip) -> tuple[list[dict[str, Any]], dict[str, Any
         "departure_at": departure_at,
         "return_at": return_at,
         "source": "aviasales",
+        "currency": settings.TRAVELPAYOUTS_CURRENCY,
         "count": len(items),
     }
     return items, meta
