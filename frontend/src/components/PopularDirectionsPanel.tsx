@@ -17,6 +17,8 @@ type Props = {
   loading: boolean
   error: string | null
   onBuildTrip: (city: string) => void
+  sectionId?: string
+  eyebrow?: string
 }
 
 export function PopularDirectionsPanel({
@@ -26,15 +28,17 @@ export function PopularDirectionsPanel({
   loading,
   error,
   onBuildTrip,
+  sectionId = 'popular-directions-title',
+  eyebrow = 'Популярные направления',
 }: Props) {
   const showSkeleton = loading && items.length === 0
 
   return (
-    <section className="flightOffers" aria-labelledby="popular-directions-title">
+    <section className="flightOffers" aria-labelledby={sectionId}>
       <header className="flightOffers__header">
         <div>
-          <p id="popular-directions-title" className="flightOffers__eyebrow">
-            Популярные направления
+          <p id={sectionId} className="flightOffers__eyebrow">
+            {eyebrow}
           </p>
           {!loading && !error && items.length > 0 ? (
             <p className="flightOffers__subtitle">Актуальные цены из {originLabel} · Aviasales</p>

@@ -102,6 +102,8 @@ export function HomeDiscoverySections({
         loading={popularLoading}
         error={popularError}
         onBuildTrip={onBuildTrip}
+        sectionId="home-flight-offers-title"
+        eyebrow="Актуальные предложения"
       />
 
       <LandingPriceCalendarSection

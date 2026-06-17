@@ -14,7 +14,11 @@ import { RegisterPage } from './components/RegisterPage'
 import { BrandLogo } from './components/BrandLogo'
 import { LandingPage } from './components/LandingPage'
 import { HomeDiscoverySections } from './components/HomeDiscoverySections'
+import { HomeFeatureCards } from './components/HomeFeatureCards'
+import { HomePageHero } from './components/HomePageHero'
+import { PopularDestinationsGrid } from './components/PopularDestinationsGrid'
 import { LANDING_TAGS } from './components/landingTags'
+import { LANDING_DESTINATIONS } from './data/landingDestinations'
 import type {
   AccommodationItem,
   AccommodationSearchResponse,
@@ -861,7 +865,7 @@ function App() {
         />
       )}
 
-      <div className="app">
+      <div className={`app${!selectedDestination ? ' app--home' : ''}`}>
         <header className="topBar">
           <div className="topBarInner">
             <button
@@ -888,10 +892,10 @@ function App() {
           </div>
         </header>
 
-        <main className={`main${isDetailPhase ? ' main--detail' : ''}`}>
+        <main className={`main${isDetailPhase ? ' main--detail' : ''}${!selectedDestination ? ' main--home' : ''}`}>
           {error ? <div className="errorBanner">{error}</div> : null}
 
-          {!isDetailPhase ? (
+          {!isDetailPhase && selectedDestination ? (
           <div className="paramsBar">
             <div className="paramsCell paramsCell--origin">
               <label htmlFor="origin">Откуда</label>
@@ -928,19 +932,17 @@ function App() {
                 onChange={(e) => setPassengers(Number(e.target.value))}
               />
             </div>
-            {selectedDestination ? (
-              <div className="paramsCell paramsCell--flexDates">
-                <label htmlFor="flex-dates">Даты</label>
-                <button
-                  id="flex-dates"
-                  type="button"
-                  className={`btn btnGhost paramsFlexDatesBtn${flexDatesOpen ? ' paramsFlexDatesBtn--active' : ''}`}
-                  onClick={() => setFlexDatesOpen((v) => !v)}
-                >
-                  {flexDatesOpen ? 'Скрыть календарь' : 'Гибкие даты'}
-                </button>
-              </div>
-            ) : null}
+            <div className="paramsCell paramsCell--flexDates">
+              <label htmlFor="flex-dates">Даты</label>
+              <button
+                id="flex-dates"
+                type="button"
+                className={`btn btnGhost paramsFlexDatesBtn${flexDatesOpen ? ' paramsFlexDatesBtn--active' : ''}`}
+                onClick={() => setFlexDatesOpen((v) => !v)}
+              >
+                {flexDatesOpen ? 'Скрыть календарь' : 'Гибкие даты'}
+              </button>
+            </div>
           </div>
           ) : null}
 
@@ -966,12 +968,49 @@ function App() {
           ) : null}
 
           {!selectedDestination ? (
-            <>
-            <section className="destinationHero" aria-labelledby="destination-hero-title">
-              <h1 id="destination-hero-title" className="destinationHero__title">
-                Куда отправимся?
-              </h1>
-              <div className="destinationHero__card">
+            <div className="homePage">
+            <HomePageHero
+              paramsBar={
+                <div className="paramsBar">
+                  <div className="paramsCell paramsCell--origin">
+                    <label htmlFor="origin">Откуда</label>
+                    <CityCombobox id="origin" value={origin} onChange={setOrigin} />
+                  </div>
+                  <div className="paramsCell">
+                    <label htmlFor="start">Когда</label>
+                    <input
+                      id="start"
+                      type="date"
+                      value={startDate}
+                      min={todayIsoLocal()}
+                      onChange={(e) => handleStartDateChange(e.target.value)}
+                    />
+                  </div>
+                  <div className="paramsCell">
+                    <label htmlFor="end">Обратно</label>
+                    <input
+                      id="end"
+                      type="date"
+                      value={endDate}
+                      min={startDate}
+                      onChange={(e) => handleEndDateChange(e.target.value)}
+                    />
+                  </div>
+                  <div className="paramsCell">
+                    <label htmlFor="passengers">Пассажиры</label>
+                    <input
+                      id="passengers"
+                      type="number"
+                      min={1}
+                      max={12}
+                      value={passengers}
+                      onChange={(e) => setPassengers(Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+              }
+            >
+              <div className="destinationHero__card homeHero__searchCard">
                 <div className="destinationHero__search">
                   <DestinationSearch
                     value={destinationQuery}
@@ -990,14 +1029,14 @@ function App() {
                   </button>
                 </div>
               </div>
-              <div className="landingTags">
+              <div className="landingTags landingTags--hero">
                 {LANDING_TAGS.map((tag) => (
                   <button
                     key={tag}
                     type="button"
                     className="landingTag"
                     onClick={() => {
-                      document.getElementById('popular-directions-title')?.scrollIntoView({
+                      document.getElementById('popular-destinations-grid')?.scrollIntoView({
                         behavior: 'smooth',
                         block: 'start',
                       })
@@ -1031,16 +1070,38 @@ function App() {
                   ))}
                 </div>
               ) : null}
-            </section>
+            </HomePageHero>
 
-            <HomeDiscoverySections
-              origin={origin}
-              startDate={startDate}
-              endDate={endDate}
-              onPickDates={handleCalendarPickDates}
-              onBuildTrip={(city) => void buildTripFromCity(city)}
-            />
-            </>
+            <div className="homePage__body">
+              <HomeFeatureCards />
+              <PopularDestinationsGrid
+                onPickCity={(city) => void buildTripFromCity(city)}
+                isFavorite={(city) => isFavorite('city', city)}
+                onToggleFavorite={(city) => {
+                  const dest = LANDING_DESTINATIONS.find((d) => d.city === city)
+                  if (!dest) return
+                  void toggleFavorite('city', city, {
+                    title: dest.city,
+                    country: dest.country,
+                    imageUrls: [dest.imageUrl],
+                  })
+                }}
+                onViewAll={() =>
+                  document.getElementById('home-flight-offers-title')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                  })
+                }
+              />
+              <HomeDiscoverySections
+                origin={origin}
+                startDate={startDate}
+                endDate={endDate}
+                onPickDates={handleCalendarPickDates}
+                onBuildTrip={(city) => void buildTripFromCity(city)}
+              />
+            </div>
+            </div>
           ) : tripId && selectedDestination && showCoreTree ? (
             <>
               <TripBuildProgress
