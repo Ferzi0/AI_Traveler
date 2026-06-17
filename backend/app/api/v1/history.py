@@ -463,3 +463,17 @@ def save_trip_to_history(
     db.commit()
     db.refresh(row)
     return _serialize_history(row, include_snapshot=True)
+
+
+@router.delete("/{history_id}")
+def delete_history_item(
+    history_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict[str, str]:
+    row = db.get(TripHistory, history_id)
+    if not row or row.user_id != user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History item not found")
+    db.delete(row)
+    db.commit()
+    return {"status": "ok"}

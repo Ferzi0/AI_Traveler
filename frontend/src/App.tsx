@@ -44,6 +44,7 @@ import { favoriteKey } from './types/favorites'
 import type { BuilderPhase } from './types/builder'
 import { DetailOfferCard } from './components/builder/DetailOfferCard'
 import { TripBuildProgress } from './components/TripBuildProgress'
+import { TripSavedModal } from './components/TripSavedModal'
 import './App.css'
 
 function App() {
@@ -94,7 +95,9 @@ function App() {
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [saveMessage, setSaveMessage] = useState('')
+  const [tripSavedModalOpen, setTripSavedModalOpen] = useState(false)
+  const [savedDestinationTitle, setSavedDestinationTitle] = useState<string | null>(null)
+  const [historyAfterSave, setHistoryAfterSave] = useState(false)
 
   const [favorites, setFavorites] = useState<FavoriteItem[]>([])
   const [favoriteKeys, setFavoriteKeys] = useState<Set<string>>(new Set())
@@ -256,18 +259,65 @@ function App() {
     }
   }
 
+  async function resetBuilderToHome() {
+    if (tripId) {
+      try {
+        await api(`/trips/${tripId}/destination/reset`, 'POST')
+      } catch {
+        /* best-effort: UI must return to home even if reset fails */
+      }
+    }
+    setSelectedDestination(null)
+    setDestinations([])
+    setDestinationQuery('')
+    setAccommodations([])
+    setSelectedHotelId('')
+    setSelectedRoomId('')
+    setSelectedTransportId('')
+    setSelectedTransportItinerary(null)
+    setSelectedTransportExtraIds({})
+    setTransport([])
+    setTransportExtras(null)
+    setRooms([])
+    setHotelExtras(null)
+    setCityTransport(null)
+    setSelectedHotelExtraIds({})
+    setSelectedCityTransportIds({})
+    setShowBreakdown(false)
+    setFlexDatesOpen(false)
+    setTreeResetKey((k) => k + 1)
+    setBuilderPhase('core')
+    setSummary(null)
+  }
+
   async function saveTrip() {
     if (!tripId || !canSaveTrip) return
     setLoading(true)
-    setSaveMessage('')
     setError('')
+    const destinationTitle = selectedDestination?.title ?? null
     try {
       await api('/history', 'POST', { trip_id: tripId })
-      setSaveMessage('Поездка сохранена в истории')
+      await resetBuilderToHome()
+      setSavedDestinationTitle(destinationTitle)
+      setTripSavedModalOpen(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось сохранить поездку')
     } finally {
       setLoading(false)
+    }
+  }
+
+  function goToHistoryAfterSave() {
+    setTripSavedModalOpen(false)
+    setHistoryAfterSave(true)
+    setActivePage('history')
+  }
+
+  function closeHistory() {
+    setActivePage(null)
+    if (historyAfterSave) {
+      setHistoryAfterSave(false)
+      setSavedDestinationTitle(null)
     }
   }
 
@@ -434,6 +484,8 @@ function App() {
   }
 
   async function pickDestination(item: DestinationItem) {
+    setHistoryAfterSave(false)
+    setSavedDestinationTitle(null)
     const id = tripId ?? (await ensureTrip())
     if (!id) return
     setLoading(true)
@@ -491,27 +543,9 @@ function App() {
     setLoading(true)
     setError('')
     try {
-      await api(`/trips/${tripId}/destination/reset`, 'POST')
-      setSelectedDestination(null)
-      setDestinations([])
-      setDestinationQuery('')
-      setAccommodations([])
-      setSelectedHotelId('')
-      setSelectedRoomId('')
-      setSelectedTransportId('')
-      setSelectedTransportItinerary(null)
-      setSelectedTransportExtraIds({})
-      setTransport([])
-      setTransportExtras(null)
-      setRooms([])
-      setHotelExtras(null)
-      setCityTransport(null)
-      setSelectedHotelExtraIds({})
-      setSelectedCityTransportIds({})
-      setSaveMessage('')
-      setShowBreakdown(false)
-      setTreeResetKey((k) => k + 1)
-      setBuilderPhase('core')
+      await resetBuilderToHome()
+      setTripSavedModalOpen(false)
+      setSavedDestinationTitle(null)
       await refreshSummary()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка смены направления')
@@ -543,7 +577,7 @@ function App() {
       setCityTransport(null)
       setSelectedHotelExtraIds({})
       setSelectedCityTransportIds({})
-      setSaveMessage('')
+      setTripSavedModalOpen(false)
       setShowBreakdown(false)
       setTreeResetKey((k) => k + 1)
       setBuilderPhase('core')
@@ -804,7 +838,13 @@ function App() {
   }
   return (
     <>
-      {activePage === 'history' && <HistoryPage onClose={() => setActivePage(null)} />}
+      {tripSavedModalOpen ? (
+        <TripSavedModal
+          destination={savedDestinationTitle}
+          onGoToHistory={goToHistoryAfterSave}
+        />
+      ) : null}
+      {activePage === 'history' && <HistoryPage onClose={closeHistory} />}
       {activePage === 'favorites' && (
         <FavoritesPage
           items={favorites}
@@ -1113,7 +1153,6 @@ function App() {
 
         {selectedDestination ? (
           <div className="appSummaryBar">
-            {saveMessage ? <p className="saveTripMessage">{saveMessage}</p> : null}
             <div className="summaryDock">
               <div className="summaryInner">
                 <button type="button" className="summaryPill" onClick={() => setShowBreakdown((v) => !v)}>

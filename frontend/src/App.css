@@ -874,6 +874,183 @@
   cursor: not-allowed;
 }
 
+.tripSavedOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(26, 22, 18, 0.52);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: tripSavedFadeIn 0.28s ease;
+}
+
+@keyframes tripSavedFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.tripSavedModal {
+  position: relative;
+  width: min(440px, 100%);
+  padding: 2rem 1.75rem 1.65rem;
+  text-align: center;
+  background: linear-gradient(165deg, #fff 0%, #fff9f5 55%, #fff 100%);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-radius: calc(var(--radius-lg) + 4px);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+  animation: tripSavedPop 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+@keyframes tripSavedPop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tripSavedModal__sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tripSavedModal__sparkles span {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.35;
+  animation: tripSavedSparkle 2.4s ease-in-out infinite;
+}
+
+.tripSavedModal__sparkles span:nth-child(1) {
+  top: 14%;
+  left: 12%;
+  animation-delay: 0s;
+}
+
+.tripSavedModal__sparkles span:nth-child(2) {
+  top: 22%;
+  right: 16%;
+  width: 4px;
+  height: 4px;
+  animation-delay: 0.4s;
+}
+
+.tripSavedModal__sparkles span:nth-child(3) {
+  bottom: 28%;
+  left: 18%;
+  width: 5px;
+  height: 5px;
+  animation-delay: 0.8s;
+}
+
+.tripSavedModal__sparkles span:nth-child(4) {
+  top: 38%;
+  right: 10%;
+  width: 7px;
+  height: 7px;
+  animation-delay: 1.1s;
+}
+
+.tripSavedModal__sparkles span:nth-child(5) {
+  bottom: 18%;
+  right: 22%;
+  animation-delay: 1.6s;
+}
+
+@keyframes tripSavedSparkle {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translateY(-6px) scale(1.2);
+    opacity: 0.55;
+  }
+}
+
+.tripSavedModal__badge {
+  position: relative;
+  z-index: 1;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin: 0 auto 1rem;
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(145deg, var(--accent), #f07a4a);
+  border-radius: 50%;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.tripSavedModal__title {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 4.5vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.tripSavedModal__lead {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.tripSavedModal__dest {
+  position: relative;
+  z-index: 1;
+  margin: 1rem 0 0;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border-radius: var(--radius-sm);
+}
+
+.tripSavedModal__dest strong {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.tripSavedModal__cta {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin-top: 1.35rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.95rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
 .builderOffer {
   width: 100%;
   max-width: 960px;
@@ -1444,16 +1621,41 @@
   box-shadow: 0 12px 32px rgba(107, 42, 26, 0.28);
 }
 
+.historyCard__top {
+  display: flex;
+  align-items: stretch;
+}
+
 .historyCard__head {
   display: flex;
   align-items: center;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   border: none;
   background: transparent;
   cursor: pointer;
   text-align: left;
   padding: 0;
   color: inherit;
+}
+
+.historyCard__delete {
+  flex-shrink: 0;
+  align-self: stretch;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+  padding: 0 1rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.historyCard__delete:hover {
+  background: rgba(0, 0, 0, 0.28);
 }
 
 .historyCard__head:hover {
@@ -1508,6 +1710,81 @@
 
 .historyPdfBtn {
   min-width: 150px;
+}
+
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(26, 22, 18, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: tripSavedFadeIn 0.22s ease;
+}
+
+.confirmDialog {
+  width: min(400px, 100%);
+  padding: 1.5rem 1.35rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius-lg) + 2px);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.2);
+  animation: tripSavedPop 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.confirmDialog__title {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.confirmDialog__message {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.confirmDialog__error {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #b42318;
+}
+
+.confirmDialog__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.confirmDialog__cancel,
+.confirmDialog__confirm {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  font-size: 0.88rem;
+  border-radius: var(--radius-sm);
+}
+
+.confirmDialog__confirm {
+  background: #b42318;
+  color: #fff;
+  border: none;
+}
+
+.confirmDialog__confirm:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.confirmDialog__confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .historyCardContent {

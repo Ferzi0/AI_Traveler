@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { api, apiDownload } from '../api'
 import { formatSummaryTotal } from '../utils/cost'
 import { AppFooter } from './AppFooter'
 import { BrandLogo } from './BrandLogo'
+import { ConfirmDialog } from './ConfirmDialog'
 import { ScrollToTopButton } from './ScrollToTopButton'
 import type { HistoryDetail, HistoryListItem } from '../types/history'
 
@@ -26,6 +27,9 @@ export function HistoryPage({ onClose }: Props) {
   const [detailLoading, setDetailLoading] = useState(false)
   const [pdfLoadingId, setPdfLoadingId] = useState<number | null>(null)
   const [pdfError, setPdfError] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<HistoryListItem | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     void (async () => {
@@ -80,8 +84,51 @@ export function HistoryPage({ onClose }: Props) {
     }
   }
 
+  function requestDelete(trip: HistoryListItem, event: MouseEvent) {
+    event.stopPropagation()
+    setDeleteError('')
+    setDeleteTarget(trip)
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    setDeleteLoading(true)
+    setDeleteError('')
+    try {
+      await api(`/history/${deleteTarget.id}`, 'DELETE')
+      setItems((prev) => prev.filter((item) => item.id !== deleteTarget.id))
+      if (expandedId === deleteTarget.id) {
+        setExpandedId(null)
+        setDetail(null)
+      }
+      setDeleteTarget(null)
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Не удалось удалить поездку')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  function cancelDelete() {
+    if (deleteLoading) return
+    setDeleteTarget(null)
+    setDeleteError('')
+  }
+
   return (
     <div className="pagePanelOverlay" ref={overlayRef}>
+      {deleteTarget ? (
+        <ConfirmDialog
+          title="Удалить поездку?"
+          message={`«${deleteTarget.destination ?? deleteTarget.trip_name}» будет удалена из истории без возможности восстановления.`}
+          confirmLabel="Да, удалить"
+          cancelLabel="Нет, оставить"
+          loading={deleteLoading}
+          error={deleteError}
+          onConfirm={() => void confirmDelete()}
+          onCancel={cancelDelete}
+        />
+      ) : null}
       <div className="pagePanel">
         <header className="topBar">
           <div className="topBarInner">
@@ -111,24 +158,34 @@ export function HistoryPage({ onClose }: Props) {
                   key={trip.id}
                   className={`historyCard${expanded ? ' historyCard--expanded' : ''}`}
                 >
-                  <button
-                    type="button"
-                    className="historyCard__head"
-                    onClick={() => void openItem(trip.id)}
-                  >
-                    <div className="historyCardContent">
-                      <span className="historyCardTitle">
-                        {trip.destination ?? trip.trip_name}
-                        {trip.hotel ? ` · ${trip.hotel}` : ''}
+                  <div className="historyCard__top">
+                    <button
+                      type="button"
+                      className="historyCard__head"
+                      onClick={() => void openItem(trip.id)}
+                    >
+                      <div className="historyCardContent">
+                        <span className="historyCardTitle">
+                          {trip.destination ?? trip.trip_name}
+                          {trip.hotel ? ` · ${trip.hotel}` : ''}
+                        </span>
+                        <span className="historyCardSub">
+                          {trip.date || 'Даты не указаны'} · Итог: {trip.total_label}
+                        </span>
+                      </div>
+                      <span className="historyCard__chevron" aria-hidden>
+                        {expanded ? '▲' : '▼'}
                       </span>
-                      <span className="historyCardSub">
-                        {trip.date || 'Даты не указаны'} · Итог: {trip.total_label}
-                      </span>
-                    </div>
-                    <span className="historyCard__chevron" aria-hidden>
-                      {expanded ? '▲' : '▼'}
-                    </span>
-                  </button>
+                    </button>
+                    <button
+                      type="button"
+                      className="historyCard__delete"
+                      aria-label={`Удалить поездку ${trip.destination ?? trip.trip_name}`}
+                      onClick={(event) => requestDelete(trip, event)}
+                    >
+                      Удалить
+                    </button>
+                  </div>
 
                   {expanded ? (
                     <div className="historyCard__body">
