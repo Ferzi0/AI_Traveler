@@ -1,10 +1,3 @@
-"""Город вылета по умолчанию в профиле пользователя.
-
-Revision ID: 20260522_0006
-Revises: 20260513_0005
-Create Date: 2026-05-22
-"""
-
 from typing import Sequence, Union
 
 import sqlalchemy as sa

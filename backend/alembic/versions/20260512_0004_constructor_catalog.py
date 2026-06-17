@@ -1,10 +1,3 @@
-"""Каталог конструктора: направления, отели, номера, рейсы.
-
-Revision ID: 20260512_0004
-Revises: 20260429_0003
-Create Date: 2026-05-12
-"""
-
 from typing import Sequence, Union
 
 from alembic import op

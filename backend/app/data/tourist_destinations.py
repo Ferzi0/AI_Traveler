@@ -1,5 +1,3 @@
-"""Справочник туристических направлений (синхрон с frontend touristDestinations.ts)."""
-
 from __future__ import annotations
 
 TOURIST_DESTINATIONS: list[dict[str, str]] = [

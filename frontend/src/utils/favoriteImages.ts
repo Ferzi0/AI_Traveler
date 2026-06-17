@@ -1,7 +1,7 @@
 import { accommodationImageUrls, destinationImage } from '../data/imageCatalog'
 import type { FavoriteItem } from '../types/favorites'
 
-/** Как hotelGallery в карточках отелей — сначала каталог, потом сохранённые URL. */
+
 export function favoriteGallery(item: FavoriteItem): string[] {
   if (item.item_type === 'hotel') {
     const catalog = accommodationImageUrls(item.item_key)

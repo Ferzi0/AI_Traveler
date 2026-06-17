@@ -72,7 +72,7 @@ export function detailCanvasMinWidth(hotelCategories: string[], cityCategories: 
   return Math.ceil(Math.min(Math.max(needed, 680), 960))
 }
 
-/** Absolute nodes do not stretch the canvas — reserve enough height for the lowest row. */
+
 export function detailCanvasMinHeight(
   hotelCategories: string[],
   cityCategories: string[]

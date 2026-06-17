@@ -1,10 +1,3 @@
-"""Trip params fields
-
-Revision ID: 20260429_0003
-Revises: 20260429_0002
-Create Date: 2026-04-29 21:03:00
-"""
-
 from typing import Sequence, Union
 
 from alembic import op

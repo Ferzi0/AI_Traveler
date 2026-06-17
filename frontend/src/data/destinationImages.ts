@@ -1,4 +1,4 @@
-/** Локальные обложки направлений (нет в API Aviasales). */
+
 
 export const DESTINATION_COVER_IMAGES = {
   istanbul: '/images/destinations/istanbul.jpg',
@@ -13,7 +13,7 @@ export const DESTINATION_COVER_IMAGES = {
 
 export const DEFAULT_DESTINATION_COVER = DESTINATION_COVER_IMAGES.phuket
 
-/** Город (рус.) → путь к JPEG в public/images/destinations */
+
 export const DESTINATION_COVER_BY_TITLE: Record<string, string> = {
   Стамбул: DESTINATION_COVER_IMAGES.istanbul,
   Анталья: DESTINATION_COVER_IMAGES.istanbul,

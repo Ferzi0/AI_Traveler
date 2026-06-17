@@ -1,5 +1,3 @@
-"""Каталог номеров: фото и описание для каждого accommodation + room_key."""
-
 from __future__ import annotations
 
 from app.data.curated_hotels import get_room_catalog_entry as curated_room_entry

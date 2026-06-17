@@ -1,4 +1,4 @@
-/** Сравнение ISO-дат YYYY-MM-DD без timezone-сюрпризов. */
+
 export function compareIsoDates(a: string, b: string): number {
   return a.localeCompare(b)
 }
@@ -37,7 +37,7 @@ export function todayIsoLocal(): string {
   return `${y}-${m}-${day}`
 }
 
-/** Старт — сегодня, возврат — через 7 дней. */
+
 export function defaultTripDateRange(): { startDate: string; endDate: string } {
   const startDate = todayIsoLocal()
   return { startDate, endDate: addDaysIso(startDate, 7) }

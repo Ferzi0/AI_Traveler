@@ -77,7 +77,6 @@ def get_room_catalog_entry(public_id: str, room_key: str) -> dict[str, Any] | No
 
 
 def export_image_manifest() -> dict[str, Any]:
-    """Manifest for scripts/fetch-curated-hotel-images.ps1"""
     hotels: dict[str, Any] = {}
     for public_id, spec in _HOTEL_INDEX.items():
         hotels[public_id] = {

@@ -1,8 +1,5 @@
-"""Справочники IATA для отображения названий мест (не для данных рейса)."""
-
 from __future__ import annotations
 
-# Город отправления (русское название) → IATA города — только для параметра запроса
 ORIGIN_CITY_TO_IATA: dict[str, str] = {
     "москва": "MOW",
     "санкт-петербург": "LED",
@@ -46,7 +43,6 @@ ORIGIN_CITY_TO_IATA: dict[str, str] = {
     "геленджик": "GDZ",
 }
 
-# IATA → город и страна для UI
 DESTINATION_IATA: dict[str, dict[str, str]] = {
     "IST": {"city": "Стамбул", "country": "Турция"},
     "AYT": {"city": "Анталья", "country": "Турция"},
@@ -112,7 +108,6 @@ DESTINATION_IATA: dict[str, dict[str, str]] = {
     "BOJ": {"city": "Бургас", "country": "Болгария"},
 }
 
-# Название направления из конструктора → IATA (город или агломерация)
 DESTINATION_TITLE_TO_IATA: dict[str, str] = {
     "пхукет": "HKT",
     "бангкок": "BKK",
@@ -270,7 +265,6 @@ def resolve_destination(iata: str) -> dict[str, str]:
 
 
 def enrich_place_names(item: dict) -> dict:
-    """Добавляет city/country из справочника; API-имена имеют приоритет."""
     dest_iata = str(item.get("destination", "")).upper()
     origin_iata = str(item.get("origin", "")).upper()
     dest_meta = resolve_destination(dest_iata)

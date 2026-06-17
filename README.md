@@ -23,6 +23,7 @@
 - **PostgreSQL** — основная БД
 - **Redis** + **Celery** — очередь задач
 - **Pydantic Settings** — управление конфигурацией
+- **Travelpayouts / Aviasales API** — цены и предложения на авиабилеты
 - **Python 3.12**
 
 ### Frontend
@@ -31,86 +32,21 @@
 - **Leaflet** — карты
 
 ### Инфраструктура
-- **Docker** + **docker-compose** — локальная разработка
 - **Render** — хостинг (backend + frontend как отдельные сервисы)
 
 ---
 
-## Локальный запуск
-
-### Требования
-- Docker Desktop
-
-### Запуск
-
-```bash
-cd infra
-docker compose up --build
-```
-
-Сервисы поднимутся на:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8000
-- Swagger: http://localhost:8000/docs
-
-### Миграции Alembic
-
-Выполнять из папки `backend`:
-
-```bash
-alembic upgrade head
-```
-
-Создать новую миграцию после изменения моделей:
-
-```bash
-alembic revision --autogenerate -m "описание изменений"
-```
-
----
-
-## Переменные окружения
-
-Создай файл `backend/.env` на основе примера ниже.
-
-```env
-PROJECT_NAME=AI Traveler API
-PROJECT_VERSION=0.1.0
-API_V1_PREFIX=/api/v1
-
-# База данных
-POSTGRES_SERVER=db
-POSTGRES_PORT=5432
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=ai_traveler
-
-# JWT
-JWT_SECRET_KEY=change_me_in_production
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-
-# Авто-создание таблиц (только для разработки)
-AUTO_CREATE_TABLES=false
-```
-
-> На продакшне (Render) переменные задаются через Environment в дашборде сервиса.  
-> `JWT_SECRET_KEY` обязательно замени на случайную строку.
-
-### Render (продакшн)
+## Деплой на Render
 
 | Сервис | Dockerfile | Ключевые ENV |
 |--------|------------|--------------|
 | Backend | `backend/Dockerfile.prod` | `CORS_ORIGINS`, `POSTGRES_*`, `JWT_SECRET_KEY`, `TRAVELPAYOUTS_*` |
 | Frontend | `frontend/Dockerfile.prod` | `VITE_API_BASE`, `VITE_FRONTEND_URL` |
 
-**Важно:** на Render фронтенд должен ходить в API по публичному URL, а не на `localhost`.  
-`frontend/src/config.ts` определяет API по hostname страницы; для явной настройки задай `VITE_API_BASE` при сборке.
+`frontend/src/config.ts` определяет URL API по hostname страницы.  
+На бэкенде в `CORS_ORIGINS` — URL фронта без слэша в конце: `https://ai-traveler-1.onrender.com`
 
-На бэкенде в `CORS_ORIGINS` укажи URL фронта без слэша в конце, например:  
-`https://ai-traveler-1.onrender.com`
-
-Первый запрос после сна сервиса может занять до минуты — фронт автоматически повторяет запросы при 502/503.
+Фронт повторяет запросы при 502/503, пока сервис просыпается.
 
 ---
 
@@ -131,6 +67,13 @@ AUTO_CREATE_TABLES=false
 | `GET` | `/auth/me` | Профиль текущего пользователя |
 | `PATCH` | `/auth/me` | Обновить профиль |
 
+### Flights
+| Метод | Путь | Описание |
+|-------|------|----------|
+| `GET` | `/flights/popular` | Популярные направления из города вылета |
+| `GET` | `/flights/calendar` | Календарь цен по маршруту |
+| `GET` | `/flights/special-offers` | Спецпредложения Aviasales |
+
 ### Trips
 | Метод | Путь | Описание |
 |-------|------|----------|
@@ -140,6 +83,9 @@ AUTO_CREATE_TABLES=false
 | `PATCH` | `/trips/{trip_id}/params` | Обновить параметры поездки |
 | `GET` | `/trips/destination/search` | Поиск направлений |
 | `POST` | `/trips/{trip_id}/destination/select` | Выбрать направление |
+| `POST` | `/trips/{trip_id}/destination/reset` | Сбросить направление |
+| `POST` | `/trips/{trip_id}/selections/reset` | Сбросить выборы в конструкторе |
+| `POST` | `/trips/{trip_id}/detail/reset` | Сбросить детализацию |
 | `GET` | `/trips/{trip_id}/tree` | Дерево поездки |
 | `POST` | `/trips/{trip_id}/nodes` | Создать узел дерева |
 | `POST` | `/trips/{trip_id}/edges` | Создать связь в дереве |
@@ -167,6 +113,13 @@ AUTO_CREATE_TABLES=false
 | `POST` | `/favorites` | Добавить в избранное |
 | `DELETE` | `/favorites/{favorite_id}` | Удалить из избранного |
 
+### Reviews
+| Метод | Путь | Описание |
+|-------|------|----------|
+| `GET` | `/reviews/{entity_type}/{entity_id}` | Отзывы по объекту каталога |
+| `POST` | `/reviews` | Оставить отзыв |
+| `POST` | `/reviews/summary/batch` | Сводка рейтингов по списку объектов |
+
 ### History
 | Метод | Путь | Описание |
 |-------|------|----------|
@@ -174,6 +127,7 @@ AUTO_CREATE_TABLES=false
 | `POST` | `/history` | Сохранить поездку в историю |
 | `GET` | `/history/{history_id}` | Детали записи истории |
 | `GET` | `/history/{history_id}/pdf` | Скачать PDF-отчёт |
+| `DELETE` | `/history/{history_id}` | Удалить запись |
 
 ### Stats
 | Метод | Путь | Описание |
@@ -192,37 +146,31 @@ AI_Traveler/
 │   │   │   ├── v1/
 │   │   │   │   ├── auth.py
 │   │   │   │   ├── favorites.py
+│   │   │   │   ├── flights.py
 │   │   │   │   ├── history.py
+│   │   │   │   ├── reviews.py
 │   │   │   │   ├── stats.py
 │   │   │   │   └── trips.py
 │   │   │   ├── deps.py
 │   │   │   └── router.py
 │   │   ├── core/
-│   │   │   ├── config.py
-│   │   │   ├── database.py
-│   │   │   └── security.py
+│   │   ├── data/              # каталоги отелей, IATA, направления
 │   │   ├── models/
-│   │   │   ├── constructor_catalog.py
-│   │   │   ├── favorite.py
-│   │   │   ├── route_point.py
-│   │   │   ├── trip.py
-│   │   │   ├── trip_edge.py
-│   │   │   ├── trip_history.py
-│   │   │   ├── trip_node.py
-│   │   │   └── user.py
+│   │   ├── services/          # Travelpayouts, поиск рейсов, отзывы
 │   │   └── main.py
 │   ├── alembic/
-│   │   └── versions/        # 7 миграций (initial → user_default_origin)
+│   │   └── versions/          # 8 миграций
+│   ├── Dockerfile.prod
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── components/      # React-компоненты
-│   │   ├── types/           # TypeScript-типы
-│   │   ├── api.ts           # HTTP-клиент
-│   │   └── App.tsx          # Корневой компонент
+│   │   ├── components/
+│   │   ├── types/
+│   │   ├── api.ts
+│   │   ├── config.ts
+│   │   └── App.tsx
+│   ├── Dockerfile.prod
 │   └── package.json
-└── infra/
-    └── docker-compose.yml
 ```
 
 ---

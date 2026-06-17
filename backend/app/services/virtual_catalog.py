@@ -1,5 +1,3 @@
-"""Виртуальный каталог отелей, доп. услуг и транспорта для любого направления."""
-
 from __future__ import annotations
 
 import hashlib

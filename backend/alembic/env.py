@@ -21,7 +21,6 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Используем URL из настроек приложения, чтобы не дублировать конфигурацию БД.
 config.set_main_option("sqlalchemy.url", settings.SQLALCHEMY_DATABASE_URI)
 target_metadata = Base.metadata
 

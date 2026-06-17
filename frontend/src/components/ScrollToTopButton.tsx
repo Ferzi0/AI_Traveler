@@ -1,9 +1,9 @@
 import { useEffect, useState, type RefObject } from 'react'
 
 type Props = {
-  /** Прокручиваемый контейнер (например pagePanelOverlay). По умолчанию — window. */
+  
   scrollRoot?: RefObject<HTMLElement | null>
-  /** Отступ снизу, например когда видна панель итога поездки. */
+  
   bottom?: string
 }
 

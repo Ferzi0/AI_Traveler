@@ -1,5 +1,3 @@
-"""Локальные обложки направлений для UI (не из API рейсов)."""
-
 from __future__ import annotations
 
 DEFAULT_DESTINATION_COVER = "/images/destinations/phuket.jpg"

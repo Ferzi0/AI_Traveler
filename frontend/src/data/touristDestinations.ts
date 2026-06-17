@@ -1,8 +1,8 @@
 export type TouristDestination = {
-  /** Название города для API и каталога */
+  
   title: string
   country: string
-  /** Штат, провинция, регион — для США, Канады и т.п. */
+  
   region?: string
 }
 

@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 
-/** Paths from frontend/public or absolute URLs returned by the API. */
+
 export function resolveImageUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined
   const trimmed = url.trim()

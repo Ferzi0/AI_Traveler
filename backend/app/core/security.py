@@ -11,7 +11,6 @@ def get_password_hash(password: str) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    # Старые записи в БД могли хранить пароль в открытом виде (до bcrypt).
     if not hashed_password.startswith("$2"):
         return plain_password == hashed_password
     try:

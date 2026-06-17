@@ -5,7 +5,7 @@ import { formatPrice } from '../utils/flightDisplay'
 type Props = {
   itinerary: TransportItinerary
   onClose: () => void
-  /** Внутри fullscreen-панели (рейсы/отели) — без portal, поверх контента */
+  
   embedded?: boolean
 }
 

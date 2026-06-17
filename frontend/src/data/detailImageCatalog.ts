@@ -1,4 +1,4 @@
-/** Тематические обложки для доп. дерева — категории и варианты пунктов каталога. */
+
 
 const DETAIL_CATEGORY_IMAGE: Record<string, string> = {
   restaurants: '/images/detail/categories/restaurants.jpg',

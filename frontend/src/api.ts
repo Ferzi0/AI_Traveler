@@ -18,9 +18,7 @@ async function extractErrorMessage(response: Response): Promise<string> {
     else if (Array.isArray(parsed.detail)) {
       message = parsed.detail.map((e) => e.msg).join(', ')
     }
-  } catch {
-    /* keep raw text */
-  }
+  } catch {}
   return message || `Ошибка сервера (${response.status})`
 }
 

@@ -1,5 +1,3 @@
-"""Справочники конструктора поездок (направления, жильё, номера, транспорт)."""
-
 from sqlalchemy import Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -84,7 +82,6 @@ class ConstructorTransportLeg(Base):
     aircraft_model: Mapped[str] = mapped_column(String(128), default="")
     cabin_class: Mapped[str] = mapped_column(String(64), default="economy")
     source_url: Mapped[str] = mapped_column(String(512), default="")
-    # JSON-массив строк: что входит в тариф
     price_includes: Mapped[str] = mapped_column(Text(), default="[]")
 
     destination: Mapped["ConstructorDestination"] = relationship(

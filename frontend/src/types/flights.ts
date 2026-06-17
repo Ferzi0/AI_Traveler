@@ -5,7 +5,7 @@ export type PopularDestination = {
   destination_airport?: string | null
   origin_name?: string | null
   destination_name?: string | null
-  /** Из справочника IATA или destination_name API */
+  
   city: string
   country: string
   origin_label?: string | null

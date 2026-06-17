@@ -1,9 +1,3 @@
-"""Add catalog reviews for accommodations and detail catalog items.
-
-Revision ID: 20260616_0008
-Revises: 20260522_0007
-"""
-
 from typing import Sequence, Union
 
 import sqlalchemy as sa

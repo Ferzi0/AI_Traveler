@@ -1,9 +1,3 @@
-"""Extend favorites and trip_history for catalog items and trip snapshots.
-
-Revision ID: 20260522_0007
-Revises: 20260522_0006
-"""
-
 from typing import Sequence, Union
 
 import sqlalchemy as sa

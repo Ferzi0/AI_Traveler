@@ -32,7 +32,7 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
 
     @property
-    def SQLALCHEMY_DATABASE_URI(self) -> str:  # noqa: N802
+    def SQLALCHEMY_DATABASE_URI(self) -> str:
         return (
             f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

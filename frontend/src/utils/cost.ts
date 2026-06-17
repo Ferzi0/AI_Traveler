@@ -8,7 +8,7 @@ function moneyLabel(value: number, currency = 'rub', approximate = true): string
   return formatPrice(value, currency, approximate)
 }
 
-/** Цена в каталоге за одного человека → подпись для карточки. */
+
 export function formatCatalogPerPersonCost(
   unitCost: number,
   passengers: number,
@@ -20,7 +20,7 @@ export function formatCatalogPerPersonCost(
   return `${moneyLabel(unit, currency)}/чел · ${moneyLabel(total, currency)} за ${passengers} чел.`
 }
 
-/** Подпись для строки калькулятора. */
+
 export function formatCalculationMeta(
   item: {
     formula: string

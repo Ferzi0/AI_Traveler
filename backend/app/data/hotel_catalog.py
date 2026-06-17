@@ -1,5 +1,3 @@
-"""Галереи фото отелей — статика фронтенда."""
-
 from __future__ import annotations
 
 from app.data.curated_hotels import all_curated_hotel_ids, is_curated_hotel
@@ -30,5 +28,4 @@ def has_hotel_gallery(public_id: str) -> bool:
     return is_curated_hotel(public_id) or public_id in LEGACY_ACCOMMODATION_IDS
 
 
-# Backward compatibility
 ACCOMMODATION_IDS = all_accommodation_ids()

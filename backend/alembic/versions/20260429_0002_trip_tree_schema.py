@@ -1,10 +1,3 @@
-"""Trip tree schema
-
-Revision ID: 20260429_0002
-Revises: 20260429_0001
-Create Date: 2026-04-29 20:12:00
-"""
-
 from typing import Sequence, Union
 
 from alembic import op

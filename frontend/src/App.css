@@ -724,7 +724,7 @@
   border-color: var(--node-from);
 }
 
-/* ——— Дерево ——— */
+
 
 .tripTree {
   display: flex;
@@ -1395,7 +1395,7 @@
   }
 }
 
-/* ——— Панель деталей рейса ——— */
+
 
 .detailsOverlay {
   position: fixed;
@@ -1571,7 +1571,7 @@
   color: var(--node-from);
 }
 
-/* ─── BURGER MENU ──────────────────────────────────────── */
+
 
 .menuOverlay {
   position: fixed;
@@ -1643,7 +1643,7 @@
   margin: 4px 0;
 }
 
-/* ─── PAGE PANEL (общий для всех страниц-оверлеев) ────── */
+
 
 .pagePanelOverlay {
   position: fixed;
@@ -1681,7 +1681,7 @@
   text-align: center;
 }
 
-/* ─── ИСТОРИЯ ПОЕЗДОК ──────────────────────────────────── */
+
 
 .historyList {
   display: flex;
@@ -1886,7 +1886,7 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
-/* ─── ИЗБРАННОЕ ────────────────────────────────────────── */
+
 
 .favoritesGrid {
   display: grid;
@@ -2309,7 +2309,7 @@
   }
 }
 
-/* ─── ПРОФИЛЬ ──────────────────────────────────────────── */
+
 
 .profileCard {
   display: flex;
@@ -2414,7 +2414,7 @@
   color: #fff;
 }
 
-/* ─── AUTH PAGES ───────────────────────────────────────── */
+
 
 .authPage {
   min-height: 100dvh;
@@ -2669,7 +2669,7 @@
   text-align: center;
 }
 
-/* ——— Дерево поездки (Layla-style) ——— */
+
 
 .tripTreeToolbar {
   display: flex;
@@ -4268,7 +4268,7 @@
 }
 
 .flightOffer--withActions {
-  /* наследует сетку .flightOffer */
+  
 }
 
 .flightOffer__actions {
@@ -4796,7 +4796,7 @@
   }
 }
 
-/* ─── HOME PAGE (mockup layout) ─────────────────────────── */
+
 
 .app--home .topBar {
   position: absolute;
@@ -5184,7 +5184,7 @@
   }
 }
 
-/* ——— Рейтинги и отзывы каталога ——— */
+
 
 .starRating {
   display: inline-flex;

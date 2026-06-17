@@ -13,20 +13,16 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    # Контактные данные
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     phone: Mapped[str] = mapped_column(String(20), unique=True, index=True)
 
-    # ФИО
     last_name: Mapped[str] = mapped_column(String(100))
     first_name: Mapped[str] = mapped_column(String(100))
     middle_name: Mapped[str] = mapped_column(String(100))
 
-    # Авторизация
     login: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255))
 
-    # Настройки поездок
     default_origin: Mapped[str] = mapped_column(String(255), default="Москва")
 
     @validates("phone")

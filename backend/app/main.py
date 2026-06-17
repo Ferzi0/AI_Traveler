@@ -28,7 +28,6 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup() -> None:
     if settings.AUTO_CREATE_TABLES:
-        # Импортируем модели перед create_all, чтобы SQLAlchemy увидел все таблицы.
         from app.models import (
             catalog_review,
             constructor_catalog,
@@ -39,9 +38,8 @@ def on_startup() -> None:
             trip_history,
             trip_node,
             user,
-        )  # noqa: F401
+        )
 
-        # Полезно для локальной разработки до перехода на миграции Alembic.
         Base.metadata.create_all(bind=engine)
 
 

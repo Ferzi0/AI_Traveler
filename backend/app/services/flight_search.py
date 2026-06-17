@@ -1,5 +1,3 @@
-"""Поиск рейсов по поездке через Travelpayouts / Aviasales."""
-
 from __future__ import annotations
 
 import hashlib

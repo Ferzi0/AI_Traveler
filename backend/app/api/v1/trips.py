@@ -572,7 +572,6 @@ def _map_center_for_destination(title: str) -> dict[str, float]:
         lat, lng = legacy
     return {"latitude": lat, "longitude": lng}
 
-# Обложка отеля (первое фото галереи) — для обратной совместимости.
 ACCOMMODATION_IMAGE_URLS: dict[str, str] = {
     public_id: accommodation_cover_image(public_id) for public_id in (
         "acc_phuket_laguna",
@@ -899,7 +898,6 @@ def _is_per_person_node_type(node_type: str) -> bool:
 def _billing_for_node(
     node: TripNode, passengers: int
 ) -> tuple[float, float, bool]:
-    """unit_cost, line_total, is_per_person (catalog stores per-person for the last flag)."""
     raw = round(node.estimated_cost or 0.0, 2)
     if _is_per_person_node_type(node.node_type):
         unit = raw
@@ -1187,8 +1185,6 @@ def create_trip(
     return {"id": trip.id}
 
 
-# Статические пути (например /destination/search) должны быть выше /{trip_id},
-# иначе часть клиентов/прокси может получать не тот маршрут или обрыв соединения.
 @router.get("/destination/search")
 def search_destinations(
     query: str = "", db: Session = Depends(get_db)

@@ -274,9 +274,7 @@ function App() {
     if (tripId) {
       try {
         await api(`/trips/${tripId}/destination/reset`, 'POST')
-      } catch {
-        /* best-effort: UI must return to home even if reset fails */
-      }
+      } catch {}
     }
     setSelectedDestination(null)
     setDestinations([])
@@ -344,9 +342,7 @@ function App() {
           round_trip: true,
         })
         await refreshSummary()
-      } catch {
-        /* params bar may update before trip is ready */
-      }
+      } catch {}
     })()
   }, [origin, startDate, endDate, passengers, tripId, selectedDestination])
 
@@ -539,9 +535,7 @@ function App() {
       }
       try {
         await refreshSummary()
-      } catch {
-        /* summary не должен перетирать ошибку загрузки рейсов */
-      }
+      } catch {}
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка выбора направления')
     } finally {

@@ -23,7 +23,7 @@ function getAnchorPoint(container: HTMLElement, nodeId: string, side: AnchorSide
   }
 }
 
-/** Ортогональные «нормальные» чёрные линии между якорями */
+
 function buildOrthogonalPath(
   from: Point,
   to: Point,

@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react'
 
-/** Отменяет устаревшие ответы поиска при быстром сбросе/смене фильтров. */
+
 export function useAsyncSearchSeq() {
   const seqRef = useRef(0)
 

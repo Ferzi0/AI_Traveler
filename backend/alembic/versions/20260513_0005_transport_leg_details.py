@@ -1,10 +1,3 @@
-"""Детализация рейсов в каталоге конструктора.
-
-Revision ID: 20260513_0005
-Revises: 20260512_0004
-Create Date: 2026-05-13
-"""
-
 from typing import Sequence, Union
 
 from alembic import op
