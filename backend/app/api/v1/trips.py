@@ -10,6 +10,7 @@ from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.data.destination_images import destination_cover_url
+from app.data.curated_hotels import is_curated_destination
 from app.data.hotel_catalog import accommodation_cover_image, accommodation_image_urls
 from app.data.room_catalog import get_room_catalog_entry
 from app.data.tourist_destinations import (
@@ -914,6 +915,9 @@ def _destination_by_title(db: Session, title: str) -> ConstructorDestination | N
 
 
 def _accommodations_for_trip(db: Session, trip: Trip) -> list[CatalogAccommodation]:
+    if is_curated_destination(trip.destination):
+        return virtual_accommodations(trip.destination)
+
     stmt = (
         select(ConstructorAccommodation)
         .join(ConstructorDestination)

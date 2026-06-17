@@ -2,26 +2,16 @@
 
 from __future__ import annotations
 
+from app.data.curated_hotels import get_room_catalog_entry as curated_room_entry
+from app.data.hotel_catalog import LEGACY_ACCOMMODATION_IDS
+
 ROOM_KEYS = ("std", "family", "suite")
 
-ACCOMMODATION_IDS = (
-    "acc_phuket_laguna",
-    "acc_phuket_hostel",
-    "acc_london_hotel",
-)
+ACCOMMODATION_IDS = LEGACY_ACCOMMODATION_IDS
 
 
-def _resolve_accommodation_id(accommodation_id: str) -> str:
-    if accommodation_id in ACCOMMODATION_IDS:
-        return accommodation_id
-    if accommodation_id.startswith("acc_v_"):
-        return "acc_phuket_hostel" if accommodation_id.endswith("_hostel") else "acc_phuket_laguna"
-    return accommodation_id
-
-
-def _room_images(accommodation_id: str, room_key: str) -> list[str]:
-    resolved = _resolve_accommodation_id(accommodation_id)
-    base = f"/images/rooms/{resolved}/{room_key}"
+def _legacy_room_images(accommodation_id: str, room_key: str) -> list[str]:
+    base = f"/images/rooms/{accommodation_id}/{room_key}"
     return [f"{base}-{i}.jpg" for i in range(1, 5)]
 
 
@@ -105,7 +95,10 @@ def room_catalog_id(accommodation_id: str, room_key: str) -> str:
 
 
 def get_room_catalog_entry(accommodation_id: str, room_key: str) -> dict:
+    curated = curated_room_entry(accommodation_id, room_key)
+    if curated:
+        return curated
     key = room_catalog_id(accommodation_id, room_key)
     meta = {**_DEFAULT_ROOM, **ROOM_CATALOG.get(key, {})}
-    meta["image_urls"] = _room_images(accommodation_id, room_key)
+    meta["image_urls"] = _legacy_room_images(accommodation_id, room_key)
     return meta

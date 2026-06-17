@@ -4,30 +4,20 @@ import {
   destinationCoverByTitle,
 } from './destinationImages'
 
-const ACCOMMODATION_GALLERY_SIZE = 4
-const ROOM_GALLERY_SIZE = 4
+const HOTEL_GALLERY_SIZE = 4
+const DEFAULT_ROOM_GALLERY_SIZE = 5
 
-const CATALOG_ACCOMMODATION_IDS = new Set([
+const LEGACY_ACCOMMODATION_IDS = new Set([
   'acc_phuket_laguna',
   'acc_phuket_hostel',
   'acc_london_hotel',
 ])
 
-/** Виртуальные отели используют галерею шаблонного каталога по типу размещения. */
-function resolveAccommodationId(publicId: string): string {
-  if (CATALOG_ACCOMMODATION_IDS.has(publicId)) return publicId
-  if (publicId.startsWith('acc_v_')) {
-    return publicId.endsWith('_hostel') ? 'acc_phuket_hostel' : 'acc_phuket_laguna'
-  }
-  return publicId
-}
-
 export function accommodationImageUrls(publicId: string): string[] {
   if (!publicId) return []
-  const id = resolveAccommodationId(publicId)
   return Array.from(
-    { length: ACCOMMODATION_GALLERY_SIZE },
-    (_, i) => `/images/hotels/${id}/${i + 1}.jpg`
+    { length: HOTEL_GALLERY_SIZE },
+    (_, i) => `/images/hotels/${publicId}/${i + 1}.jpg`
   )
 }
 
@@ -36,11 +26,14 @@ export function accommodationCoverImage(publicId: string): string {
   return urls[0] ?? '/images/hotels/default.jpg'
 }
 
-export function roomImageUrls(accommodationId: string, roomKey: string): string[] {
+export function roomImageUrls(
+  accommodationId: string,
+  roomKey: string,
+  imageCount = DEFAULT_ROOM_GALLERY_SIZE
+): string[] {
   if (!accommodationId || !roomKey) return []
-  const id = resolveAccommodationId(accommodationId)
-  const base = `/images/rooms/${id}/${roomKey}`
-  return Array.from({ length: ROOM_GALLERY_SIZE }, (_, i) => `${base}-${i + 1}.jpg`)
+  const base = `/images/rooms/${accommodationId}/${roomKey}`
+  return Array.from({ length: imageCount }, (_, i) => `${base}-${i + 1}.jpg`)
 }
 
 export function roomCoverImage(accommodationId: string, roomKey: string): string {
@@ -89,10 +82,10 @@ export function accommodationGallery(hotel: {
   image_urls?: string[]
   image_url?: string | null
 }): string[] {
-  if (CATALOG_ACCOMMODATION_IDS.has(hotel.id) || hotel.id.startsWith('acc_v_')) {
+  if (hotel.image_urls && hotel.image_urls.length > 0) return hotel.image_urls
+  if (hotel.id.startsWith('acc_') || LEGACY_ACCOMMODATION_IDS.has(hotel.id)) {
     return accommodationImageUrls(hotel.id)
   }
-  if (hotel.image_urls && hotel.image_urls.length > 0) return hotel.image_urls
   return hotel.image_url ? [hotel.image_url] : ['/images/hotels/default.jpg']
 }
 

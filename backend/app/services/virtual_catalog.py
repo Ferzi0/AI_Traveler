@@ -6,6 +6,7 @@ import hashlib
 import math
 from dataclasses import dataclass
 
+from app.data.curated_hotels import get_curated_hotel, get_hotels_for_destination
 from app.data.destination_images import destination_cover_url
 from app.data.hotel_catalog import accommodation_cover_image, accommodation_image_urls
 from app.data.tourist_destinations import destination_slug, find_tourist_destination
@@ -124,6 +125,33 @@ def destination_coords(title: str, country: str) -> tuple[float, float]:
 
 
 def virtual_accommodations(destination_title: str) -> list[CatalogAccommodation]:
+    curated = get_hotels_for_destination(destination_title)
+    if curated:
+        items: list[CatalogAccommodation] = []
+        for spec in curated:
+            rooms = tuple(
+                CatalogRoom(
+                    room["room_key"],
+                    room["room_name"],
+                    room["price_multiplier"],
+                    room["max_persons"],
+                )
+                for room in spec["rooms"]
+            )
+            items.append(
+                CatalogAccommodation(
+                    public_id=spec["public_id"],
+                    title=spec["title"],
+                    kind=spec["kind"],
+                    rating=spec["rating"],
+                    base_price_per_night=spec["base_price_per_night"],
+                    distance_km=spec["distance_km"],
+                    rooms=rooms,
+                    virtual=True,
+                )
+            )
+        return items
+
     meta = find_tourist_destination(destination_title)
     country = meta["country"] if meta else ""
     slug = destination_slug(destination_title)
@@ -170,14 +198,26 @@ def accommodation_coords(acc: CatalogAccommodation, destination_title: str, coun
 
 def serialize_accommodation(acc: CatalogAccommodation, destination_title: str, country: str) -> dict:
     digest = _digest(acc.public_id, "meta")
-    stars = min(5, max(1, round(acc.rating / 2)))
-    if acc.virtual:
-        cover = destination_cover_url(destination_title)
-        image_urls = [cover]
-    else:
+    curated_spec = get_curated_hotel(acc.public_id)
+    if curated_spec:
+        stars = curated_spec.get("stars") or min(5, max(1, round(acc.rating / 2)))
+        breakfast = curated_spec.get("breakfast_included", True)
+        has_pool = curated_spec.get("has_pool", acc.kind == "hotel")
+        lat = curated_spec["latitude"]
+        lng = curated_spec["longitude"]
         image_urls = accommodation_image_urls(acc.public_id)
         cover = accommodation_cover_image(acc.public_id)
-    lat, lng = accommodation_coords(acc, destination_title, country)
+    else:
+        stars = min(5, max(1, round(acc.rating / 2)))
+        breakfast = digest % 3 != 0
+        has_pool = acc.kind == "hotel" and digest % 5 != 0
+        if acc.virtual:
+            cover = destination_cover_url(destination_title)
+            image_urls = [cover]
+        else:
+            image_urls = accommodation_image_urls(acc.public_id)
+            cover = accommodation_cover_image(acc.public_id)
+        lat, lng = accommodation_coords(acc, destination_title, country)
     return {
         "id": acc.public_id,
         "destination": destination_title,
@@ -187,8 +227,8 @@ def serialize_accommodation(acc: CatalogAccommodation, destination_title: str, c
         "price": acc.base_price_per_night,
         "distance_km": acc.distance_km,
         "stars": stars,
-        "breakfast_included": digest % 3 != 0,
-        "has_pool": acc.kind == "hotel" and digest % 5 != 0,
+        "breakfast_included": breakfast,
+        "has_pool": has_pool,
         "latitude": lat,
         "longitude": lng,
         "image_url": cover,
@@ -197,6 +237,12 @@ def serialize_accommodation(acc: CatalogAccommodation, destination_title: str, c
 
 
 def hotel_extras_catalog(accommodation_id: str, destination_title: str) -> dict[str, list[dict]]:
+    from app.data.curated_destinations import get_curated_profile
+
+    profile = get_curated_profile(destination_title)
+    if profile and "hotel_extras" in profile:
+        return profile["hotel_extras"]
+
     slug = destination_slug(destination_title)
     short = destination_title
     return {
@@ -270,6 +316,12 @@ def find_hotel_extra(accommodation_id: str, destination_title: str, category: st
 
 
 def city_transport_catalog(destination_title: str) -> dict[str, list[dict]]:
+    from app.data.curated_destinations import get_curated_profile
+
+    profile = get_curated_profile(destination_title)
+    if profile and "city_transport" in profile:
+        return profile["city_transport"]
+
     slug = destination_slug(destination_title)
     coastal = destination_title in {
         "Пхукет", "Бангкок", "Паттайя", "Краби", "Бали", "Барселона", "Майами",

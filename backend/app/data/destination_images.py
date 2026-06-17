@@ -40,7 +40,7 @@ DESTINATION_COVER_BY_TITLE: dict[str, str] = {
     "Дублин": "/images/destinations/london.jpg",
     "Москва": "/images/destinations/london.jpg",
     "Санкт-Петербург": "/images/destinations/london.jpg",
-    "Сочи": "/images/destinations/london.jpg",
+    "Сочи": "/images/destinations/sochi.jpg",
     "Париж": "/images/destinations/paris.jpg",
     "Ницца": "/images/destinations/paris.jpg",
     "Лион": "/images/destinations/paris.jpg",

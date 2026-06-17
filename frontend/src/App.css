@@ -2628,6 +2628,33 @@
   margin-bottom: 0.5rem;
 }
 
+@media (min-width: 720px) {
+  .roomCatalog {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+.detailExtraCatalog {
+  padding-bottom: 1rem;
+}
+
+.detailExtraCard .photoSlider {
+  margin-bottom: 0;
+}
+
+.detailExtraCard .photoSlider--card .photoSlider__slide {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-color: #eee6df;
+}
+
+.detailExtraCard--active {
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(192, 96, 58, 0.14);
+}
+
 .tripFlow--detail .stepCard--flow {
   width: min(220px, 24vw);
   min-width: 168px;

@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { FilterToolbar } from './FilterToolbar'
 import { FullscreenPanel } from './FullscreenPanel'
 import type { HotelExtraItem } from '../../types/trip'
-import { appendCostToSubtitle } from '../../utils/cost'
-import { imageBackgroundStyle } from '../../utils/images'
+import { formatPrice } from '../../utils/flightDisplay'
+import { resolveImageUrl } from '../../utils/images'
+import { PhotoSlider } from '../PhotoSlider'
 
 const DEFAULT_SORT = 'price'
 
@@ -52,27 +53,64 @@ export function DetailExtraPickerPanel({
         ]}
         onReset={() => setSortBy(DEFAULT_SORT)}
       />
-      <div className="catalogList">
-        {sorted.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`catalogCard catalogCard--detail${selectedId === item.id ? ' catalogCard--active' : ''}`}
-            onClick={() => onSelect(item.id)}
-          >
-            <div
-              className="catalogCard__media catalogCard__media--detail"
-              style={imageBackgroundStyle(imageUrlForItem(item))}
-              aria-hidden
-            />
-            <div className="catalogCard__body">
-              <strong>{item.title}</strong>
-              <span className="catalogCard__meta">
-                {appendCostToSubtitle(item.description, item.estimated_cost, passengers)}
-              </span>
-            </div>
-          </button>
-        ))}
+      <div className="roomCatalog detailExtraCatalog">
+        {sorted.map((item) => {
+          const active = selectedId === item.id
+          const unitCost = item.estimated_cost
+          const totalCost = unitCost * Math.max(1, passengers)
+          return (
+            <article
+              key={item.id}
+              className={`roomCard detailExtraCard${active ? ' detailExtraCard--active' : ''}`}
+            >
+              <div
+                className="roomCard__gallery"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                role="presentation"
+              >
+                <PhotoSlider
+                  images={
+                    [resolveImageUrl(imageUrlForItem(item))].filter(
+                      (url): url is string => Boolean(url)
+                    )
+                  }
+                  variant="card"
+                  autoMs={4500}
+                />
+              </div>
+              <div className="roomCard__body">
+                <div className="roomCard__head">
+                  <h3 className="roomCard__title">{item.title}</h3>
+                  <p className="roomCard__description">{item.description}</p>
+                </div>
+                <div className="roomCard__priceRow">
+                  <div>
+                    <span className="roomCard__price">
+                      {unitCost > 0
+                        ? formatPrice(totalCost, 'rub', true)
+                        : 'Бесплатно'}
+                    </span>
+                    <span className="roomCard__priceMeta">
+                      {unitCost > 0
+                        ? passengers > 1
+                          ? `${formatPrice(unitCost, 'rub', true)}/чел · ${passengers} чел.`
+                          : `${formatPrice(unitCost, 'rub', true)}/чел`
+                        : 'Включено в маршрут'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className={`btn roomCard__selectBtn${active ? ' btn--secondary' : ''}`}
+                    onClick={() => onSelect(item.id)}
+                  >
+                    {active ? 'Выбрано' : 'Выбрать'}
+                  </button>
+                </div>
+              </div>
+            </article>
+          )
+        })}
       </div>
     </FullscreenPanel>
   )

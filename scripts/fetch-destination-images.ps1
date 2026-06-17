@@ -1,11 +1,11 @@
-# Thematic destination covers for AI Traveler (Pexels — verified photo IDs)
+# Thematic destination covers for AI Traveler (Unsplash — iconic landmarks, verified URLs)
 $root = Join-Path $PSScriptRoot "..\frontend\public\images\destinations"
 New-Item -ItemType Directory -Force -Path $root | Out-Null
 
-$W = "auto=compress&cs=tinysrgb&w=960&h=640&fit=crop"
+$W = "w=960&q=80&fit=crop"
 
-function Pexels($id) {
-  "https://images.pexels.com/photos/$id/pexels-photo-$id.jpeg?$W"
+function Unsplash($id) {
+  "https://images.unsplash.com/$id`?$W"
 }
 
 function Save-Image($url, $path) {
@@ -18,13 +18,14 @@ function Save-Image($url, $path) {
 }
 
 $destinations = @{
-  "istanbul.jpg"  = (Pexels 1089305)  # Босфор / Стамбул
-  "phuket.jpg"    = (Pexels 457881)   # Тропический пляж
-  "london.jpg"    = (Pexels 460672)   # Биг-Бен / Темза
-  "paris.jpg"     = (Pexels 1618542)  # Эйфелева башня
-  "dubai.jpg"     = (Pexels 358136)   # Небоскрёбы Дубая
-  "tokyo.jpg"     = (Pexels 2506923)  # Токио, огни города
-  "barcelona.jpg" = (Pexels 1388038)  # Саграда Фамилия
+  "istanbul.jpg"  = (Unsplash "photo-1524231757912-21f4fe3a7200")  # Босфор, мечети
+  "phuket.jpg"    = (Unsplash "photo-1507525428034-b723cf961d3e")    # Тропический пляж
+  "london.jpg"    = (Unsplash "photo-1539037116277-4db20889f2d4")    # Биг-Бен, Westminster
+  "paris.jpg"     = (Unsplash "photo-1502602898657-3e91760cbb34")    # Эйфелева башня
+  "dubai.jpg"     = (Unsplash "photo-1512453979798-5ea266f8880c")    # Панорама Дубая
+  "tokyo.jpg"     = (Unsplash "photo-1542051841857-5f90071e7989")    # Токио, огни
+  "barcelona.jpg" = (Unsplash "photo-1467269204594-9661b134dd2b")    # Саграда Фамилия
+  "sochi.jpg"     = "https://images.pexels.com/photos/2404843/pexels-photo-2404843.jpeg?auto=compress&cs=tinysrgb&w=960&fit=crop"
 }
 
 foreach ($entry in $destinations.GetEnumerator()) {

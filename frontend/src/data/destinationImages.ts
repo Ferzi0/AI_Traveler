@@ -8,6 +8,7 @@ export const DESTINATION_COVER_IMAGES = {
   dubai: '/images/destinations/dubai.jpg',
   tokyo: '/images/destinations/tokyo.jpg',
   barcelona: '/images/destinations/barcelona.jpg',
+  sochi: '/images/destinations/sochi.jpg',
 } as const
 
 export const DEFAULT_DESTINATION_COVER = DESTINATION_COVER_IMAGES.phuket
@@ -51,7 +52,7 @@ export const DESTINATION_COVER_BY_TITLE: Record<string, string> = {
   Дублин: DESTINATION_COVER_IMAGES.london,
   Москва: DESTINATION_COVER_IMAGES.london,
   'Санкт-Петербург': DESTINATION_COVER_IMAGES.london,
-  Сочи: DESTINATION_COVER_IMAGES.london,
+  Сочи: DESTINATION_COVER_IMAGES.sochi,
 
   Париж: DESTINATION_COVER_IMAGES.paris,
   Ницца: DESTINATION_COVER_IMAGES.paris,

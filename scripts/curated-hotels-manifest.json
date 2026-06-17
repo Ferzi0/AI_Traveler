@@ -1,0 +1,364 @@
+﻿{
+    "hotels":  {
+                   "acc_istanbul_marmara":  {
+                                                "hotel_photos":  4,
+                                                "rooms":  {
+                                                              "suite":  5,
+                                                              "family":  5,
+                                                              "standard":  5,
+                                                              "deluxe":  5
+                                                          }
+                                            },
+                   "acc_sochi_bridge":  {
+                                            "hotel_photos":  4,
+                                            "rooms":  {
+                                                          "comfort":  5,
+                                                          "family":  5,
+                                                          "standard":  5,
+                                                          "junior_suite":  5
+                                                      }
+                                        },
+                   "acc_paris_georgev":  {
+                                             "hotel_photos":  4,
+                                             "rooms":  {
+                                                           "suite":  5,
+                                                           "family":  5,
+                                                           "deluxe":  5,
+                                                           "superior":  5
+                                                       }
+                                         },
+                   "acc_sochi_rodina":  {
+                                            "hotel_photos":  4,
+                                            "rooms":  {
+                                                          "family":  5,
+                                                          "deluxe":  5,
+                                                          "premier":  5,
+                                                          "presidential":  5
+                                                      }
+                                        },
+                   "acc_dubai_armani":  {
+                                            "hotel_photos":  4,
+                                            "rooms":  {
+                                                          "suite":  5,
+                                                          "signature":  5,
+                                                          "deluxe":  5,
+                                                          "premier":  5
+                                                      }
+                                        },
+                   "acc_paris_bristol":  {
+                                             "hotel_photos":  4,
+                                             "rooms":  {
+                                                           "suite":  5,
+                                                           "family":  5,
+                                                           "deluxe":  5,
+                                                           "superior":  5
+                                                       }
+                                         },
+                   "acc_sochi_goldentulip":  {
+                                                 "hotel_photos":  4,
+                                                 "rooms":  {
+                                                               "suite":  5,
+                                                               "family":  5,
+                                                               "standard":  5,
+                                                               "superior":  5
+                                                           }
+                                             },
+                   "acc_phuket_novotel":  {
+                                              "hotel_photos":  4,
+                                              "rooms":  {
+                                                            "premier":  5,
+                                                            "family":  5,
+                                                            "standard":  5,
+                                                            "superior":  5
+                                                        }
+                                          },
+                   "acc_paris_shangri":  {
+                                             "hotel_photos":  4,
+                                             "rooms":  {
+                                                           "eiffel":  5,
+                                                           "suite":  5,
+                                                           "chaillot":  5,
+                                                           "deluxe":  5
+                                                       }
+                                         },
+                   "acc_phuket_kee":  {
+                                          "hotel_photos":  4,
+                                          "rooms":  {
+                                                        "spa_suite":  5,
+                                                        "family":  5,
+                                                        "deluxe":  5,
+                                                        "superior":  5
+                                                    }
+                                      },
+                   "acc_istanbul_fourseasons":  {
+                                                    "hotel_photos":  4,
+                                                    "rooms":  {
+                                                                  "suite":  5,
+                                                                  "family":  5,
+                                                                  "deluxe":  5,
+                                                                  "superior":  5
+                                                              }
+                                                },
+                   "acc_sochi_bogatyr":  {
+                                             "hotel_photos":  4,
+                                             "rooms":  {
+                                                           "suite":  5,
+                                                           "family":  5,
+                                                           "standard":  5,
+                                                           "deluxe":  5
+                                                       }
+                                         },
+                   "acc_dubai_address":  {
+                                             "hotel_photos":  4,
+                                             "rooms":  {
+                                                           "suite":  5,
+                                                           "family":  5,
+                                                           "deluxe":  5,
+                                                           "fountain":  5
+                                                       }
+                                         },
+                   "acc_istanbul_pera":  {
+                                             "hotel_photos":  4,
+                                             "rooms":  {
+                                                           "suite":  5,
+                                                           "classic":  5,
+                                                           "deluxe":  5,
+                                                           "agatha":  5
+                                                       }
+                                         },
+                   "acc_phuket_slate":  {
+                                            "hotel_photos":  4,
+                                            "rooms":  {
+                                                          "villa":  5,
+                                                          "coastal":  5,
+                                                          "pearl":  5,
+                                                          "ocean_pavilion":  5
+                                                      }
+                                        },
+                   "acc_sochi_pullman":  {
+                                             "hotel_photos":  4,
+                                             "rooms":  {
+                                                           "suite":  5,
+                                                           "family":  5,
+                                                           "deluxe":  5,
+                                                           "superior":  5
+                                                       }
+                                         },
+                   "acc_sochi_radisson":  {
+                                              "hotel_photos":  4,
+                                              "rooms":  {
+                                                            "family":  5,
+                                                            "suite":  5,
+                                                            "deluxe_sea":  5,
+                                                            "superior":  5
+                                                        }
+                                          },
+                   "acc_phuket_pullman":  {
+                                              "hotel_photos":  4,
+                                              "rooms":  {
+                                                            "executive":  5,
+                                                            "family":  5,
+                                                            "superior":  5,
+                                                            "deluxe_ocean":  5
+                                                        }
+                                          },
+                   "acc_paris_lutetia":  {
+                                             "hotel_photos":  4,
+                                             "rooms":  {
+                                                           "suite":  5,
+                                                           "family":  5,
+                                                           "deluxe":  5,
+                                                           "superior":  5
+                                                       }
+                                         },
+                   "acc_phuket_banyan":  {
+                                             "hotel_photos":  4,
+                                             "rooms":  {
+                                                           "ocean_suite":  5,
+                                                           "two_bedroom":  5,
+                                                           "deluxe_pool":  5,
+                                                           "pool_villa":  5
+                                                       }
+                                         },
+                   "acc_paris_plaza":  {
+                                           "hotel_photos":  4,
+                                           "rooms":  {
+                                                         "eiffel":  5,
+                                                         "suite":  5,
+                                                         "deluxe":  5,
+                                                         "grand":  5
+                                                     }
+                                       },
+                   "acc_phuket_jw":  {
+                                         "hotel_photos":  4,
+                                         "rooms":  {
+                                                       "deluxe_lagoon":  5,
+                                                       "ocean_front":  5,
+                                                       "deluxe_garden":  5,
+                                                       "family_lagoon":  5
+                                                   }
+                                     },
+                   "acc_paris_meurice":  {
+                                             "hotel_photos":  4,
+                                             "rooms":  {
+                                                           "suite":  5,
+                                                           "penthouse":  5,
+                                                           "deluxe":  5,
+                                                           "superior":  5
+                                                       }
+                                         },
+                   "acc_istanbul_ciragan":  {
+                                                "hotel_photos":  4,
+                                                "rooms":  {
+                                                              "grand":  5,
+                                                              "deluxe":  5,
+                                                              "premier":  5,
+                                                              "palace":  5
+                                                          }
+                                            },
+                   "acc_paris_ritz":  {
+                                          "hotel_photos":  4,
+                                          "rooms":  {
+                                                        "suite":  5,
+                                                        "deluxe":  5,
+                                                        "superior":  5,
+                                                        "grand":  5
+                                                    }
+                                      },
+                   "acc_sochi_marriott_kp":  {
+                                                 "hotel_photos":  4,
+                                                 "rooms":  {
+                                                               "suite":  5,
+                                                               "family":  5,
+                                                               "deluxe":  5,
+                                                               "mountain":  5
+                                                           }
+                                             },
+                   "acc_phuket_amari":  {
+                                            "hotel_photos":  4,
+                                            "rooms":  {
+                                                          "deluxe_seaview":  5,
+                                                          "club_cabin":  5,
+                                                          "superior":  5,
+                                                          "suite_terrace":  5
+                                                      }
+                                        },
+                   "acc_dubai_jumeirah_beach":  {
+                                                    "hotel_photos":  4,
+                                                    "rooms":  {
+                                                                  "suite":  5,
+                                                                  "family":  5,
+                                                                  "deluxe":  5,
+                                                                  "club":  5
+                                                              }
+                                                },
+                   "acc_paris_generator":  {
+                                               "hotel_photos":  4,
+                                               "rooms":  {
+                                                             "private":  5,
+                                                             "suite":  5,
+                                                             "quad":  5,
+                                                             "double":  5
+                                                         }
+                                           },
+                   "acc_istanbul_cheers":  {
+                                               "hotel_photos":  4,
+                                               "rooms":  {
+                                                             "ensuite":  5,
+                                                             "twin":  5,
+                                                             "dorm":  5,
+                                                             "triple":  5
+                                                         }
+                                           },
+                   "acc_phuket_movenpick":  {
+                                                "hotel_photos":  4,
+                                                "rooms":  {
+                                                              "suite":  5,
+                                                              "family":  5,
+                                                              "deluxe":  5,
+                                                              "pool_access":  5
+                                                          }
+                                            },
+                   "acc_dubai_kempinski_moe":  {
+                                                   "hotel_photos":  4,
+                                                   "rooms":  {
+                                                                 "suite":  5,
+                                                                 "family":  5,
+                                                                 "deluxe":  5,
+                                                                 "superior":  5
+                                                             }
+                                               },
+                   "acc_istanbul_wyndham":  {
+                                                "hotel_photos":  4,
+                                                "rooms":  {
+                                                              "suite":  5,
+                                                              "deluxe":  5,
+                                                              "superior":  5,
+                                                              "club":  5
+                                                          }
+                                            },
+                   "acc_sochi_hyatt":  {
+                                           "hotel_photos":  4,
+                                           "rooms":  {
+                                                         "suite":  5,
+                                                         "king":  5,
+                                                         "club":  5,
+                                                         "deluxe":  5
+                                                     }
+                                       },
+                   "acc_dubai_rove":  {
+                                          "hotel_photos":  4,
+                                          "rooms":  {
+                                                        "family":  5,
+                                                        "rove":  5,
+                                                        "rove_plus":  5,
+                                                        "sky":  5
+                                                    }
+                                      },
+                   "acc_dubai_raffles":  {
+                                             "hotel_photos":  4,
+                                             "rooms":  {
+                                                           "royal":  5,
+                                                           "signature":  5,
+                                                           "club":  5,
+                                                           "raffles_room":  5
+                                                       }
+                                         },
+                   "acc_istanbul_swissotel":  {
+                                                  "hotel_photos":  4,
+                                                  "rooms":  {
+                                                                "suite":  5,
+                                                                "family":  5,
+                                                                "superior":  5,
+                                                                "bosphorus":  5
+                                                            }
+                                              },
+                   "acc_dubai_atlantis":  {
+                                              "hotel_photos":  4,
+                                              "rooms":  {
+                                                            "underwater":  5,
+                                                            "palm":  5,
+                                                            "royal_bridge":  5,
+                                                            "ocean":  5
+                                                        }
+                                          },
+                   "acc_dubai_burjalarab":  {
+                                                "hotel_photos":  4,
+                                                "rooms":  {
+                                                              "deluxe_suite":  5,
+                                                              "royal":  5,
+                                                              "panoramic":  5,
+                                                              "club":  5
+                                                          }
+                                            },
+                   "acc_istanbul_doubletree":  {
+                                                   "hotel_photos":  4,
+                                                   "rooms":  {
+                                                                 "family":  5,
+                                                                 "suite":  5,
+                                                                 "guest":  5,
+                                                                 "deluxe":  5
+                                                             }
+                                               }
+               }
+}
