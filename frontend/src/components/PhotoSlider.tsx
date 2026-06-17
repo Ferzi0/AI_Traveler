@@ -65,7 +65,7 @@ export function PhotoSlider({
           go(-1)
         }}
       >
-        ‹
+        <span className="photoSlider__arrowIcon photoSlider__arrowIcon--prev" aria-hidden="true" />
       </button>
       <div className="photoSlider__viewport">
         <div
@@ -97,7 +97,7 @@ export function PhotoSlider({
           go(1)
         }}
       >
-        ›
+        <span className="photoSlider__arrowIcon photoSlider__arrowIcon--next" aria-hidden="true" />
       </button>
       <div className="photoSlider__dots">
         {slides.map((_, i) => (
