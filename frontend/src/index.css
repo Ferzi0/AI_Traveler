@@ -60,6 +60,14 @@ p {
 }
 
 button,
-input {
+input,
+textarea,
+select {
   font-family: inherit;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+textarea {
+  -webkit-appearance: none;
+  appearance: none;
 }

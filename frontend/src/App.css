@@ -128,6 +128,22 @@
   font-weight: 600;
   padding: 0;
   width: 100%;
+  color: var(--text);
+  -webkit-text-fill-color: var(--text);
+}
+
+.paramsCell input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+.paramsCell input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.paramsCell input[type='number']::-webkit-inner-spin-button,
+.paramsCell input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .paramsCell input:focus {
@@ -151,6 +167,7 @@
   padding: 0 1.35rem 0 0;
   width: 100%;
   color: inherit;
+  -webkit-text-fill-color: currentColor;
 }
 
 .cityCombobox__input::placeholder {
@@ -1265,8 +1282,12 @@
   position: fixed;
   right: 1.25rem;
   z-index: 95;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 44px;
   height: 44px;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.96);
@@ -2835,6 +2856,13 @@
     gap: 0.75rem;
   }
 
+  .filterToolbar__filters--inline {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    align-items: end;
+  }
+
   .filterRange {
     min-width: 0;
     width: 100%;
@@ -3120,8 +3148,12 @@
   position: absolute;
   top: 0.4rem;
   right: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 32px;
   height: 32px;
+  padding: 0;
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.92);
@@ -3213,13 +3245,18 @@
 }
 
 .fullscreenPanel__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 40px;
   height: 40px;
+  padding: 0;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: #fff;
   cursor: pointer;
   font-size: 1.1rem;
+  line-height: 1;
 }
 
 .fullscreenPanel__title {
@@ -3294,8 +3331,12 @@
 }
 
 .modalPanel__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 36px;
   height: 36px;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: #fff;
@@ -3413,6 +3454,33 @@
   flex-direction: column;
   font-size: 0.8rem;
   gap: 0.2rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.filterToolbar__filters input[type='number'] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  min-height: 44px;
+  -moz-appearance: textfield;
+}
+
+.filterToolbar__filters input[type='number']::-webkit-inner-spin-button,
+.filterToolbar__filters input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.filterToolbar__filters input[type='number']:focus {
+  outline: 2px solid var(--accent-ring);
+  border-color: var(--accent);
 }
 
 .filterRange {
@@ -5277,12 +5345,20 @@
 
 .reviewsSection__textarea {
   width: 100%;
+  box-sizing: border-box;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 0.65rem 0.75rem;
+  background: var(--surface);
   font: inherit;
+  color: var(--text);
   resize: vertical;
   min-height: 84px;
+}
+
+.reviewsSection__textarea:focus {
+  outline: 2px solid var(--accent-ring);
+  border-color: var(--accent);
 }
 
 .reviewsSection__submit {
