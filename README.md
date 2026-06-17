@@ -97,6 +97,21 @@ AUTO_CREATE_TABLES=false
 > На продакшне (Render) переменные задаются через Environment в дашборде сервиса.  
 > `JWT_SECRET_KEY` обязательно замени на случайную строку.
 
+### Render (продакшн)
+
+| Сервис | Dockerfile | Ключевые ENV |
+|--------|------------|--------------|
+| Backend | `backend/Dockerfile.prod` | `CORS_ORIGINS`, `POSTGRES_*`, `JWT_SECRET_KEY`, `TRAVELPAYOUTS_*` |
+| Frontend | `frontend/Dockerfile.prod` | `VITE_API_BASE`, `VITE_FRONTEND_URL` |
+
+**Важно:** на Render фронтенд должен ходить в API по публичному URL, а не на `localhost`.  
+`frontend/src/config.ts` определяет API по hostname страницы; для явной настройки задай `VITE_API_BASE` при сборке.
+
+На бэкенде в `CORS_ORIGINS` укажи URL фронта без слэша в конце, например:  
+`https://ai-traveler-1.onrender.com`
+
+Первый запрос после сна сервиса может занять до минуты — фронт автоматически повторяет запросы при 502/503.
+
 ---
 
 ## API эндпоинты

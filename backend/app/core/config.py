@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     FRONTEND_URL: str = "https://ai-traveler-1.onrender.com"
     API_PUBLIC_URL: str = "https://ai-traveler-0jhd.onrender.com"
-    CORS_ORIGINS: str = "https://ai-traveler-1.onrender.com"
+    CORS_ORIGINS: str = "https://ai-traveler-1.onrender.com,http://localhost:5173,http://127.0.0.1:5173"
 
     TRAVELPAYOUTS_API_TOKEN: str = ""
     TRAVELPAYOUTS_MARKER: str = ""

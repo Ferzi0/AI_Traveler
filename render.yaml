@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: ai-traveler-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.prod
+    dockerContext: ./backend
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: CORS_ORIGINS
+        value: https://ai-traveler-1.onrender.com
+      - key: FRONTEND_URL
+        value: https://ai-traveler-1.onrender.com
+      - key: API_PUBLIC_URL
+        value: https://ai-traveler-0jhd.onrender.com
+      - key: AUTO_CREATE_TABLES
+        value: "false"
+
+  - type: web
+    name: ai-traveler-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile.prod
+    dockerContext: ./frontend
+    envVars:
+      - key: VITE_API_BASE
+        value: https://ai-traveler-0jhd.onrender.com/api/v1
+      - key: VITE_FRONTEND_URL
+        value: https://ai-traveler-1.onrender.com
