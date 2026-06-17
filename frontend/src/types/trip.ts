@@ -64,6 +64,8 @@ export type AccommodationItem = {
   image_url: string | null
   image_urls: string[]
   destination?: string
+  average_rating?: number | null
+  review_count?: number
 }
 
 export type AccommodationSearchResponse = {
@@ -96,6 +98,8 @@ export type HotelExtraItem = {
   title: string
   description: string
   estimated_cost: number
+  average_rating?: number | null
+  review_count?: number
 }
 
 export type HotelExtrasCategory = {
@@ -130,6 +134,8 @@ export type CityTransportItem = {
   title: string
   description: string
   estimated_cost: number
+  average_rating?: number | null
+  review_count?: number
 }
 
 export type CityTransportCategory = {

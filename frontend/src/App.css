@@ -3227,6 +3227,144 @@
   flex-direction: column;
 }
 
+.modalPanelOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(26, 22, 18, 0.52);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: tripSavedFadeIn 0.22s ease;
+}
+
+.modalPanel {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 720px);
+  max-height: min(88vh, 820px);
+  background: #faf8f6;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: calc(var(--radius-lg) + 4px);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  animation: tripSavedPop 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.modalPanel--lg {
+  width: min(100%, 860px);
+}
+
+.modalPanel--md {
+  width: min(100%, 560px);
+}
+
+.modalPanel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem 0.85rem;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.modalPanel__headings {
+  min-width: 0;
+}
+
+.modalPanel__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.modalPanel__close {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.modalPanel__close:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: rgba(232, 93, 42, 0.05);
+}
+
+.modalPanel__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modalPanel__toolbar .filterToolbar {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+}
+
+.detailExtraCatalog--modal {
+  padding: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .detailExtraCatalog--modal {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+.detailExtraCatalog--modal .detailExtraCard {
+  height: 100%;
+}
+
+@media (max-width: 520px) {
+  .modalPanelOverlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modalPanel {
+    width: 100%;
+    max-height: min(92vh, 100dvh);
+    border-radius: calc(var(--radius-lg) + 4px) calc(var(--radius-lg) + 4px) 0 0;
+    animation: modalSheetUp 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .detailExtraCatalog--modal {
+    grid-template-columns: 1fr;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@keyframes modalSheetUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .filterToolbar {
   padding: 0.75rem 1rem;
   background: #fff;
@@ -3322,6 +3460,37 @@
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+}
+
+.catalogList--modal {
+  padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+.catalogCard--extra {
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  cursor: default;
+}
+
+.catalogCard--extra .catalogCard__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.catalogCard__pickBtn {
+  flex-shrink: 0;
+  min-width: 6.5rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  border-radius: 999px;
+}
+
+.catalogCard__pickBtn--active {
+  background: var(--bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
 }
 
 .catalogCard {
@@ -4795,4 +4964,274 @@
     grid-template-columns: 1fr 1fr;
     gap: 0.65rem;
   }
+}
+
+/* ——— Рейтинги и отзывы каталога ——— */
+
+.starRating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  line-height: 1;
+}
+
+.starRating--md .starRating__star {
+  font-size: 1rem;
+}
+
+.starRating__star {
+  color: #d8d0c8;
+  font-size: 0.82rem;
+}
+
+.starRating__star--full,
+.starRating__star--half {
+  color: #e8a317;
+}
+
+.starRating__value {
+  margin-left: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.starRatingInput {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.starRatingInput__star {
+  border: none;
+  background: transparent;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #d8d0c8;
+  cursor: pointer;
+  padding: 0.1rem;
+}
+
+.starRatingInput__star--active {
+  color: #e8a317;
+}
+
+.pickerStage {
+  position: relative;
+  overflow: hidden;
+}
+
+.pickerStage__list,
+.pickerStage__detail {
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.pickerStage--detail .pickerStage__list {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  transform: translateX(-12px);
+}
+
+.pickerStage__detail {
+  animation: pickerDetailIn 0.3s ease;
+}
+
+@keyframes pickerDetailIn {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pickerDetail {
+  padding: 0 1rem 1.25rem;
+}
+
+.pickerDetail__back {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.75rem 0 0.5rem;
+}
+
+.pickerDetail__hero .photoSlider--card .photoSlider__slide {
+  min-height: 220px;
+  border-radius: var(--radius-md);
+}
+
+.pickerDetail__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.pickerDetail__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pickerDetail__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.pickerDetail__description {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.pickerDetail__priceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.pickerDetail__price {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.pickerDetail__priceMeta {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.pickerDetail__selectBtn {
+  flex-shrink: 0;
+}
+
+.detailExtraCard--expandable {
+  padding: 0;
+  overflow: hidden;
+}
+
+.detailExtraCard__open {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+
+.detailExtraCard__more {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.hotelExplorer__detailWrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reviewsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reviewsSection__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.reviewsSection__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.reviewsSection__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.reviewsSection__error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #b42318;
+  font-weight: 600;
+}
+
+.reviewsSection__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.reviewsSection__item {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.reviewsSection__itemHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.reviewsSection__text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.reviewsSection__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding-top: 0.25rem;
+}
+
+.reviewsSection__formTitle {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.reviewsSection__textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+  resize: vertical;
+  min-height: 84px;
+}
+
+.reviewsSection__submit {
+  align-self: flex-start;
 }

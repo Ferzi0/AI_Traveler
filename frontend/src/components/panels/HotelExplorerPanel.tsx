@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { FavoriteButton } from '../FavoriteButton'
 import { PhotoSlider } from '../PhotoSlider'
+import { StarRating } from '../StarRating'
 import type { AccommodationItem, AccommodationSearchResponse } from '../../types/trip'
 import { accommodationGallery } from '../../data/imageCatalog'
 import { formatPrice } from '../../utils/flightDisplay'
@@ -10,6 +11,7 @@ import { MOBILE_FLOW_MEDIA } from '../tree/tripFlowLayout'
 import { FilterToolbar } from './FilterToolbar'
 import { FullscreenPanel } from './FullscreenPanel'
 import { HotelMap } from './HotelMap'
+import { PickerItemDetailView } from './PickerItemDetailView'
 
 export type HotelSearchFilters = {
   sort_by: string
@@ -41,6 +43,17 @@ function hotelGallery(hotel: AccommodationItem): string[] {
   return accommodationGallery(hotel)
 }
 
+function hotelDescription(hotel: AccommodationItem): string {
+  const parts = [
+    hotel.kind === 'hotel' ? 'Отель' : 'Хостел',
+    `${hotel.stars}★`,
+  ]
+  if (hotel.distance_km != null) parts.push(`${hotel.distance_km} км от центра`)
+  if (hotel.breakfast_included) parts.push('Завтрак включён')
+  if (hotel.has_pool) parts.push('Бассейн')
+  return parts.join(' · ')
+}
+
 export function HotelExplorerPanel({
   open,
   onClose,
@@ -60,6 +73,7 @@ export function HotelExplorerPanel({
   const [items, setItems] = useState<AccommodationItem[]>([])
   const [mapCenter, setMapCenter] = useState({ latitude: 0, longitude: 0 })
   const [activeId, setActiveId] = useState('')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [searching, setSearching] = useState(false)
 
   const runSearch = useCallback(
@@ -83,6 +97,7 @@ export function HotelExplorerPanel({
       setFilters({ ...DEFAULT_FILTERS })
       setItems([])
       setActiveId('')
+      setExpandedId(null)
       setFilterFormKey((k) => k + 1)
       return
     }
@@ -125,6 +140,8 @@ export function HotelExplorerPanel({
   function pickHotel(hotel: AccommodationItem) {
     onSelect(hotel.id)
   }
+
+  const expandedHotel = expandedId ? items.find((hotel) => hotel.id === expandedId) : null
 
   const filterBlock = (
     <FilterToolbar
@@ -177,6 +194,23 @@ export function HotelExplorerPanel({
 
   return (
     <FullscreenPanel title="Отели" open={open} onClose={onClose}>
+      {expandedHotel ? (
+        <div className="hotelExplorer__detailWrap">
+          <PickerItemDetailView
+            title={expandedHotel.title}
+            description={hotelDescription(expandedHotel)}
+            images={hotelGallery(expandedHotel)}
+            priceLabel={`${formatPrice(expandedHotel.price, 'rub', true)}/ночь`}
+            entityType="accommodation"
+            entityId={expandedHotel.id}
+            averageRating={expandedHotel.average_rating}
+            reviewCount={expandedHotel.review_count}
+            onBack={() => setExpandedId(null)}
+            onSelect={() => pickHotel(expandedHotel)}
+          />
+        </div>
+      ) : (
+        <>
       {isMobile ? (
         <div className="panelFiltersFold">
           <button
@@ -221,8 +255,17 @@ export function HotelExplorerPanel({
               </div>
               <div className="catalogCard__body">
                 <strong className="catalogCard__title">{hotel.title}</strong>
+                {hotel.average_rating != null ? (
+                  <StarRating
+                    value={hotel.average_rating}
+                    showValue
+                    reviewCount={hotel.review_count}
+                  />
+                ) : (
+                  <span className="catalogCard__meta">{'★'.repeat(hotel.stars)}</span>
+                )}
                 <span className="catalogCard__meta">
-                  {'★'.repeat(hotel.stars)} · {formatPrice(hotel.price, 'rub', true)}/ночь
+                  {formatPrice(hotel.price, 'rub', true)}/ночь
                 </span>
                 <span className="catalogCard__tags">
                   {hotel.breakfast_included ? 'Завтрак' : null}
@@ -231,9 +274,9 @@ export function HotelExplorerPanel({
                 <button
                   type="button"
                   className="btn btnAccent catalogCard__selectBtn"
-                  onClick={() => pickHotel(hotel)}
+                  onClick={() => setExpandedId(hotel.id)}
                 >
-                  Выбрать
+                  Подробнее
                 </button>
               </div>
             </article>
@@ -254,6 +297,8 @@ export function HotelExplorerPanel({
           />
         </div>
       </div>
+        </>
+      )}
     </FullscreenPanel>
   )
 }

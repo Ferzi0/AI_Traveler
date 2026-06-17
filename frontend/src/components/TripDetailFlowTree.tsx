@@ -279,6 +279,8 @@ export function TripDetailFlowTree({
           items={activePanel.items}
           selectedId={activePanel.selectedId}
           passengers={passengers}
+          entityType={activePanel.kind === 'hotel-extra' ? 'hotel_extra' : 'city_transport'}
+          category={activePanel.category}
           imageUrlForItem={activePanel.imageUrlForItem}
           onClose={() => setPanel(null)}
           onSelect={(id) => {

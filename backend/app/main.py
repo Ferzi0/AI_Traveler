@@ -30,6 +30,7 @@ def on_startup() -> None:
     if settings.AUTO_CREATE_TABLES:
         # Импортируем модели перед create_all, чтобы SQLAlchemy увидел все таблицы.
         from app.models import (
+            catalog_review,
             constructor_catalog,
             favorite,
             route_point,

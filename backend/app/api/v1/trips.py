@@ -31,6 +31,11 @@ from app.models.trip_edge import TripEdge
 from app.models.trip_node import TripNode
 from app.models.user import User
 from app.services.flight_search import find_trip_itinerary, search_trip_flights
+from app.services.review_stats import (
+    attach_accommodation_review_stats,
+    attach_city_transport_review_stats,
+    attach_hotel_extras_review_stats,
+)
 from app.services.virtual_catalog import (
     CatalogAccommodation,
     destination_coords as virtual_destination_coords,
@@ -1403,12 +1408,17 @@ def search_accommodations(
     if payload.has_pool is True:
         items = [item for item in items if item["has_pool"]]
 
+    items = attach_accommodation_review_stats(db, items)
+
     if payload.sort_by in ("-price", "price_desc"):
         items.sort(key=lambda item: item["price"], reverse=True)
     elif payload.sort_by == "price":
         items.sort(key=lambda item: item["price"])
     else:
-        items.sort(key=lambda item: item["rating"], reverse=True)
+        items.sort(
+            key=lambda item: item.get("average_rating") or item.get("rating") or 0,
+            reverse=True,
+        )
 
     return {
         "items": items,
@@ -1542,7 +1552,8 @@ def get_hotel_extras(
     trip_id: int, accommodation_id: str, db: Session = Depends(get_db)
 ) -> dict:
     trip = _get_trip_or_404(db, trip_id)
-    return _serialize_hotel_extras(accommodation_id, trip.destination)
+    payload = _serialize_hotel_extras(accommodation_id, trip.destination)
+    return attach_hotel_extras_review_stats(db, payload)
 
 
 @router.post("/{trip_id}/accommodations/{accommodation_id}/extras/select")
@@ -1771,7 +1782,8 @@ def get_city_transport_options(trip_id: int, db: Session = Depends(get_db)) -> d
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Select destination first",
         )
-    return _serialize_city_transport(trip.destination)
+    payload = _serialize_city_transport(trip.destination)
+    return attach_city_transport_review_stats(db, payload)
 
 
 @router.post("/{trip_id}/city-transport/select")
