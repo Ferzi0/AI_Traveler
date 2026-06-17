@@ -11,8 +11,17 @@ ACCOMMODATION_IDS = (
 )
 
 
+def _resolve_accommodation_id(accommodation_id: str) -> str:
+    if accommodation_id in ACCOMMODATION_IDS:
+        return accommodation_id
+    if accommodation_id.startswith("acc_v_"):
+        return "acc_phuket_hostel" if accommodation_id.endswith("_hostel") else "acc_phuket_laguna"
+    return accommodation_id
+
+
 def _room_images(accommodation_id: str, room_key: str) -> list[str]:
-    base = f"/images/rooms/{accommodation_id}/{room_key}"
+    resolved = _resolve_accommodation_id(accommodation_id)
+    base = f"/images/rooms/{resolved}/{room_key}"
     return [f"{base}-{i}.jpg" for i in range(1, 5)]
 
 

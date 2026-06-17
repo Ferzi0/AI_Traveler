@@ -7,11 +7,27 @@ import {
 const ACCOMMODATION_GALLERY_SIZE = 4
 const ROOM_GALLERY_SIZE = 4
 
+const CATALOG_ACCOMMODATION_IDS = new Set([
+  'acc_phuket_laguna',
+  'acc_phuket_hostel',
+  'acc_london_hotel',
+])
+
+/** Виртуальные отели используют галерею шаблонного каталога по типу размещения. */
+function resolveAccommodationId(publicId: string): string {
+  if (CATALOG_ACCOMMODATION_IDS.has(publicId)) return publicId
+  if (publicId.startsWith('acc_v_')) {
+    return publicId.endsWith('_hostel') ? 'acc_phuket_hostel' : 'acc_phuket_laguna'
+  }
+  return publicId
+}
+
 export function accommodationImageUrls(publicId: string): string[] {
   if (!publicId) return []
+  const id = resolveAccommodationId(publicId)
   return Array.from(
     { length: ACCOMMODATION_GALLERY_SIZE },
-    (_, i) => `/images/hotels/${publicId}/${i + 1}.jpg`
+    (_, i) => `/images/hotels/${id}/${i + 1}.jpg`
   )
 }
 
@@ -22,7 +38,8 @@ export function accommodationCoverImage(publicId: string): string {
 
 export function roomImageUrls(accommodationId: string, roomKey: string): string[] {
   if (!accommodationId || !roomKey) return []
-  const base = `/images/rooms/${accommodationId}/${roomKey}`
+  const id = resolveAccommodationId(accommodationId)
+  const base = `/images/rooms/${id}/${roomKey}`
   return Array.from({ length: ROOM_GALLERY_SIZE }, (_, i) => `${base}-${i + 1}.jpg`)
 }
 
@@ -72,10 +89,11 @@ export function accommodationGallery(hotel: {
   image_urls?: string[]
   image_url?: string | null
 }): string[] {
-  const catalog = accommodationImageUrls(hotel.id)
-  if (catalog.length > 0) return catalog
+  if (CATALOG_ACCOMMODATION_IDS.has(hotel.id) || hotel.id.startsWith('acc_v_')) {
+    return accommodationImageUrls(hotel.id)
+  }
   if (hotel.image_urls && hotel.image_urls.length > 0) return hotel.image_urls
-  return hotel.image_url ? [hotel.image_url] : []
+  return hotel.image_url ? [hotel.image_url] : ['/images/hotels/default.jpg']
 }
 
 export function accommodationCover(hotel: {
