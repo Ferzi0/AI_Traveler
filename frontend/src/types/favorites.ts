@@ -1,6 +1,8 @@
+export type FavoriteItemType = 'city' | 'hotel' | 'hotel_extra' | 'city_transport'
+
 export type FavoriteItem = {
   id: number
-  item_type: 'city' | 'hotel'
+  item_type: FavoriteItemType
   item_key: string
   title: string
   subtitle: string | null
@@ -11,7 +13,7 @@ export type FavoriteItem = {
 }
 
 export type FavoriteCreatePayload = {
-  item_type: 'city' | 'hotel'
+  item_type: FavoriteItemType
   item_key: string
   title: string
   subtitle?: string | null
@@ -22,4 +24,19 @@ export type FavoriteCreatePayload = {
 
 export function favoriteKey(itemType: string, itemKey: string): string {
   return `${itemType}:${itemKey}`
+}
+
+export function buildCatalogFavoriteKey(category: string, entityId: string): string {
+  return `${category}/${entityId}`
+}
+
+export function parseCatalogFavoriteKey(
+  itemKey: string
+): { category: string; entityId: string } | null {
+  const slash = itemKey.indexOf('/')
+  if (slash <= 0) return null
+  return {
+    category: itemKey.slice(0, slash),
+    entityId: itemKey.slice(slash + 1),
+  }
 }

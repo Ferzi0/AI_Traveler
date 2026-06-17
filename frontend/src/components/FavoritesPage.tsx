@@ -2,9 +2,12 @@ import { useRef, useState } from 'react'
 import { AppFooter } from './AppFooter'
 import { BrandLogo } from './BrandLogo'
 import { PhotoSlider } from './PhotoSlider'
+import { ReviewsSection } from './ReviewsSection'
 import { ScrollToTopButton } from './ScrollToTopButton'
 import type { FavoriteItem } from '../types/favorites'
 import { favoriteGallery } from '../utils/favoriteImages'
+import { favoriteItemTypeLabel, favoriteReviewTarget } from '../utils/favoriteCatalog'
+import { normalizeFavoriteCurrencyText } from '../utils/favoriteDisplay'
 import { imageBackgroundStyle } from '../utils/images'
 
 type Props = {
@@ -45,6 +48,9 @@ export function FavoritesPage({ items, loading, onClose, onRemove }: Props) {
             {items.map((item) => {
               const expanded = expandedId === item.id
               const gallery = favoriteGallery(item)
+              const reviewTarget = favoriteReviewTarget(item)
+              const description = normalizeFavoriteCurrencyText(item.description)
+              const subtitle = normalizeFavoriteCurrencyText(item.subtitle)
               return (
                 <article
                   key={item.id}
@@ -64,7 +70,7 @@ export function FavoritesPage({ items, loading, onClose, onRemove }: Props) {
                     <div className="favoriteCardContent">
                       <span className="favoriteCardTitle">{item.title}</span>
                       <span className="favoriteCardSub">
-                        {item.item_type === 'city' ? 'Город' : 'Отель'}
+                        {favoriteItemTypeLabel(item.item_type)}
                         {item.country ? ` · ${item.country}` : ''}
                       </span>
                     </div>
@@ -85,9 +91,19 @@ export function FavoritesPage({ items, loading, onClose, onRemove }: Props) {
                   {expanded ? (
                     <div className="favoriteCard__body">
                       <PhotoSlider images={gallery} />
-                      <p className="favoriteCard__description">{item.description}</p>
-                      {item.subtitle ? (
-                        <p className="favoriteCard__meta">{item.subtitle}</p>
+                      <p className="favoriteCard__description">{description}</p>
+                      {subtitle ? (
+                        <p className="favoriteCard__meta">{subtitle}</p>
+                      ) : null}
+                      {reviewTarget ? (
+                        <div className="favoriteCard__reviews">
+                          <ReviewsSection
+                            entityType={reviewTarget.entityType}
+                            entityId={reviewTarget.entityId}
+                            category={reviewTarget.category}
+                            active={expanded}
+                          />
+                        </div>
                       ) : null}
                     </div>
                   ) : null}

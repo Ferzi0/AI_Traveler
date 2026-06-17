@@ -43,7 +43,7 @@ import { DestinationSearch } from './components/DestinationSearch'
 import type { TouristDestination } from './data/touristDestinations'
 import { RUSSIAN_CITIES } from './data/russianCities'
 import type { UserProfile } from './types/user'
-import type { FavoriteCreatePayload, FavoriteItem } from './types/favorites'
+import type { FavoriteCreatePayload, FavoriteItem, FavoriteItemType } from './types/favorites'
 import { favoriteKey } from './types/favorites'
 import type { BuilderPhase } from './types/builder'
 import { DetailOfferCard } from './components/builder/DetailOfferCard'
@@ -204,14 +204,20 @@ function App() {
     }
   }
 
-  function isFavorite(itemType: 'city' | 'hotel', itemKey: string) {
+  function isFavorite(itemType: FavoriteItemType, itemKey: string) {
     return favoriteKeys.has(favoriteKey(itemType, itemKey))
   }
 
   async function toggleFavorite(
-    itemType: 'city' | 'hotel',
+    itemType: FavoriteItemType,
     itemKey: string,
-    meta: { title: string; subtitle?: string; country?: string; imageUrls?: string[] }
+    meta: {
+      title: string
+      subtitle?: string
+      country?: string
+      description?: string
+      imageUrls?: string[]
+    }
   ) {
     const key = favoriteKey(itemType, itemKey)
     const existing = favorites.find((f) => favoriteKey(f.item_type, f.item_key) === key)
@@ -232,6 +238,7 @@ function App() {
           title: meta.title,
           subtitle: meta.subtitle ?? null,
           country: meta.country ?? null,
+          description: meta.description ?? null,
           image_urls: meta.imageUrls ?? [],
         }
         const created = await api<FavoriteItem>('/favorites', 'POST', payload)
@@ -1207,6 +1214,8 @@ function App() {
                 selectedCityTransportIds={selectedCityTransportIds}
                 onPickHotelExtra={pickHotelExtra}
                 onPickCityTransport={pickCityTransport}
+                isFavorite={isFavorite}
+                onToggleFavorite={toggleFavorite}
               />
             </>
           ) : null}

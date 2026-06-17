@@ -1,8 +1,9 @@
 import { useState } from 'react'
+import { FavoriteButton } from '../FavoriteButton'
 import { PhotoSlider } from '../PhotoSlider'
-import type { CatalogEntityType } from '../types/reviews'
 import { ReviewsSection } from '../ReviewsSection'
 import { StarRating } from '../StarRating'
+import type { CatalogEntityType } from '../../types/reviews'
 
 type Props = {
   title: string
@@ -16,6 +17,8 @@ type Props = {
   averageRating?: number | null
   reviewCount?: number
   selected?: boolean
+  favoriteActive?: boolean
+  onToggleFavorite?: () => void
   onBack: () => void
   onSelect: () => void
 }
@@ -32,6 +35,8 @@ export function PickerItemDetailView({
   averageRating,
   reviewCount,
   selected = false,
+  favoriteActive = false,
+  onToggleFavorite,
   onBack,
   onSelect,
 }: Props) {
@@ -48,6 +53,13 @@ export function PickerItemDetailView({
 
       <div className="pickerDetail__hero">
         <PhotoSlider images={images} variant="card" autoMs={4500} />
+        {onToggleFavorite ? (
+          <FavoriteButton
+            active={favoriteActive}
+            onClick={() => onToggleFavorite()}
+            size="sm"
+          />
+        ) : null}
       </div>
 
       <div className="pickerDetail__body">

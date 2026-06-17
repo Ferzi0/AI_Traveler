@@ -205,6 +205,8 @@ export function HotelExplorerPanel({
             entityId={expandedHotel.id}
             averageRating={expandedHotel.average_rating}
             reviewCount={expandedHotel.review_count}
+            favoriteActive={isFavorite(expandedHotel.id)}
+            onToggleFavorite={() => onToggleFavorite(expandedHotel)}
             onBack={() => setExpandedId(null)}
             onSelect={() => pickHotel(expandedHotel)}
           />

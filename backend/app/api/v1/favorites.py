@@ -9,12 +9,13 @@ from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models.favorite import Favorite
 from app.models.user import User
+from app.utils.currency_display import normalize_currency_text
 
 router = APIRouter()
 
 
 class FavoriteCreateRequest(BaseModel):
-    item_type: str = Field(pattern="^(city|hotel)$")
+    item_type: str = Field(pattern="^(city|hotel|hotel_extra|city_transport)$")
     item_key: str = Field(min_length=1, max_length=128)
     title: str = Field(min_length=1, max_length=255)
     subtitle: str | None = Field(default=None, max_length=255)
@@ -37,10 +38,11 @@ def _serialize_favorite(row: Favorite) -> dict:
         "item_type": row.item_type,
         "item_key": row.item_key,
         "title": row.title,
-        "subtitle": row.subtitle,
+        "subtitle": normalize_currency_text(row.subtitle),
         "country": row.country,
-        "description": row.description
-        or _default_description(row.item_type, row.title, row.country),
+        "description": normalize_currency_text(
+            row.description or _default_description(row.item_type, row.title, row.country)
+        ),
         "image_urls": images,
         "created_at": row.created_at.isoformat() if row.created_at else None,
     }
@@ -52,6 +54,10 @@ def _default_description(item_type: str, title: str, country: str | None) -> str
         if country:
             parts.append(f"Страна: {country}")
         return ". ".join(parts) + "."
+    if item_type == "hotel_extra":
+        return f"{title}. Ресторан, достопримечательность или активность в маршруте."
+    if item_type == "city_transport":
+        return f"{title}. Вариант передвижения по городу."
     return f"Отель {title}. Удобное размещение в выбранном направлении."
 
 

@@ -26,6 +26,8 @@ import {
   parseDetailNodeKey,
 } from './tree/detailFlowLayout'
 import { MOBILE_FLOW_MEDIA } from './tree/tripFlowLayout'
+import type { FavoriteItemType } from '../types/favorites'
+import { buildCatalogFavoriteKey } from '../types/favorites'
 
 type PanelKey = string | null
 
@@ -40,6 +42,12 @@ export type TripDetailFlowTreeProps = {
   selectedCityTransportIds: Record<string, string>
   onPickHotelExtra: (category: string, itemId: string) => Promise<void>
   onPickCityTransport: (category: string, itemId: string) => Promise<void>
+  isFavorite: (itemType: FavoriteItemType, itemKey: string) => boolean
+  onToggleFavorite: (
+    itemType: Extract<FavoriteItemType, 'hotel_extra' | 'city_transport'>,
+    itemKey: string,
+    meta: { title: string; subtitle?: string; country?: string; description?: string; imageUrls?: string[] }
+  ) => void
 }
 
 export function TripDetailFlowTree({
@@ -53,6 +61,8 @@ export function TripDetailFlowTree({
   selectedCityTransportIds,
   onPickHotelExtra,
   onPickCityTransport,
+  isFavorite,
+  onToggleFavorite,
 }: TripDetailFlowTreeProps) {
   const [panel, setPanel] = useState<PanelKey>(null)
   const flowRef = useRef<HTMLDivElement>(null)
@@ -282,6 +292,25 @@ export function TripDetailFlowTree({
           entityType={activePanel.kind === 'hotel-extra' ? 'hotel_extra' : 'city_transport'}
           category={activePanel.category}
           imageUrlForItem={activePanel.imageUrlForItem}
+          isFavorite={(itemId) =>
+            isFavorite(
+              activePanel.kind === 'hotel-extra' ? 'hotel_extra' : 'city_transport',
+              buildCatalogFavoriteKey(activePanel.category, itemId)
+            )
+          }
+          onToggleFavorite={(item, imageUrl) =>
+            onToggleFavorite(
+              activePanel.kind === 'hotel-extra' ? 'hotel_extra' : 'city_transport',
+              buildCatalogFavoriteKey(activePanel.category, item.id),
+              {
+                title: item.title,
+                subtitle: `${activePanel.title} · ${formatCatalogPerPersonCost(item.estimated_cost, passengers)}`,
+                country: destination.country,
+                description: item.description,
+                imageUrls: imageUrl ? [imageUrl] : [],
+              }
+            )
+          }
           onClose={() => setPanel(null)}
           onSelect={(id) => {
             void activePanel.onSelect(id).then(() => setPanel(null))
