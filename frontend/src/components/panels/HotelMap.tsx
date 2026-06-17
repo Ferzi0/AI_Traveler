@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { AccommodationItem } from '../../types/trip'
+import { formatPrice } from '../../utils/flightDisplay'
 
 import iconUrl from 'leaflet/dist/images/marker-icon.png'
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
@@ -60,7 +61,7 @@ export function HotelMap({ center, hotels, activeId, onSelect }: Props) {
     group.clearLayers()
     hotels.forEach((hotel) => {
       const marker = L.marker([hotel.latitude, hotel.longitude])
-      marker.bindPopup(`<strong>${hotel.title}</strong><br/>$${hotel.price}`)
+      marker.bindPopup(`<strong>${hotel.title}</strong><br/>${formatPrice(hotel.price, 'rub', true)}/ночь`)
       marker.on('click', () => onSelect(hotel.id))
       if (hotel.id === activeId) {
         marker.openPopup()

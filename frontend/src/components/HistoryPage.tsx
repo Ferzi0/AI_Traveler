@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, apiDownload } from '../api'
+import { formatSummaryTotal } from '../utils/cost'
 import { AppFooter } from './AppFooter'
 import { BrandLogo } from './BrandLogo'
 import { ScrollToTopButton } from './ScrollToTopButton'
@@ -189,7 +190,7 @@ export function HistoryPage({ onClose }: Props) {
                                       }
                                     ).items.map((line) => (
                                       <li key={line.title}>
-                                        {line.title}: ${line.result}
+                                        {line.title}: {formatSummaryTotal(line.result)}
                                       </li>
                                     ))}
                                   </ul>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { RoomItem } from '../../types/trip'
+import { formatPrice } from '../../utils/flightDisplay'
 import { useAsyncSearchSeq } from '../../hooks/useAsyncSearchSeq'
 import { PhotoSlider } from '../PhotoSlider'
 import { FilterToolbar } from './FilterToolbar'
@@ -104,9 +105,9 @@ export function RoomPickerPanel({ open, hotelTitle, onClose, onSearch, onSelect,
               </div>
               <div className="roomCard__priceRow">
                 <div>
-                  <span className="roomCard__price">${room.price_total}</span>
+                  <span className="roomCard__price">{formatPrice(room.price_total, 'rub', true)}</span>
                   <span className="roomCard__priceMeta">
-                    ${room.price_per_night}/ночь · всего за {room.nights} ноч.
+                    {formatPrice(room.price_per_night, 'rub', true)}/ночь · всего за {room.nights} ноч.
                   </span>
                 </div>
                 <button

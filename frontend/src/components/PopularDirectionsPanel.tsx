@@ -16,7 +16,7 @@ type Props = {
   items: PopularDestination[]
   loading: boolean
   error: string | null
-  onBuildTrip: () => void
+  onBuildTrip: (city: string) => void
 }
 
 export function PopularDirectionsPanel({
@@ -128,7 +128,7 @@ export function PopularDirectionsPanel({
                     <button
                       type="button"
                       className="btn btnAccent flightOffer__actionBtn"
-                      onClick={onBuildTrip}
+                      onClick={() => onBuildTrip(dest.city)}
                     >
                       Собрать поездку
                     </button>

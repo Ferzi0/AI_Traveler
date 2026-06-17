@@ -80,6 +80,14 @@ def _http_get_json(url: str, token: str) -> dict[str, Any]:
                 "Сократите поездку или измените даты вылета и возврата."
             ) from exc
         raise RuntimeError(f"Travelpayouts HTTP {exc.code}: {msg}") from exc
+    except urllib.error.URLError as exc:
+        reason = exc.reason if exc.reason is not None else exc
+        reason_text = str(reason).lower()
+        if "timed out" in reason_text or "timeout" in reason_text:
+            raise RuntimeError(
+                "Aviasales не ответил вовремя. Попробуйте ещё раз или измените даты."
+            ) from exc
+        raise RuntimeError(f"Ошибка сети при запросе к Aviasales: {reason}") from exc
 
 
 def _normalize_row(row: dict[str, Any], default_origin: str) -> dict[str, Any] | None:
@@ -125,7 +133,7 @@ def fetch_prices_for_route(
         raise RuntimeError("TRAVELPAYOUTS_API_TOKEN is not configured")
 
     per_page = 30
-    pages = max(1, min(3, (max_results + per_page - 1) // per_page))
+    pages = 1
     all_rows: list[dict[str, Any]] = []
 
     for page in range(1, pages + 1):

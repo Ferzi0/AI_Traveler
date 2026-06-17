@@ -150,20 +150,20 @@ HOTEL_EXTRA_CATALOG: dict[str, dict[str, list[dict]]] = {
             {
                 "id": "laguna_rest_1",
                 "title": "Andaman Grill",
-                "description": "Рейтинг 4.6 · $$ · 0.4 км",
-                "estimated_cost": 28.0,
+                "description": "Рейтинг 4.6 · ₽₽ · 0.4 км",
+                "estimated_cost": 2800.0,
             },
             {
                 "id": "laguna_rest_2",
                 "title": "Sunset Thai Kitchen",
-                "description": "Рейтинг 4.4 · $$ · 0.9 км",
-                "estimated_cost": 22.0,
+                "description": "Рейтинг 4.4 · ₽₽ · 0.9 км",
+                "estimated_cost": 2200.0,
             },
             {
                 "id": "laguna_rest_3",
                 "title": "Lagoon Street Food",
-                "description": "Рейтинг 4.3 · $ · 1.1 км",
-                "estimated_cost": 12.0,
+                "description": "Рейтинг 4.3 · ₽ · 1.1 км",
+                "estimated_cost": 1200.0,
             },
         ],
         "attractions": [
@@ -176,8 +176,8 @@ HOTEL_EXTRA_CATALOG: dict[str, dict[str, list[dict]]] = {
             {
                 "id": "laguna_attr_2",
                 "title": "Phuket Aquarium",
-                "description": "Рейтинг 4.5 · 13 км · вход: $16 · 9:00-18:00",
-                "estimated_cost": 16.0,
+                "description": "Рейтинг 4.5 · 13 км · вход: ~1600 ₽ · 9:00-18:00",
+                "estimated_cost": 1600.0,
             },
         ],
         "events": [
@@ -190,8 +190,8 @@ HOTEL_EXTRA_CATALOG: dict[str, dict[str, list[dict]]] = {
             {
                 "id": "laguna_event_2",
                 "title": "Шоу Siam Fantasy",
-                "description": "Сб · 20:30 · билет: $35",
-                "estimated_cost": 35.0,
+                "description": "Сб · 20:30 · билет: ~3500 ₽",
+                "estimated_cost": 3500.0,
             },
         ],
         "walking_routes": [
@@ -214,14 +214,14 @@ HOTEL_EXTRA_CATALOG: dict[str, dict[str, list[dict]]] = {
             {
                 "id": "hostel_rest_1",
                 "title": "Blue Noodle House",
-                "description": "Рейтинг 4.2 · $ · 0.2 км",
-                "estimated_cost": 9.0,
+                "description": "Рейтинг 4.2 · ₽ · 0.2 км",
+                "estimated_cost": 900.0,
             },
             {
                 "id": "hostel_rest_2",
                 "title": "Mango Vegan Point",
-                "description": "Рейтинг 4.5 · $ · 0.6 км",
-                "estimated_cost": 11.0,
+                "description": "Рейтинг 4.5 · ₽ · 0.6 км",
+                "estimated_cost": 1100.0,
             },
         ],
         "attractions": [
@@ -236,8 +236,8 @@ HOTEL_EXTRA_CATALOG: dict[str, dict[str, list[dict]]] = {
             {
                 "id": "hostel_event_1",
                 "title": "Live music at Marina Bar",
-                "description": "Чт · 21:00 · вход: $8",
-                "estimated_cost": 8.0,
+                "description": "Чт · 21:00 · вход: ~800 ₽",
+                "estimated_cost": 800.0,
             }
         ],
         "walking_routes": [
@@ -254,24 +254,24 @@ HOTEL_EXTRA_CATALOG: dict[str, dict[str, list[dict]]] = {
             {
                 "id": "london_rest_1",
                 "title": "Riverside Brasserie",
-                "description": "Рейтинг 4.5 · $$$ · 0.3 км",
-                "estimated_cost": 45.0,
+                "description": "Рейтинг 4.5 · ₽₽₽ · 0.3 км",
+                "estimated_cost": 4500.0,
             }
         ],
         "attractions": [
             {
                 "id": "london_attr_1",
                 "title": "Tower of London",
-                "description": "Рейтинг 4.7 · 3.2 км · вход: $40 · 9:00-17:30",
-                "estimated_cost": 40.0,
+                "description": "Рейтинг 4.7 · 3.2 км · вход: ~4000 ₽ · 9:00-17:30",
+                "estimated_cost": 4000.0,
             }
         ],
         "events": [
             {
                 "id": "london_event_1",
                 "title": "West End Musical",
-                "description": "Ср · 19:30 · билет: $65",
-                "estimated_cost": 65.0,
+                "description": "Ср · 19:30 · билет: ~6500 ₽",
+                "estimated_cost": 6500.0,
             }
         ],
         "walking_routes": [
@@ -303,32 +303,32 @@ CITY_TRANSPORT_CATALOG: dict[str, dict[str, list[dict]]] = {
             {
                 "id": "phuket_bus_1",
                 "title": "Smart Bus + Songthaew",
-                "description": "Маршрут из аэропорта и по пляжам · от $2",
-                "estimated_cost": 12.0,
+                "description": "Маршрут из аэропорта и по пляжам · от ~200 ₽",
+                "estimated_cost": 1200.0,
             }
         ],
         "taxi": [
             {
                 "id": "phuket_taxi_1",
                 "title": "Grab / Bolt",
-                "description": "Средний чек по городу $7-15",
-                "estimated_cost": 25.0,
+                "description": "Средний чек по городу 700–1500 ₽",
+                "estimated_cost": 2500.0,
             }
         ],
         "rent": [
             {
                 "id": "phuket_rent_1",
                 "title": "Аренда байка",
-                "description": "Сервисы local rent · от $9/день",
-                "estimated_cost": 27.0,
+                "description": "Сервисы local rent · от ~900 ₽/день",
+                "estimated_cost": 2700.0,
             }
         ],
         "ferry": [
             {
                 "id": "phuket_ferry_1",
                 "title": "Паром на Пхи-Пхи",
-                "description": "Туда-обратно · от $18",
-                "estimated_cost": 18.0,
+                "description": "Туда-обратно · от ~1800 ₽",
+                "estimated_cost": 1800.0,
             }
         ],
     },
@@ -338,23 +338,23 @@ CITY_TRANSPORT_CATALOG: dict[str, dict[str, list[dict]]] = {
                 "id": "london_public_1",
                 "title": "Oyster / Contactless",
                 "description": "Метро + автобус · daily cap",
-                "estimated_cost": 22.0,
+                "estimated_cost": 2200.0,
             }
         ],
         "taxi": [
             {
                 "id": "london_taxi_1",
                 "title": "Uber / Black Cab",
-                "description": "Поездки по центру · $15-35",
-                "estimated_cost": 40.0,
+                "description": "Поездки по центру · 1500–3500 ₽",
+                "estimated_cost": 4000.0,
             }
         ],
         "rent": [
             {
                 "id": "london_rent_1",
                 "title": "Santander Cycles",
-                "description": "Велопрокат · £1.65/30 мин",
-                "estimated_cost": 12.0,
+                "description": "Велопрокат · ~165 ₽/30 мин",
+                "estimated_cost": 1200.0,
             }
         ],
     },
@@ -364,23 +364,23 @@ CITY_TRANSPORT_CATALOG: dict[str, dict[str, list[dict]]] = {
                 "id": "istanbul_public_1",
                 "title": "Istanbulkart",
                 "description": "Метро + трамвай + автобус",
-                "estimated_cost": 14.0,
+                "estimated_cost": 1400.0,
             }
         ],
         "taxi": [
             {
                 "id": "istanbul_taxi_1",
                 "title": "BiTaksi / Uber",
-                "description": "Поездки по городу · $6-18",
-                "estimated_cost": 24.0,
+                "description": "Поездки по городу · 600–1800 ₽",
+                "estimated_cost": 2400.0,
             }
         ],
         "ferry": [
             {
                 "id": "istanbul_ferry_1",
                 "title": "Паром через Босфор",
-                "description": "Шехир Хатлары · от $2",
-                "estimated_cost": 8.0,
+                "description": "Шехир Хатлары · от ~200 ₽",
+                "estimated_cost": 800.0,
             }
         ],
     },
@@ -737,13 +737,13 @@ def _serialize_transport_extras(itinerary: dict) -> dict:
             "id": "bag_20",
             "title": "Багаж 20 кг",
             "description": "1 место багажа до 20 кг",
-            "estimated_cost": 25.0,
+            "estimated_cost": 2500.0,
         },
         {
             "id": "bag_23_plus",
             "title": "Багаж 23 кг + приоритет",
             "description": "23 кг, приоритетная посадка",
-            "estimated_cost": 48.0,
+            "estimated_cost": 4800.0,
         },
     ]
     if any("23 кг" in str(item) for item in includes):
@@ -760,13 +760,13 @@ def _serialize_transport_extras(itinerary: dict) -> dict:
             "id": "refund_flexible",
             "title": "Гибкий возврат",
             "description": "Возврат со штрафом до вылета",
-            "estimated_cost": 35.0,
+            "estimated_cost": 3500.0,
         },
         {
             "id": "refund_full",
             "title": "Полный возврат",
             "description": "Полный возврат до вылета",
-            "estimated_cost": 60.0,
+            "estimated_cost": 6000.0,
         },
     ]
     return {
@@ -1286,6 +1286,16 @@ def get_trip_tree(trip_id: int, db: Session = Depends(get_db)) -> dict[str, list
             for edge in edges
         ],
     }
+
+
+@router.post("/{trip_id}/destination/reset")
+def reset_destination(trip_id: int, db: Session = Depends(get_db)) -> dict[str, str]:
+    trip = _get_trip_or_404(db, trip_id)
+    trip.destination = ""
+    db.execute(delete(TripEdge).where(TripEdge.trip_id == trip_id))
+    db.execute(delete(TripNode).where(TripNode.trip_id == trip_id))
+    db.commit()
+    return {"status": "ok"}
 
 
 @router.post("/{trip_id}/selections/reset")

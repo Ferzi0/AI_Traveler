@@ -34,11 +34,12 @@ export function tripDaysFromApi(
   }
 }
 
-export function formatPrice(price: number, currency: string): string {
+export function formatPrice(price: number, currency: string, approximate = false): string {
   const rounded = Math.round(price)
   const formatted = rounded.toLocaleString('ru-RU')
   const symbol = currency.toLowerCase() === 'rub' ? '₽' : currency.toUpperCase()
-  return `${formatted} ${symbol}`
+  const prefix = approximate ? '~\u202f' : ''
+  return `${prefix}${formatted}\u00a0${symbol}`
 }
 
 export function transfersLabel(transfers: number | null | undefined): string {

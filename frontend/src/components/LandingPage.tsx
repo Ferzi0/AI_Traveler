@@ -1,93 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { BrandLogo } from './BrandLogo'
-import { AppFooter } from './AppFooter'
 import { ScrollToTopButton } from './ScrollToTopButton'
 import { CityCombobox } from './CityCombobox'
-import { PopularDirectionsPanel } from './PopularDirectionsPanel'
-import { LandingPriceCalendarSection } from './LandingPriceCalendarSection'
-import { SpecialOffersPanel } from './panels/SpecialOffersPanel'
-import { api } from '../api'
-import type { PopularDestination, PopularDirectionsResponse, SpecialOffer, SpecialOffersResponse } from '../types/flights'
-import type { PlatformStats } from '../types/stats'
-import { adjustDatesOnEndChange, adjustDatesOnStartChange, todayIsoLocal } from '../utils/tripDates'
+import { HomeDiscoverySections } from './HomeDiscoverySections'
+import { LANDING_TAGS } from './landingTags'
+import { adjustDatesOnEndChange, adjustDatesOnStartChange, defaultTripDateRange, todayIsoLocal } from '../utils/tripDates'
 
 type Props = {
   onLogin: () => void
   onRegister: () => void
 }
 
-const TAGS = ['🏖 Пляж', '🏙 Города', '🏔 Горы', '🎭 Культура', '🍜 Гастро']
-
 export function LandingPage({ onLogin, onRegister }: Props) {
   const [origin, setOrigin]       = useState('Москва')
-  const [startDate, setStartDate] = useState('2026-06-10')
-  const [endDate, setEndDate]     = useState('2026-06-17')
+  const [startDate, setStartDate] = useState(() => defaultTripDateRange().startDate)
+  const [endDate, setEndDate]     = useState(() => defaultTripDateRange().endDate)
   const [passengers, setPassengers] = useState(2)
-  const [stats, setStats] = useState<PlatformStats | null>(null)
-  const [popular, setPopular] = useState<PopularDestination[]>([])
-  const [popularOriginLabel, setPopularOriginLabel] = useState('Москва')
-  const [popularCurrency, setPopularCurrency] = useState('rub')
-  const [popularError, setPopularError] = useState<string | null>(null)
-  const [popularLoading, setPopularLoading] = useState(true)
-  const [specialOffers, setSpecialOffers] = useState<SpecialOffer[]>([])
-  const [specialOffersCurrency, setSpecialOffersCurrency] = useState('rub')
-  const [specialOffersError, setSpecialOffersError] = useState<string | null>(null)
-  const [specialOffersLoading, setSpecialOffersLoading] = useState(true)
-
-  useEffect(() => {
-    void api<PlatformStats>('/stats').then(setStats).catch(() => null)
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    setPopularLoading(true)
-    setPopularError(null)
-    void api<PopularDirectionsResponse>(
-      `/flights/popular?origin=${encodeURIComponent(origin)}&limit=6`
-    )
-      .then((res) => {
-        if (cancelled) return
-        setPopular(res.items)
-        setPopularOriginLabel(res.origin_label)
-        setPopularCurrency(res.currency)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setPopular([])
-        setPopularError(err instanceof Error ? err.message : 'Не удалось загрузить направления')
-      })
-      .finally(() => {
-        if (!cancelled) setPopularLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [origin])
-
-  useEffect(() => {
-    let cancelled = false
-    setSpecialOffersLoading(true)
-    setSpecialOffersError(null)
-    void api<SpecialOffersResponse>(
-      `/flights/special-offers?origin=${encodeURIComponent(origin)}&limit=6`
-    )
-      .then((res) => {
-        if (cancelled) return
-        setSpecialOffers(res.items)
-        setSpecialOffersCurrency(res.currency)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setSpecialOffers([])
-        setSpecialOffersError(err instanceof Error ? err.message : 'Не удалось загрузить спецпредложения')
-      })
-      .finally(() => {
-        if (!cancelled) setSpecialOffersLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [origin])
 
   return (
     <div className="landingPage">
@@ -164,7 +92,7 @@ export function LandingPage({ onLogin, onRegister }: Props) {
             </div>
           </div>
           <div className="landingTags">
-            {TAGS.map(tag => (
+            {LANDING_TAGS.map(tag => (
               <button key={tag} type="button" className="landingTag" onClick={onLogin}>
                 {tag}
               </button>
@@ -172,51 +100,19 @@ export function LandingPage({ onLogin, onRegister }: Props) {
           </div>
         </section>
 
-        <PopularDirectionsPanel
-          originLabel={popularOriginLabel}
-          currency={popularCurrency}
-          items={popular}
-          loading={popularLoading}
-          error={popularError}
-          onBuildTrip={onLogin}
-        />
-
-        <LandingPriceCalendarSection
+        <HomeDiscoverySections
           origin={origin}
           startDate={startDate}
           endDate={endDate}
-          destinations={popular}
-          loading={popularLoading}
           onPickDates={(nextStart, nextEnd) => {
             const next = adjustDatesOnStartChange(nextStart, nextEnd)
             setStartDate(next.startDate)
             setEndDate(next.endDate)
           }}
+          onBuildTrip={() => onLogin()}
         />
-
-        <SpecialOffersPanel
-          originLabel={popularOriginLabel}
-          currency={specialOffersCurrency}
-          items={specialOffers}
-          loading={specialOffersLoading}
-          error={specialOffersError}
-        />
-
-        {stats && (
-          <div className="landingStats">
-            <div className="landingStat">
-              <span className="landingStat__num">{stats.users_count}</span>
-              <span className="landingStat__label">ПУТЕШЕСТВЕННИКА</span>
-            </div>
-            <div className="landingStat landingStat--divider">
-              <span className="landingStat__num">{stats.trips_count}</span>
-              <span className="landingStat__label">МАРШРУТОВ</span>
-            </div>
-          </div>
-        )}
       </main>
 
-      <AppFooter />
       <ScrollToTopButton />
     </div>
   )

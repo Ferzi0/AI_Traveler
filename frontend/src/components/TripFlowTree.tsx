@@ -124,10 +124,10 @@ export function TripFlowTree({
   })
 
   const hotelsSubtitle = selectedHotel
-    ? `${selectedHotel.title} · ${formatPrice(selectedHotel.price, 'rub')}/ночь`
+    ? `${selectedHotel.title} · ${formatPrice(selectedHotel.price, 'rub', true)}/ночь`
     : 'Подобрать отель'
   const roomsSubtitle = selectedRoom
-    ? `${selectedRoom.room_name} · ${formatPrice(selectedRoom.price_total, 'rub')}`
+    ? `${selectedRoom.room_name} · ${formatPrice(selectedRoom.price_total, 'rub', true)}`
     : selectedHotel
       ? 'Выберите номер'
       : 'Сначала отель'
@@ -241,7 +241,7 @@ export function TripFlowTree({
                   ? () =>
                       onToggleFavorite('hotel', selectedHotel.id, {
                         title: selectedHotel.title,
-                        subtitle: `${selectedHotel.stars}★ · ${formatPrice(selectedHotel.price, 'rub')}/ночь`,
+                        subtitle: `${selectedHotel.stars}★ · ${formatPrice(selectedHotel.price, 'rub', true)}/ночь`,
                         country: destination.country,
                         imageUrls: accommodationGallery(selectedHotel),
                       })
@@ -327,7 +327,7 @@ export function TripFlowTree({
         onToggleFavorite={(hotel) =>
           onToggleFavorite('hotel', hotel.id, {
             title: hotel.title,
-            subtitle: `${hotel.stars}★ · ${formatPrice(hotel.price, 'rub')}/ночь`,
+            subtitle: `${hotel.stars}★ · ${formatPrice(hotel.price, 'rub', true)}/ночь`,
             country: destination.country,
             imageUrls: accommodationGallery(hotel),
           })

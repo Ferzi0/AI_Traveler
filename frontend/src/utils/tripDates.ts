@@ -37,6 +37,12 @@ export function todayIsoLocal(): string {
   return `${y}-${m}-${day}`
 }
 
+/** Старт — сегодня, возврат — через 7 дней. */
+export function defaultTripDateRange(): { startDate: string; endDate: string } {
+  const startDate = todayIsoLocal()
+  return { startDate, endDate: addDaysIso(startDate, 7) }
+}
+
 export function isoMonth(iso: string): string {
   return iso.slice(0, 7)
 }

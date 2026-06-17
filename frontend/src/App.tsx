@@ -13,6 +13,8 @@ import { LoginPage } from './components/LoginPage'
 import { RegisterPage } from './components/RegisterPage'
 import { BrandLogo } from './components/BrandLogo'
 import { LandingPage } from './components/LandingPage'
+import { HomeDiscoverySections } from './components/HomeDiscoverySections'
+import { LANDING_TAGS } from './components/landingTags'
 import type {
   AccommodationItem,
   AccommodationSearchResponse,
@@ -27,7 +29,7 @@ import type {
 import { api, AUTH_EXPIRED_EVENT, clearAuthToken } from './api'
 import { formatCalculationMeta, formatSummaryTotal } from './utils/cost'
 import { destinationCoverImage } from './data/imageCatalog'
-import { adjustDatesOnEndChange, adjustDatesOnStartChange, clampEndDate, todayIsoLocal } from './utils/tripDates'
+import { adjustDatesOnEndChange, adjustDatesOnStartChange, clampEndDate, defaultTripDateRange, todayIsoLocal } from './utils/tripDates'
 import { PriceCalendarPanel } from './components/panels/PriceCalendarPanel'
 import { SpecialOffersPanel } from './components/panels/SpecialOffersPanel'
 import type { SpecialOffer, SpecialOffersResponse } from './types/flights'
@@ -48,8 +50,8 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [origin, setOrigin] = useState('Москва')
   const [tripId, setTripId] = useState<number | null>(null)
-  const [startDate, setStartDate] = useState('2026-06-10')
-  const [endDate, setEndDate] = useState('2026-06-17')
+  const [startDate, setStartDate] = useState(() => defaultTripDateRange().startDate)
+  const [endDate, setEndDate] = useState(() => defaultTripDateRange().endDate)
   const [passengers, setPassengers] = useState(2)
   const [menuOpen, setMenuOpen] = useState(false)
   const [activePage, setActivePage] = useState<'history' | 'favorites' | 'profile' | null>(null)
@@ -119,6 +121,8 @@ function App() {
 
   const showCoreTree =
     selectedDestination && (builderPhase === 'core' || builderPhase === 'detail-offer')
+
+  const isDetailPhase = builderPhase === 'detail'
 
   const selectedHotel = useMemo(
     () => accommodations.find((h) => h.id === selectedHotelId),
@@ -415,6 +419,20 @@ function App() {
     }
   }
 
+  async function buildTripFromCity(city: string) {
+    setDestinationQuery(city)
+    setError('')
+    const items = await searchDestinations(city)
+    const cityLower = city.toLowerCase()
+    const match =
+      items?.find((item) => item.title.toLowerCase() === cityLower) ??
+      items?.find((item) => item.title.toLowerCase().includes(cityLower)) ??
+      items?.[0]
+    if (match) {
+      await pickDestination(match)
+    }
+  }
+
   async function pickDestination(item: DestinationItem) {
     const id = tripId ?? (await ensureTrip())
     if (!id) return
@@ -456,9 +474,47 @@ function App() {
             : 'Направление выбрано, но рейсы временно недоступны'
         )
       }
-      await refreshSummary()
+      try {
+        await refreshSummary()
+      } catch {
+        /* summary не должен перетирать ошибку загрузки рейсов */
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка выбора направления')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function changeDestination() {
+    if (!tripId || !selectedDestination) return
+    setLoading(true)
+    setError('')
+    try {
+      await api(`/trips/${tripId}/destination/reset`, 'POST')
+      setSelectedDestination(null)
+      setDestinations([])
+      setDestinationQuery('')
+      setAccommodations([])
+      setSelectedHotelId('')
+      setSelectedRoomId('')
+      setSelectedTransportId('')
+      setSelectedTransportItinerary(null)
+      setSelectedTransportExtraIds({})
+      setTransport([])
+      setTransportExtras(null)
+      setRooms([])
+      setHotelExtras(null)
+      setCityTransport(null)
+      setSelectedHotelExtraIds({})
+      setSelectedCityTransportIds({})
+      setSaveMessage('')
+      setShowBreakdown(false)
+      setTreeResetKey((k) => k + 1)
+      setBuilderPhase('core')
+      await refreshSummary()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка смены направления')
     } finally {
       setLoading(false)
     }
@@ -726,6 +782,7 @@ function App() {
         <RegisterPage
           onSuccess={() => setAuthScreen('login')}
           onGoLogin={() => setAuthScreen('login')}
+          onGoHome={() => setAuthScreen('landing')}
         />
       )
     }
@@ -734,6 +791,7 @@ function App() {
         <LoginPage
           onSuccess={(t) => { setToken(t); setAuthScreen('landing') }}
           onGoRegister={() => setAuthScreen('register')}
+          onGoHome={() => setAuthScreen('landing')}
         />
       )
     }
@@ -790,9 +848,10 @@ function App() {
           </div>
         </header>
 
-        <main className="main">
+        <main className={`main${isDetailPhase ? ' main--detail' : ''}`}>
           {error ? <div className="errorBanner">{error}</div> : null}
 
+          {!isDetailPhase ? (
           <div className="paramsBar">
             <div className="paramsCell paramsCell--origin">
               <label htmlFor="origin">Откуда</label>
@@ -843,8 +902,9 @@ function App() {
               </div>
             ) : null}
           </div>
+          ) : null}
 
-          {selectedDestination && flexDatesOpen ? (
+          {selectedDestination && flexDatesOpen && !isDetailPhase ? (
             <PriceCalendarPanel
               origin={origin}
               destinationTitle={selectedDestination.title}
@@ -854,7 +914,7 @@ function App() {
             />
           ) : null}
 
-          {selectedDestination ? (
+          {selectedDestination && builderPhase === 'core' ? (
             <SpecialOffersPanel
               originLabel={routeOffersOriginLabel || origin}
               destinationLabel={selectedDestination.title}
@@ -866,6 +926,7 @@ function App() {
           ) : null}
 
           {!selectedDestination ? (
+            <>
             <section className="destinationHero" aria-labelledby="destination-hero-title">
               <h1 id="destination-hero-title" className="destinationHero__title">
                 Куда отправимся?
@@ -881,13 +942,30 @@ function App() {
                   />
                   <button
                     type="button"
-                    className="btn destinationHero__btn"
+                    className="btn btnAccent destinationHero__btn"
                     disabled={loading}
                     onClick={() => void searchDestinations()}
                   >
                     Найти
                   </button>
                 </div>
+              </div>
+              <div className="landingTags">
+                {LANDING_TAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className="landingTag"
+                    onClick={() => {
+                      document.getElementById('popular-directions-title')?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start',
+                      })
+                    }}
+                  >
+                    {tag}
+                  </button>
+                ))}
               </div>
               {destinations.length > 0 ? (
                 <div className="destinationHero__results destPickerCards">
@@ -914,6 +992,15 @@ function App() {
                 </div>
               ) : null}
             </section>
+
+            <HomeDiscoverySections
+              origin={origin}
+              startDate={startDate}
+              endDate={endDate}
+              onPickDates={handleCalendarPickDates}
+              onBuildTrip={(city) => void buildTripFromCity(city)}
+            />
+            </>
           ) : tripId && selectedDestination && showCoreTree ? (
             <>
               <TripBuildProgress
@@ -926,14 +1013,24 @@ function App() {
                 <p className="tripTreeToolbar__hint">
                   Направление: <strong>{selectedDestination.title}</strong>
                 </p>
-                <button
-                  type="button"
-                  className="btn btnGhost tripTreeToolbar__reset"
-                  disabled={loading || !hasTreeSelections}
-                  onClick={() => void resetTripTree()}
-                >
-                  Сбросить
-                </button>
+                <div className="tripTreeToolbar__actions">
+                  <button
+                    type="button"
+                    className="btn btnGhost tripTreeToolbar__change"
+                    disabled={loading}
+                    onClick={() => void changeDestination()}
+                  >
+                    Сменить направление
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btnGhost tripTreeToolbar__reset"
+                    disabled={loading || !hasTreeSelections}
+                    onClick={() => void resetTripTree()}
+                  >
+                    Сбросить
+                  </button>
+                </div>
               </div>
               <TripFlowTree
                 key={treeResetKey}
@@ -974,14 +1071,24 @@ function App() {
                 <p className="tripTreeToolbar__hint">
                   Детализация · <strong>{selectedDestination.title}</strong>
                 </p>
-                <button
-                  type="button"
-                  className="btn btnGhost tripTreeToolbar__reset"
-                  disabled={loading || !hasDetailSelections}
-                  onClick={() => void resetDetailSelections()}
-                >
-                  Сбросить
-                </button>
+                <div className="tripTreeToolbar__actions">
+                  <button
+                    type="button"
+                    className="btn btnGhost tripTreeToolbar__change"
+                    disabled={loading}
+                    onClick={() => void changeDestination()}
+                  >
+                    Сменить направление
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btnGhost tripTreeToolbar__reset"
+                    disabled={loading || !hasDetailSelections}
+                    onClick={() => void resetDetailSelections()}
+                  >
+                    Сбросить
+                  </button>
+                </div>
               </div>
               {!hasDetailCatalog && !loading ? (
                 <p className="builderStepPlaceholder__hint builderEmptyDetail">
@@ -1052,7 +1159,7 @@ function App() {
           </div>
         ) : null}
 
-        <AppFooter />
+        {selectedDestination ? <AppFooter /> : null}
 
         <ScrollToTopButton bottom={selectedDestination ? '6.5rem' : '1.25rem'} />
       </div>

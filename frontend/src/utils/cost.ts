@@ -4,8 +4,8 @@ export function roundMoney(value: number): number {
   return Math.round(value * 100) / 100
 }
 
-function moneyLabel(value: number, currency = 'rub'): string {
-  return formatPrice(value, currency)
+function moneyLabel(value: number, currency = 'rub', approximate = true): string {
+  return formatPrice(value, currency, approximate)
 }
 
 /** Цена в каталоге за одного человека → подпись для карточки. */
@@ -65,5 +65,5 @@ export function appendCostToSubtitle(
 }
 
 export function formatSummaryTotal(value: number, currency = 'rub'): string {
-  return formatPrice(Math.round(value), currency)
+  return formatPrice(Math.round(value), currency, true)
 }

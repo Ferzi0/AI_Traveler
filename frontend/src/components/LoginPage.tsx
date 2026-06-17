@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { API_BASE } from '../config'
-import { AppFooter } from './AppFooter'
-import { BrandLogo } from './BrandLogo'
+import { AuthPageLayout } from './AuthPageLayout'
 import '../App.css'
 
 type Props = {
   onSuccess: (token: string) => void
   onGoRegister: () => void
+  onGoHome: () => void
 }
 
-export function LoginPage({ onSuccess, onGoRegister }: Props) {
+export function LoginPage({ onSuccess, onGoRegister, onGoHome }: Props) {
   const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -26,7 +26,7 @@ export function LoginPage({ onSuccess, onGoRegister }: Props) {
         body: JSON.stringify({ login, password }),
       })
       const text = await res.text()
-      let data: { detail?: string | { msg: string }[] } = {}
+      let data: { access_token?: string; detail?: string | { msg: string }[] } = {}
       if (text) {
         try {
           data = JSON.parse(text) as typeof data
@@ -47,6 +47,10 @@ export function LoginPage({ onSuccess, onGoRegister }: Props) {
         )
         return
       }
+      if (!data.access_token) {
+        setError('Неверный ответ сервера')
+        return
+      }
       localStorage.setItem('token', data.access_token)
       onSuccess(data.access_token)
     } catch {
@@ -57,57 +61,52 @@ export function LoginPage({ onSuccess, onGoRegister }: Props) {
   }
 
   return (
-    <div className="authPage">
-      <header className="topBar">
-        <div className="topBarInner">
-          <span className="logo">
-            <BrandLogo />
-          </span>
-        </div>
-      </header>
+    <AuthPageLayout
+      title="С возвращением"
+      subtitle="Войдите, чтобы продолжить сборку поездки"
+      onGoHome={onGoHome}
+      footer={
+        <button type="button" className="authLink" onClick={onGoRegister}>
+          Ещё не зарегистрированы? Создать аккаунт
+        </button>
+      }
+    >
+      {error ? <div className="authError">{error}</div> : null}
 
-      <div className="authBody">
-        <div className="authCard">
-          <h1 className="authTitle">Авторизация</h1>
-
-          {error && <div className="authError">{error}</div>}
-
-          <div className="authField">
-            <input
-              type="text"
-              placeholder="Логин"
-              value={login}
-              onChange={e => setLogin(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && void handleSubmit()}
-            />
-          </div>
-
-          <div className="authField">
-            <input
-              type="password"
-              placeholder="Пароль"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && void handleSubmit()}
-            />
-          </div>
-
-          <button
-            type="button"
-            className="authBtn"
-            disabled={loading}
-            onClick={() => void handleSubmit()}
-          >
-            {loading ? 'Входим...' : 'Войти'}
-          </button>
-
-          <button type="button" className="authLink" onClick={onGoRegister}>
-            Ещё не зарегистрированы?
-          </button>
-        </div>
+      <div className="authField">
+        <label className="authField__label" htmlFor="login-input">Логин</label>
+        <input
+          id="login-input"
+          type="text"
+          placeholder="Ваш логин"
+          value={login}
+          onChange={e => setLogin(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && void handleSubmit()}
+          autoComplete="username"
+        />
       </div>
 
-      <AppFooter />
-    </div>
+      <div className="authField">
+        <label className="authField__label" htmlFor="password-input">Пароль</label>
+        <input
+          id="password-input"
+          type="password"
+          placeholder="••••••••"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && void handleSubmit()}
+          autoComplete="current-password"
+        />
+      </div>
+
+      <button
+        type="button"
+        className="authBtn"
+        disabled={loading}
+        onClick={() => void handleSubmit()}
+      >
+        {loading ? 'Входим…' : 'Войти'}
+      </button>
+    </AuthPageLayout>
   )
 }

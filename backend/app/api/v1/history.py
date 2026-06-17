@@ -68,7 +68,8 @@ def _detail_calculation_items(snapshot: dict | None) -> list[dict]:
 def _format_calc_price(item: dict) -> str:
     result = item.get("result")
     if isinstance(result, (int, float)):
-        return f"${result}"
+        rounded = int(round(float(result)))
+        return f"~{rounded:,}".replace(",", " ") + " ₽"
     return "—"
 
 
@@ -178,7 +179,11 @@ def _build_pdf_html(row: TripHistory) -> str:
 
     detail_html = _detail_section_html(snapshot)
 
-    total = f"${row.total_cost}" if row.total_cost is not None else row.total_cost_label or "—"
+    total = (
+        f"~{int(round(float(row.total_cost))):,}".replace(",", " ") + " ₽"
+        if row.total_cost is not None
+        else row.total_cost_label or "—"
+    )
     start_label = row.start_date.strftime("%d.%m.%Y") if row.start_date else "—"
     end_label = row.end_date.strftime("%d.%m.%Y") if row.end_date else "—"
     trip_dates = f"{start_label} – {end_label}"
@@ -432,9 +437,9 @@ def save_trip_to_history(
     currency = settings.TRAVELPAYOUTS_CURRENCY.upper()
     rounded = int(round(float(total)))
     total_label = (
-        f"{rounded:,}".replace(",", " ") + " ₽"
+        f"~{rounded:,}".replace(",", " ") + " ₽"
         if currency == "RUB"
-        else f"{rounded} {currency}"
+        else f"~{rounded} {currency}"
     )
     row = TripHistory(
         user_id=user.id,

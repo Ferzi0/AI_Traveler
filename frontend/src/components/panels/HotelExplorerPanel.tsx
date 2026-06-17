@@ -3,6 +3,7 @@ import { FavoriteButton } from '../FavoriteButton'
 import { PhotoSlider } from '../PhotoSlider'
 import type { AccommodationItem, AccommodationSearchResponse } from '../../types/trip'
 import { accommodationGallery } from '../../data/imageCatalog'
+import { formatPrice } from '../../utils/flightDisplay'
 import { useAsyncSearchSeq } from '../../hooks/useAsyncSearchSeq'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { MOBILE_FLOW_MEDIA } from '../tree/tripFlowLayout'
@@ -221,7 +222,7 @@ export function HotelExplorerPanel({
               <div className="catalogCard__body">
                 <strong className="catalogCard__title">{hotel.title}</strong>
                 <span className="catalogCard__meta">
-                  {'★'.repeat(hotel.stars)} · ${hotel.price}/ночь
+                  {'★'.repeat(hotel.stars)} · {formatPrice(hotel.price, 'rub', true)}/ночь
                 </span>
                 <span className="catalogCard__tags">
                   {hotel.breakfast_included ? 'Завтрак' : null}

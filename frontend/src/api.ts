@@ -21,7 +21,18 @@ async function extractErrorMessage(response: Response): Promise<string> {
   } catch {
     /* keep raw text */
   }
-  return message
+  return message || `Ошибка сервера (${response.status})`
+}
+
+function formatFetchFailure(cause: unknown): string {
+  if (cause instanceof TypeError) {
+    return (
+      `Сервер API недоступен (${API_BASE}). ` +
+      'Проверьте, что backend запущен (docker compose up в infra).'
+    )
+  }
+  const detail = cause instanceof Error ? cause.message : String(cause)
+  return `Запрос к API не выполнен (${API_BASE}): ${detail}`
 }
 
 export async function api<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
@@ -37,8 +48,8 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
       headers: Object.keys(headers).length > 0 ? headers : undefined,
       body: body ? JSON.stringify(body) : undefined,
     })
-  } catch {
-    throw new Error(`Нет связи с API (${API_BASE}). Перезапустите хост.`)
+  } catch (cause) {
+    throw new Error(formatFetchFailure(cause))
   }
   if (!response.ok) {
     if (response.status === 401) {
@@ -46,7 +57,11 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
     }
     throw new Error(await extractErrorMessage(response))
   }
-  return response.json() as Promise<T>
+  try {
+    return (await response.json()) as T
+  } catch {
+    throw new Error(`Неверный ответ сервера (${response.status})`)
+  }
 }
 
 export async function apiDownload(path: string): Promise<Blob> {
@@ -60,8 +75,8 @@ export async function apiDownload(path: string): Promise<Blob> {
       method: 'GET',
       headers: Object.keys(headers).length > 0 ? headers : undefined,
     })
-  } catch {
-    throw new Error(`Нет связи с API (${API_BASE}). Перезапустите хост.`)
+  } catch (cause) {
+    throw new Error(formatFetchFailure(cause))
   }
 
   if (!response.ok) {

@@ -204,13 +204,13 @@ def hotel_extras_catalog(accommodation_id: str, destination_title: str) -> dict[
             {
                 "id": f"{slug}_rest_1",
                 "title": f"Central Kitchen · {short}",
-                "description": "Рейтинг 4.5 · $$ · 0.6 км",
+                "description": "Рейтинг 4.5 · ₽₽ · 0.6 км",
                 "estimated_cost": 1800.0,
             },
             {
                 "id": f"{slug}_rest_2",
                 "title": f"Old Town Bistro",
-                "description": "Рейтинг 4.3 · $$ · 1.2 км",
+                "description": "Рейтинг 4.3 · ₽₽ · 1.2 км",
                 "estimated_cost": 1500.0,
             },
         ],

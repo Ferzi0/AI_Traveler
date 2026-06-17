@@ -1,17 +1,57 @@
 import { useState } from 'react'
 import { API_BASE } from '../config'
 import { formatPhone } from '../utils/phone'
-import { AppFooter } from './AppFooter'
-import { BrandLogo } from './BrandLogo'
+import { AuthPageLayout } from './AuthPageLayout'
 import '../App.css'
 
 type Props = {
   onSuccess: () => void
   onGoLogin: () => void
+  onGoHome: () => void
 }
 
-export function RegisterPage({ onSuccess, onGoLogin }: Props) {
-  const [form, setForm] = useState({
+type FormState = {
+  email: string
+  phone: string
+  last_name: string
+  first_name: string
+  middle_name: string
+  login: string
+  password: string
+  password2: string
+}
+
+const SECTIONS: {
+  label: string
+  fields: { key: keyof FormState; placeholder: string; type?: string; autoComplete?: string }[]
+}[] = [
+  {
+    label: 'Контакты',
+    fields: [
+      { key: 'email', placeholder: 'name@example.com', type: 'email', autoComplete: 'email' },
+      { key: 'phone', placeholder: 'Номер телефона +7(999)999-99-99', autoComplete: 'tel' },
+    ],
+  },
+  {
+    label: 'Личные данные',
+    fields: [
+      { key: 'last_name', placeholder: 'Фамилия', autoComplete: 'family-name' },
+      { key: 'first_name', placeholder: 'Имя', autoComplete: 'given-name' },
+      { key: 'middle_name', placeholder: 'Отчество', autoComplete: 'additional-name' },
+    ],
+  },
+  {
+    label: 'Аккаунт',
+    fields: [
+      { key: 'login', placeholder: 'Логин', autoComplete: 'username' },
+      { key: 'password', placeholder: 'Пароль', type: 'password', autoComplete: 'new-password' },
+      { key: 'password2', placeholder: 'Повторите пароль', type: 'password', autoComplete: 'new-password' },
+    ],
+  },
+]
+
+export function RegisterPage({ onSuccess, onGoLogin, onGoHome }: Props) {
+  const [form, setForm] = useState<FormState>({
     email: '',
     phone: '',
     last_name: '',
@@ -24,7 +64,7 @@ export function RegisterPage({ onSuccess, onGoLogin }: Props) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  function set(field: keyof typeof form) {
+  function set(field: keyof FormState) {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = field === 'phone' ? formatPhone(e.target.value) : e.target.value
       setForm(prev => ({ ...prev, [field]: value }))
@@ -86,60 +126,44 @@ export function RegisterPage({ onSuccess, onGoLogin }: Props) {
     }
   }
 
-  const fields: { key: keyof typeof form; placeholder: string; type?: string }[] = [
-    { key: 'email', placeholder: 'Почта', type: 'email' },
-    { key: 'phone', placeholder: 'Номер телефона +7(999)999-99-99' },
-    { key: 'last_name', placeholder: 'Фамилия' },
-    { key: 'first_name', placeholder: 'Имя' },
-    { key: 'middle_name', placeholder: 'Отчество' },
-    { key: 'login', placeholder: 'Логин' },
-    { key: 'password', placeholder: 'Пароль', type: 'password' },
-    { key: 'password2', placeholder: 'Повторите пароль', type: 'password' },
-  ]
-
   return (
-    <div className="authPage">
-      <header className="topBar">
-        <div className="topBarInner">
-          <span className="logo">
-            <BrandLogo />
-          </span>
-        </div>
-      </header>
+    <AuthPageLayout
+      title="Создать аккаунт"
+      subtitle="Заполните данные — и можно собирать первую поездку"
+      onGoHome={onGoHome}
+      footer={
+        <button type="button" className="authLink" onClick={onGoLogin}>
+          Уже есть аккаунт? Войти
+        </button>
+      }
+    >
+      {error ? <div className="authError">{error}</div> : null}
 
-      <div className="authBody">
-        <div className="authCard">
-          <h1 className="authTitle">Регистрация</h1>
-
-          {error && <div className="authError">{error}</div>}
-
-          {fields.map(({ key, placeholder, type }) => (
+      {SECTIONS.map((section) => (
+        <div key={section.label} className="authSection">
+          <p className="authSection__label">{section.label}</p>
+          {section.fields.map(({ key, placeholder, type, autoComplete }) => (
             <div key={key} className="authField">
               <input
                 type={type ?? 'text'}
                 placeholder={placeholder}
                 value={form[key]}
                 onChange={set(key)}
+                autoComplete={autoComplete}
               />
             </div>
           ))}
-
-          <button
-            type="button"
-            className="authBtn"
-            disabled={loading}
-            onClick={() => void handleSubmit()}
-          >
-            {loading ? 'Регистрация...' : 'Зарегистрироваться'}
-          </button>
-
-          <button type="button" className="authLink" onClick={onGoLogin}>
-            Уже есть аккаунт? Войдите!
-          </button>
         </div>
-      </div>
+      ))}
 
-      <AppFooter />
-    </div>
+      <button
+        type="button"
+        className="authBtn"
+        disabled={loading}
+        onClick={() => void handleSubmit()}
+      >
+        {loading ? 'Регистрация…' : 'Зарегистрироваться'}
+      </button>
+    </AuthPageLayout>
   )
 }
