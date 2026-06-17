@@ -44,15 +44,49 @@
 }
 
 .menuBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 36px;
   height: 36px;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
+  color: var(--text);
   cursor: pointer;
-  display: grid;
-  place-items: center;
   font-size: 1.1rem;
+  line-height: 1;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.menuBtn__icon {
+  position: relative;
+  display: block;
+  width: 16px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+.menuBtn__icon::before,
+.menuBtn__icon::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 16px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+.menuBtn__icon::before {
+  top: -5px;
+}
+
+.menuBtn__icon::after {
+  top: 5px;
 }
 
 .menuWrap {
@@ -287,13 +321,21 @@
 }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: var(--radius-sm);
   padding: 0.55rem 1rem;
   font-weight: 700;
   font-size: 0.85rem;
+  line-height: 1.2;
   cursor: pointer;
   transition: filter 0.12s;
+  -webkit-appearance: none;
+  appearance: none;
+  color: inherit;
+  text-decoration: none;
 }
 
 .btn:disabled {
@@ -1396,15 +1438,28 @@
 }
 
 .detailsClose {
-  border: none;
-  background: var(--bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
   width: 32px;
   height: 32px;
   border-radius: 8px;
   font-size: 1.25rem;
   line-height: 1;
+  color: var(--text-muted);
   cursor: pointer;
   flex-shrink: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.detailsClose:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: rgba(232, 93, 42, 0.05);
 }
 
 .detailsGrid {
@@ -2845,6 +2900,10 @@
     align-items: stretch;
   }
 
+  .filterToolbar__label {
+    width: 100%;
+  }
+
   .filterToolbar__reset {
     margin-left: 0;
     width: 100%;
@@ -3254,9 +3313,12 @@
   border-radius: 50%;
   border: 1px solid var(--border);
   background: #fff;
+  color: var(--text);
   cursor: pointer;
   font-size: 1.1rem;
   line-height: 1;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .fullscreenPanel__title {
@@ -3427,11 +3489,37 @@
   gap: 0.75rem;
 }
 
+.filterToolbar__label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
 .filterToolbar__label select {
-  margin-left: 0.35rem;
-  padding: 0.35rem 0.5rem;
-  border-radius: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 1.75rem 0.55rem 0.65rem;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%236b6560' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filterToolbar__label select:focus {
+  outline: 2px solid var(--accent-ring);
+  border-color: var(--accent);
 }
 
 .filterToolbar__reset {
@@ -3851,6 +3939,7 @@
   .flightExplorer__actions .btn {
     flex: 1;
     min-width: 0;
+    min-height: 44px;
   }
 }
 

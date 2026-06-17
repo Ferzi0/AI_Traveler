@@ -888,7 +888,15 @@ function App() {
               <BrandLogo />
             </button>
             <div className="menuWrap">
-              <button type="button" className="menuBtn" onClick={() => setMenuOpen(v => !v)}>☰</button>
+              <button
+                type="button"
+                className="menuBtn"
+                aria-label="Меню"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen(v => !v)}
+              >
+                <span className="menuBtn__icon" aria-hidden="true" />
+              </button>
               <SideMenu
                 open={menuOpen}
                 onNavigate={setActivePage}

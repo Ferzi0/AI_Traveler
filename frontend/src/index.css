@@ -66,6 +66,12 @@ select {
   font-family: inherit;
 }
 
+button,
+select {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
 textarea {
   -webkit-appearance: none;

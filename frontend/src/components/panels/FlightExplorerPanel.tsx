@@ -275,7 +275,7 @@ export function FlightExplorerPanel({
                         Aviasales ↗
                       </a>
                     ) : null}
-                    <button type="button" className="btn" onClick={() => onSelect(item.itinerary_id)}>
+                    <button type="button" className="btn btnGhost" onClick={() => onSelect(item.itinerary_id)}>
                       Выбрать
                     </button>
                   </div>
