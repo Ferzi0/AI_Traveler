@@ -363,7 +363,7 @@ def get_history_item(
 ) -> dict:
     row = db.get(TripHistory, history_id)
     if not row or row.user_id != user.id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запись истории не найдена")
     return _serialize_history(row, include_snapshot=True)
 
 
@@ -375,7 +375,7 @@ def download_history_pdf(
 ) -> Response:
     row = db.get(TripHistory, history_id)
     if not row or row.user_id != user.id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запись истории не найдена")
 
     try:
         from weasyprint import HTML
@@ -404,7 +404,7 @@ def save_trip_to_history(
 ) -> dict:
     trip = _get_trip_or_404(db, payload.trip_id)
     if trip.user_id != user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your trip")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Это не ваша поездка")
 
     summary = get_trip_summary(payload.trip_id, db)
     nodes = list(
@@ -473,7 +473,7 @@ def delete_history_item(
 ) -> dict[str, str]:
     row = db.get(TripHistory, history_id)
     if not row or row.user_id != user.id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запись истории не найдена")
     db.delete(row)
     db.commit()
     return {"status": "ok"}

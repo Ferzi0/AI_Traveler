@@ -39,8 +39,15 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    login: str = Field(min_length=3, max_length=255)
-    password: str = Field(min_length=8, max_length=128)
+    login: str
+    password: str
+
+    @field_validator("login", "password")
+    @classmethod
+    def not_empty(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Заполните все поля")
+        return value
 
 
 class TokenResponse(BaseModel):

@@ -1,15 +1,30 @@
-from fastapi import FastAPI, Request 
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.api.router import api_router
 from app.core.config import settings
 from app.core.database import Base, engine
+from app.core.validation_errors import format_validation_errors
 
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.PROJECT_VERSION,
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    _request: Request,
+    exc: RequestValidationError,
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=422,
+        content={"detail": format_validation_errors(exc.errors())},
+    )
+
 
 @app.middleware("http")
 async def proxy_headers_middleware(request, call_next):

@@ -101,7 +101,7 @@ def list_reviews(
     user: Annotated[User | None, Depends(get_current_user_optional)] = None,
 ) -> dict:
     if entity_type not in ENTITY_TYPES:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported entity type")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Неподдерживаемый тип объекта")
 
     rows = db.execute(
         select(CatalogReview)

@@ -234,7 +234,7 @@ def destination_title_to_iata(title: str) -> str:
     for code, meta in DESTINATION_IATA.items():
         if meta["city"].lower() == needle:
             return code
-    raise ValueError(f"Unknown destination for IATA lookup: {title}")
+    raise ValueError(f"Неизвестное направление: {title}")
 
 
 def _display_city_name(city_lower: str) -> str:

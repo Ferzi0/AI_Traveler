@@ -204,13 +204,13 @@ def _date_iso(value: date | None) -> str | None:
 def search_trip_flights(trip: Trip) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     token = settings.TRAVELPAYOUTS_API_TOKEN.strip()
     if not token:
-        raise RuntimeError("TRAVELPAYOUTS_API_TOKEN is not configured")
+        raise RuntimeError("Токен Aviasales не настроен")
     if not trip.destination:
-        raise RuntimeError("Select destination first")
+        raise RuntimeError("Сначала выберите направление")
     if not trip.start_date:
-        raise RuntimeError("Set trip start date first")
+        raise RuntimeError("Сначала укажите дату начала поездки")
     if trip.round_trip and not trip.end_date:
-        raise RuntimeError("Set trip return date for round trip")
+        raise RuntimeError("Укажите дату возврата для обратного билета")
     if trip.round_trip and trip.start_date and trip.end_date:
         trip_days = (trip.end_date - trip.start_date).days
         if trip_days < 1:

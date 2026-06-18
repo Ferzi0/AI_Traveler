@@ -116,7 +116,7 @@ def remove_favorite(
 ) -> dict[str, str]:
     row = db.get(Favorite, favorite_id)
     if not row or row.user_id != user.id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Favorite not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Избранное не найдено")
     db.delete(row)
     db.commit()
     return {"status": "ok"}

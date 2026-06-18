@@ -970,7 +970,7 @@ def _transport_legs_for_trip(db: Session, trip: Trip) -> list[ConstructorTranspo
 def _get_trip_or_404(db: Session, trip_id: int) -> Trip:
     trip = db.get(Trip, trip_id)
     if not trip:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Поездка не найдена")
     return trip
 
 
@@ -1242,7 +1242,7 @@ def select_destination(
     if not dest and not tourist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Destination not found in catalog",
+            detail="Направление не найдено в каталоге",
         )
     trip.destination = dest.title if dest else tourist["title"]
 
@@ -1309,7 +1309,7 @@ def reset_trip_selections(trip_id: int, db: Session = Depends(get_db)) -> dict[s
     if not trip.destination:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select destination first",
+            detail="Сначала выберите направление",
         )
     _reset_tree_selections(db, trip_id)
     db.commit()
@@ -1330,7 +1330,7 @@ def create_trip_node(
 ) -> dict[str, int]:
     trip = db.get(Trip, trip_id)
     if not trip:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Поездка не найдена")
 
     node = TripNode(
         trip_id=trip_id,
@@ -1356,9 +1356,9 @@ def create_trip_edge(
     source_node = db.get(TripNode, payload.source_node_id)
     target_node = db.get(TripNode, payload.target_node_id)
     if not source_node or source_node.trip_id != trip_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source node not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Исходный узел не найден")
     if not target_node or target_node.trip_id != trip_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target node not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Целевой узел не найден")
 
     edge = TripEdge(
         trip_id=trip_id,
@@ -1379,7 +1379,7 @@ def search_accommodations(
     if not trip.destination:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select destination first",
+            detail="Сначала выберите направление",
         )
 
     country = _destination_country(trip.destination)
@@ -1433,7 +1433,7 @@ def get_accommodation_rooms(
         db, trip, payload.accommodation_id, load_rooms=True
     )
     if not accommodation:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Accommodation not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Размещение не найдено")
 
     rooms = _build_room_options(trip, accommodation)
     if payload.room_price_from is not None:
@@ -1458,12 +1458,12 @@ def select_accommodation(
     if not destination_node:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select destination first",
+            detail="Сначала выберите направление",
         )
 
     selected = _get_accommodation_for_trip(db, trip, payload.item_id)
     if not selected:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Accommodation not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Размещение не найдено")
 
     _reset_choice_branch(db, trip_id, "accommodation")
     node = TripNode(
@@ -1497,14 +1497,14 @@ def select_accommodation_room(
     if not destination_node:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select destination first",
+            detail="Сначала выберите направление",
         )
 
     accommodation = _get_accommodation_for_trip(
         db, trip, payload.accommodation_id, load_rooms=True
     )
     if not accommodation:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Accommodation not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Размещение не найдено")
 
     room = next(
         (
@@ -1515,7 +1515,7 @@ def select_accommodation_room(
         None,
     )
     if not room:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Номер не найден")
 
     _reset_choice_branch(db, trip_id, "accommodation")
     node = TripNode(
@@ -1564,14 +1564,14 @@ def select_hotel_extra(
     if not accommodation_node:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select accommodation room first",
+            detail="Сначала выберите номер в отеле",
         )
 
     selected = _find_hotel_extra(
         accommodation_id, trip.destination, payload.category, payload.item_id
     )
     if not selected:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Extra option not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Дополнительная опция не найдена")
 
     _reset_hotel_extra_category(db, trip_id, payload.category)
     node = TripNode(
@@ -1604,17 +1604,17 @@ def search_transport(
     if not trip.destination:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select destination first",
+            detail="Сначала выберите направление",
         )
     if not trip.start_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Set trip start date first",
+            detail="Сначала укажите дату начала поездки",
         )
     if trip.round_trip and not trip.end_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Set trip return date for round trip",
+            detail="Укажите дату возврата для обратного билета",
         )
 
     try:
@@ -1667,7 +1667,7 @@ def get_transport_itinerary(
     trip = _get_trip_or_404(db, trip_id)
     selected = _find_itinerary_by_id(db, trip, itinerary_id)
     if not selected:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Itinerary not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Маршрут не найден")
     return selected
 
 
@@ -1680,12 +1680,12 @@ def select_transport(
     if not destination_node:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select destination first",
+            detail="Сначала выберите направление",
         )
 
     selected = _find_itinerary_by_id(db, trip, payload.itinerary_id)
     if not selected:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transport not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Транспорт не найден")
 
     _reset_choice_branch(db, trip_id, "transport")
     inbound_title = selected["inbound"]["title"] if selected["inbound"] else "нет"
@@ -1721,7 +1721,7 @@ def get_transport_extras(
     trip = _get_trip_or_404(db, trip_id)
     itinerary = _find_itinerary_by_id(db, trip, itinerary_id)
     if not itinerary:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Itinerary not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Маршрут не найден")
     return _serialize_transport_extras(itinerary)
 
 
@@ -1737,15 +1737,15 @@ def select_transport_extra(
     if not transport_node:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select transport itinerary first",
+            detail="Сначала выберите вариант перелёта",
         )
     itinerary = _find_itinerary_by_id(db, trip, itinerary_id)
     if not itinerary:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Itinerary not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Маршрут не найден")
     extras_payload = _serialize_transport_extras(itinerary)
     selected = _find_transport_extra(extras_payload, payload.category, payload.item_id)
     if not selected:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Extra option not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Дополнительная опция не найдена")
 
     _reset_transport_extra_category(db, trip_id, payload.category)
     node = TripNode(
@@ -1776,7 +1776,7 @@ def get_city_transport_options(trip_id: int, db: Session = Depends(get_db)) -> d
     if not trip.destination:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select destination first",
+            detail="Сначала выберите направление",
         )
     payload = _serialize_city_transport(trip.destination)
     return attach_city_transport_review_stats(db, payload)
@@ -1791,11 +1791,11 @@ def select_city_transport(
     if not destination_node:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select destination first",
+            detail="Сначала выберите направление",
         )
     selected = _find_city_transport_item(trip.destination, payload.category, payload.item_id)
     if not selected:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="City transport option not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Городской транспорт не найден")
 
     _reset_city_transport_category(db, trip_id, payload.category)
     node = TripNode(
@@ -1826,7 +1826,7 @@ def get_day_plan_options(trip_id: int, db: Session = Depends(get_db)) -> dict:
     if not trip.destination:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select destination first",
+            detail="Сначала выберите направление",
         )
     return _serialize_day_plan(trip)
 
@@ -1840,12 +1840,12 @@ def select_day_plan_item(
     if not destination_node:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Select destination first",
+            detail="Сначала выберите направление",
         )
 
     selected = _find_day_plan_item(trip, payload.day_key, payload.slot, payload.item_id)
     if not selected:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Day plan item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пункт плана дня не найден")
 
     _reset_day_plan_slot(db, trip_id, payload.day_key, payload.slot)
     node = TripNode(

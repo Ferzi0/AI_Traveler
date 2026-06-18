@@ -25,12 +25,12 @@ async function extractErrorMessage(response: Response): Promise<string> {
 function formatFetchFailure(cause: unknown): string {
   if (cause instanceof TypeError) {
     const hint = appConfig.backendHost.includes('onrender.com')
-      ? 'Сервер мог уйти в сон — подождите минуту и обновите страницу.'
-      : 'Проверьте, что backend запущен (docker compose up в infra).'
-    return `Сервер API недоступен (${API_BASE}). ${hint}`
+      ? 'Сервис временно недоступен — подождите минуту и обновите страницу.'
+      : 'Проверьте подключение к интернету и повторите попытку.'
+    return `Сервер недоступен. ${hint}`
   }
   const detail = cause instanceof Error ? cause.message : String(cause)
-  return `Запрос к API не выполнен (${API_BASE}): ${detail}`
+  return `Запрос не выполнен: ${detail}`
 }
 
 const RETRYABLE_STATUSES = new Set([502, 503, 504])

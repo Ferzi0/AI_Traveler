@@ -31,11 +31,11 @@ def get_current_user(
         )
         user_id = payload.get("sub")
         if not user_id:
-            raise _unauthorized("Invalid token payload")
+            raise _unauthorized("Некорректный токен")
     except JWTError as exc:
-        raise _unauthorized("Invalid or expired token") from exc
+        raise _unauthorized("Недействительный или просроченный токен") from exc
 
     user = db.get(User, int(user_id))
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
     return user

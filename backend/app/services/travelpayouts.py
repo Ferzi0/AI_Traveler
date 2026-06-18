@@ -63,7 +63,7 @@ def _http_get_json(url: str, token: str) -> dict[str, Any]:
                 raw = gzip.decompress(raw)
             payload = json.loads(raw.decode("utf-8"))
             if not isinstance(payload, dict):
-                raise ValueError("Unexpected Travelpayouts response shape")
+                raise ValueError("Неожиданный ответ Aviasales")
             return payload
     except urllib.error.HTTPError as exc:
         raw = exc.read()
@@ -79,7 +79,7 @@ def _http_get_json(url: str, token: str) -> dict[str, Any]:
                 "Aviasales отклонил запрос по этим датам или направлению. "
                 "Сократите поездку или измените даты вылета и возврата."
             ) from exc
-        raise RuntimeError(f"Travelpayouts HTTP {exc.code}: {msg}") from exc
+        raise RuntimeError(f"Ошибка Aviasales (HTTP {exc.code}): {msg}") from exc
     except urllib.error.URLError as exc:
         reason = exc.reason if exc.reason is not None else exc
         reason_text = str(reason).lower()
@@ -130,7 +130,7 @@ def fetch_prices_for_route(
 ) -> list[dict[str, Any]]:
     token = settings.TRAVELPAYOUTS_API_TOKEN.strip()
     if not token:
-        raise RuntimeError("TRAVELPAYOUTS_API_TOKEN is not configured")
+        raise RuntimeError("Токен Aviasales не настроен")
 
     per_page = 30
     pages = 1
@@ -157,7 +157,7 @@ def fetch_prices_for_route(
         url = f"{BASE_URL}/aviasales/v3/prices_for_dates?{urllib.parse.urlencode(params)}"
         payload = _http_get_json(url, token)
         if not payload.get("success"):
-            raise RuntimeError(str(payload.get("error") or "Travelpayouts prices_for_dates failed"))
+            raise RuntimeError(str(payload.get("error") or "Не удалось получить цены Aviasales"))
 
         rows = payload.get("data") or []
         if isinstance(rows, dict):
@@ -212,7 +212,7 @@ def _fetch_v3_popular(origin_iata: str, limit: int, token: str) -> list[dict[str
     url = f"{BASE_URL}/aviasales/v3/prices_for_dates?{urllib.parse.urlencode(params)}"
     payload = _http_get_json(url, token)
     if not payload.get("success"):
-        raise RuntimeError(str(payload.get("error") or "Travelpayouts v3 request failed"))
+        raise RuntimeError(str(payload.get("error") or "Ошибка запроса к Aviasales"))
 
     rows = payload.get("data") or []
     if isinstance(rows, dict):
@@ -240,7 +240,7 @@ def _fetch_city_directions(origin_iata: str, limit: int, token: str) -> list[dic
     url = f"{BASE_URL}/v1/city-directions?{urllib.parse.urlencode(params)}"
     payload = _http_get_json(url, token)
     if not payload.get("success"):
-        raise RuntimeError(str(payload.get("error") or "Travelpayouts city-directions failed"))
+        raise RuntimeError(str(payload.get("error") or "Не удалось загрузить направления Aviasales"))
 
     data = payload.get("data") or {}
     items: list[dict[str, Any]] = []
@@ -263,7 +263,7 @@ def _cache_get_list(key: str) -> list[dict[str, Any]] | None:
 def get_popular_destinations(origin_iata: str, limit: int = 6) -> dict[str, Any]:
     token = settings.TRAVELPAYOUTS_API_TOKEN.strip()
     if not token:
-        raise RuntimeError("TRAVELPAYOUTS_API_TOKEN is not configured")
+        raise RuntimeError("Токен Aviasales не настроен")
 
     origin = origin_iata.strip().upper()
     cache_key = f"popular:{origin}:{limit}"
@@ -279,7 +279,7 @@ def get_popular_destinations(origin_iata: str, limit: int = 6) -> dict[str, Any]
     if not items:
         items = _fetch_city_directions(origin, limit, token)
     if not items:
-        raise RuntimeError("Travelpayouts returned no popular directions")
+        raise RuntimeError("Aviasales не вернул популярные направления")
 
     _cache_set(cache_key, items)
     return {
@@ -298,7 +298,7 @@ def fetch_price_calendar(
 ) -> list[dict[str, Any]]:
     token = settings.TRAVELPAYOUTS_API_TOKEN.strip()
     if not token:
-        raise RuntimeError("TRAVELPAYOUTS_API_TOKEN is not configured")
+        raise RuntimeError("Токен Aviasales не настроен")
 
     origin = origin_iata.upper()
     destination = destination_iata.upper()
@@ -324,7 +324,7 @@ def fetch_price_calendar(
     url = f"{BASE_URL}/v1/prices/calendar?{urllib.parse.urlencode(params)}"
     payload = _http_get_json(url, token)
     if not payload.get("success"):
-        raise RuntimeError(str(payload.get("error") or "Travelpayouts calendar failed"))
+        raise RuntimeError(str(payload.get("error") or "Не удалось загрузить календарь цен Aviasales"))
 
     raw = payload.get("data") or {}
     items: list[dict[str, Any]] = []
@@ -387,7 +387,7 @@ def fetch_special_offers(
 ) -> list[dict[str, Any]]:
     token = settings.TRAVELPAYOUTS_API_TOKEN.strip()
     if not token:
-        raise RuntimeError("TRAVELPAYOUTS_API_TOKEN is not configured")
+        raise RuntimeError("Токен Aviasales не настроен")
 
     origin = origin_iata.upper()
     dest_part = destination_iata.upper() if destination_iata else "-"
@@ -409,7 +409,7 @@ def fetch_special_offers(
     url = f"{BASE_URL}/aviasales/v3/get_special_offers?{urllib.parse.urlencode(params)}"
     payload = _http_get_json(url, token)
     if not payload.get("success"):
-        raise RuntimeError(str(payload.get("error") or "Travelpayouts special offers failed"))
+        raise RuntimeError(str(payload.get("error") or "Не удалось загрузить спецпредложения Aviasales"))
 
     rows = payload.get("data") or []
     items: list[dict[str, Any]] = []
