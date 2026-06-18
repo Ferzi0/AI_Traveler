@@ -237,10 +237,105 @@ def destination_title_to_iata(title: str) -> str:
     raise ValueError(f"Unknown destination for IATA lookup: {title}")
 
 
-ORIGIN_IATA_LABELS: dict[str, str] = {
-    "MOW": "Москва",
-    "LED": "Санкт-Петербург",
-}
+def _display_city_name(city_lower: str) -> str:
+    def cap_word(word: str) -> str:
+        return word[:1].upper() + word[1:] if word else word
+
+    parts: list[str] = []
+    for segment in city_lower.split(" "):
+        parts.append("-".join(cap_word(part) for part in segment.split("-")))
+    return " ".join(parts)
+
+
+def _build_origin_iata_labels() -> dict[str, str]:
+    labels: dict[str, str] = {}
+
+    for city_lower, iata in ORIGIN_CITY_TO_IATA.items():
+        labels[iata.upper()] = _display_city_name(city_lower)
+
+    for code, meta in DESTINATION_IATA.items():
+        if meta.get("country") == "Россия":
+            labels.setdefault(code.upper(), meta["city"])
+
+    extras = {
+        "SVO": "Москва",
+        "DME": "Москва",
+        "VKO": "Москва",
+        "ZIA": "Москва",
+        "OVB": "Новосибирск",
+        "SVX": "Екатеринбург",
+        "KZN": "Казань",
+        "UFA": "Уфа",
+        "KUF": "Самара",
+        "GOJ": "Нижний Новгород",
+        "CEK": "Челябинск",
+        "OMS": "Омск",
+        "PEE": "Пермь",
+        "KJA": "Красноярск",
+        "IKT": "Иркутск",
+        "KHV": "Хабаровск",
+        "YKS": "Якутск",
+        "TJM": "Тюмень",
+        "TOF": "Томск",
+        "KEJ": "Кемерово",
+        "RTW": "Саратов",
+        "VOG": "Волгоград",
+        "UUD": "Улан-Удэ",
+        "ARH": "Архангельск",
+        "SGC": "Сургут",
+        "VOZ": "Воронеж",
+        "MMK": "Мурманск",
+        "VGD": "Вологда",
+        "BAX": "Барнаул",
+        "STW": "Ставрополь",
+        "GRV": "Грозный",
+        "MCX": "Махачкала",
+        "AAQ": "Анапа",
+        "GDZ": "Геленджик",
+        "PES": "Петрозаводск",
+        "BQS": "Благовещенск",
+        "HTA": "Чита",
+        "PKC": "Петропавловск-Камчатский",
+        "UUS": "Южно-Сахалинск",
+        "GDX": "Магадан",
+        "NJC": "Нижневартовск",
+        "IJK": "Ижевск",
+        "SCW": "Сыктывкар",
+        "KVX": "Киров",
+        "ASF": "Астрахань",
+        "REN": "Оренбург",
+        "CSY": "Чебоксары",
+        "EGO": "Белгород",
+        "OGZ": "Владикавказ",
+        "NAL": "Нальчик",
+        "ESL": "Элиста",
+        "SKX": "Саранск",
+        "PKV": "Псков",
+        "RZN": "Рязань",
+        "SLY": "Салехард",
+        "NOJ": "Ноябрьск",
+        "NYM": "Надым",
+        "HMA": "Ханты-Мансийск",
+        "NUX": "Новый Уренгой",
+        "NSK": "Норильск",
+        "KGP": "Когалым",
+        "NBC": "Набережные Челны",
+        "JOK": "Йошкар-Ола",
+        "ULV": "Ульяновск",
+        "PEZ": "Пенза",
+        "TBW": "Тамбов",
+        "LPK": "Липецк",
+        "URS": "Курск",
+        "BZK": "Брянск",
+        "IWA": "Иваново",
+    }
+    for code, name in extras.items():
+        labels.setdefault(code, name)
+
+    return labels
+
+
+ORIGIN_IATA_LABELS: dict[str, str] = _build_origin_iata_labels()
 
 
 def origin_city_to_iata(city_name: str) -> str:
