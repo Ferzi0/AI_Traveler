@@ -7,8 +7,9 @@
 Нужен установленный **Docker Desktop**.
 
 ```bash
-# 1. (необязательно) свои настройки поверх backend/.env.example
+# 1. свои настройки поверх backend/.env.example
 cp backend/.env.example backend/.env
+#    обязательно: JWT_SECRET_KEY (python3 -c "import secrets; print(secrets.token_urlsafe(48))")
 #    впишите TRAVELPAYOUTS_API_TOKEN, иначе блоки с рейсами будут пустыми
 
 # 2. запуск всех сервисов
