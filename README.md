@@ -2,16 +2,30 @@
 
 Дипломный веб-проект — AI-планировщик путешествий.
 
-## Боевые ссылки
+## Локальный запуск
+
+Нужен установленный **Docker Desktop**.
+
+```bash
+# 1. (необязательно) свои настройки поверх backend/.env.example
+cp backend/.env.example backend/.env
+#    впишите TRAVELPAYOUTS_API_TOKEN, иначе блоки с рейсами будут пустыми
+
+# 2. запуск всех сервисов
+docker compose -f infra/docker-compose.yml up --build
+```
 
 | Сервис | URL |
 |--------|-----|
-| Фронтенд | https://ai-traveler-1.onrender.com |
-| Backend API | https://ai-traveler-0jhd.onrender.com |
-| Swagger / Docs | https://ai-traveler-0jhd.onrender.com/docs |
+| Фронтенд | http://localhost:5173 |
+| Backend API | http://localhost:8000/api/v1 |
+| Swagger / Docs | http://localhost:8000/docs |
+| PostgreSQL | localhost:5432 (postgres / postgres, БД `ai_traveler`) |
 
-> Render переводит сервисы в спящий режим при отсутствии трафика.  
-> Первый запрос после простоя может занять 30–60 секунд.
+Миграции применяются автоматически при старте backend-контейнера.  
+Код `backend/app` и `frontend/src` смонтирован в контейнеры — изменения подхватываются без пересборки.
+
+Остановить: `docker compose -f infra/docker-compose.yml down` (добавьте `-v`, чтобы удалить данные БД).
 
 ---
 
@@ -32,21 +46,7 @@
 - **Leaflet** — карты
 
 ### Инфраструктура
-- **Render** — хостинг (backend + frontend как отдельные сервисы)
-
----
-
-## Деплой на Render
-
-| Сервис | Dockerfile | Ключевые ENV |
-|--------|------------|--------------|
-| Backend | `backend/Dockerfile.prod` | `CORS_ORIGINS`, `POSTGRES_*`, `JWT_SECRET_KEY`, `TRAVELPAYOUTS_*` |
-| Frontend | `frontend/Dockerfile.prod` | `VITE_API_BASE`, `VITE_FRONTEND_URL` |
-
-`frontend/src/config.ts` определяет URL API по hostname страницы.  
-На бэкенде в `CORS_ORIGINS` — URL фронта без слэша в конце: `https://ai-traveler-1.onrender.com`
-
-Фронт повторяет запросы при 502/503, пока сервис просыпается.
+- **Docker Compose** — локальный запуск (frontend, api, PostgreSQL, Redis)
 
 ---
 
@@ -160,7 +160,7 @@ AI_Traveler/
 │   │   └── main.py
 │   ├── alembic/
 │   │   └── versions/          # 8 миграций
-│   ├── Dockerfile.prod
+│   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
@@ -169,8 +169,10 @@ AI_Traveler/
 │   │   ├── api.ts
 │   │   ├── config.ts
 │   │   └── App.tsx
-│   ├── Dockerfile.prod
+│   ├── Dockerfile
 │   └── package.json
+├── infra/
+│   └── docker-compose.yml
 ```
 
 ---

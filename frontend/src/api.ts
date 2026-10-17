@@ -24,10 +24,7 @@ async function extractErrorMessage(response: Response): Promise<string> {
 
 function formatFetchFailure(cause: unknown): string {
   if (cause instanceof TypeError) {
-    const hint = appConfig.backendHost.includes('onrender.com')
-      ? 'Сервис временно недоступен — подождите минуту и обновите страницу.'
-      : 'Проверьте подключение к интернету и повторите попытку.'
-    return `Сервер недоступен. ${hint}`
+    return `Сервер недоступен. Проверьте, что backend запущен на ${appConfig.backendHost}, и повторите попытку.`
   }
   const detail = cause instanceof Error ? cause.message : String(cause)
   return `Запрос не выполнен: ${detail}`

@@ -1,8 +1,3 @@
----
-description: Данные рейсов Aviasales — только из API; справочник IATA для названий мест
-alwaysApply: true
----
-
 # Travelpayouts: данные рейса vs названия мест
 
 ## Только из API (данные карточки / рейса)
