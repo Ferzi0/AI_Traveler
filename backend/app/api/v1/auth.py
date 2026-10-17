@@ -11,7 +11,6 @@ from app.core.database import get_db
 from app.core.security import (
     create_access_token,
     get_password_hash,
-    is_bcrypt_hash,
     verify_password,
 )
 from app.models.user import User
@@ -135,10 +134,6 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
 
     if not user or not verify_password(payload.password, user.hashed_password):
         raise _unauthorized("Неверный логин или пароль")
-
-    if not is_bcrypt_hash(user.hashed_password):
-        user.hashed_password = get_password_hash(payload.password)
-        db.commit()
 
     token = create_access_token(subject=str(user.id))
     return TokenResponse(access_token=token)
